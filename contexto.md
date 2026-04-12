@@ -225,7 +225,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **`totp_secret` no se limpia en reset:** Se mantiene para no obligar a reconfigurar 2FA. Documentado para revisión cuando se complete el módulo 2FA completo.
 - **throttle:5,1 en rutas de reset:** Máximo 5 solicitudes por minuto por IP para protección anti-spam.
 - **Suspense en `/reset`:** `useSearchParams()` de Next.js App Router requiere que el componente que lo usa esté envuelto en `<Suspense>`. Se usa un componente interno `ResetForm` para aislar el boundary.
-- **Correo SMTP:** Usa la config Gmail App Password del `.env` (`MAIL_SCHEME=tls`, puerto 587). Verificado en `.env` existente.
+- **Correo SMTP:** Gmail en puerto 587 con `MAIL_MAILER=smtp`. **No** usar `MAIL_SCHEME=tls` (Laravel 12 solo admite esquema `smtp`/`smtps` o sin definir; con 587 Laravel aplica STARTTLS). App Password en `MAIL_PASSWORD` entre comillas si lleva espacios.
 - **URL del front en correos:** Variable `FRONTEND_URL` en `.env` del backend (expuesta como `config('app.frontend_url')`). El correo de reset usa `{FRONTEND_URL}/reset?token=...` para que coincida con el puerto real (3000, 3001, etc.).
 - **Admin de prueba (desarrollo):** el seeder usa `andresfelipeorozcopiedrahita@gmail.com` para recibir correos de recuperación en la misma cuenta SMTP del `.env`. Si la BD ya existía con el correo anterior, ejecutar `php artisan migrate:fresh --seed` o actualizar manualmente la fila en `usuarios`.
 - **Instructor de prueba (desarrollo):** el seeder usa `documentosorozco25@gmail.com` (segundo buzón Gmail) para probar recuperación de contraseña y login sin depender solo del admin.
