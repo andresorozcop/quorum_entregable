@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas de la API QUORUM
@@ -28,6 +29,11 @@ Route::prefix('auth')->group(function () {
         Route::get('me',      [AuthController::class, 'me']);
     });
 });
+
+// -----------------------------------------------------------------------
+// Módulo 4 — Dashboard por rol
+// -----------------------------------------------------------------------
+Route::middleware('auth:sanctum')->get('/dashboard', [DashboardController::class, 'index']);
 
 // -----------------------------------------------------------------------
 // Módulo 2 — Recuperación de contraseña

@@ -150,8 +150,8 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - [x] **Módulo 0** — Setup inicial (Next strict + Tailwind + Lucide + SweetAlert2 + axios + recaptcha; Laravel + Sanctum + PhpSpreadsheet + mail + 2FA; CORS; migraciones MER completas; modelos con relaciones; seeders; `migrate --seed`)
 - [x] **Módulo 1** — Autenticación (login + reCAPTCHA + bloqueo intentos; login aprendiz correo+cédula; Sanctum; 2FA configurar/verificar; páginas login y 2FA)
 - [x] **Módulo 2** — Recuperación de contraseña (token, correo, `/recuperar`, `/reset`, política de contraseña en UI)
-- [ ] **Módulo 3** — Layout global (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum)
-- [ ] **Módulo 4** — Dashboard por rol (`/api/dashboard`, cards, datos reales BD)
+- [x] **Módulo 3** — Layout global (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum)
+- [x] **Módulo 4** — Dashboard por rol (`/api/dashboard`, cards, datos reales BD)
 - [ ] **Módulo 5** — Gestión de fichas Admin (CRUD, jornadas, horarios, instructores/gestor único, detalle, import Excel aprendices)
 - [ ] **Módulo 6** — Gestión de usuarios Admin (CRUD, filtros, soft delete, admin no auto-borra)
 - [ ] **Módulo 7** — Tomar asistencia (Instructor/Gestor: sesión, validaciones festivo/día, lista completa, parcial con horas, barra progreso, marcar todos presentes)
@@ -235,11 +235,34 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - Error `Tablespace already exists` al correr `migrate:fresh` — solucionado eliminando y recreando la BD desde PHP.
 - Error de referencia circular `usuarios ↔ fichas` — solucionado con migración separada `alter_usuarios_add_ficha_fk`.
 
+## Decisiones tomadas en M3
+
+- **Componentes nuevos creados:** `components/ui/Avatar.tsx`, `components/ui/Badge.tsx`, `components/ui/Sidebar.tsx`, `components/ui/Headbar.tsx`.
+- **Layout del dashboard:** `app/(dashboard)/layout.tsx` con `"use client"`, doble capa de protección: middleware (cookie) + `useEffect` que redirige si `!usuario` tras `getMe`.
+- **Menú por rol:** admin (Dashboard, Usuarios, Fichas, Configuración), coordinador (Dashboard, Historial), instructor/gestor (Dashboard, Tomar asistencia, Historial), aprendiz (Mi historial). Ítems adicionales del PRD §11 (Programas, Centros, Festivos) quedan para M5/M12.
+- **Sidebar en desktop:** `lg:static lg:translate-x-0` — siempre visible sin overlay. En tablet/móvil: `fixed`, controlado por `sidebarAbierto` en el layout.
+- **Overlay móvil:** `<div>` semitransparente que cubre el contenido; clic fuera llama `onCerrar()`.
+- **Ítem activo:** `usePathname()` del App Router; `/dashboard` solo activo si la ruta es exactamente `/dashboard` (para no activar en `/dashboard/algo`).
+- **Avatar:** color de fondo por `id % 8` sobre paleta de 8 colores; iniciales = primera letra nombre + primera letra apellido (o dos primeras letras si es un solo token).
+- **Badge:** colores inline via `style` para no depender de clases JIT de Tailwind con valores arbitrarios; etiquetas en español.
+- **Accesibilidad:** `--font-scale` en `:root` de `globals.css`; `html { font-size: calc(16px * var(--font-scale)) }`. Alto contraste: clase `high-contrast` en `<html>` con `filter: contrast(1.5)`. Panel en Headbar con botones +/- (rango 0.9–1.3) y toggle switch.
+- **Logout:** confirmación con SweetAlert2 antes de llamar al servicio.
+- **globals.css:** eliminado bloque `@media (prefers-color-scheme: dark)` que sobreescribía los colores de la paleta SENA.
+- **Páginas placeholder:** 4 restantes (`/fichas`, `/usuarios`, `/asistencia/tomar`, `/asistencia/historial`); `/dashboard` implementado en M4 con datos reales.
+
+## Decisiones tomadas en M4
+
+- **Endpoint:** `GET /api/dashboard` con `auth:sanctum`; lógica en `DashboardService` y `DashboardController`. Aprendiz recibe **403** en API.
+- **Front:** `GET` con axios + cookies (sin Bearer). Página `/dashboard` en cliente: si `rol === aprendiz`, `router.replace('/mi-historial')` sin llamar al API.
+- **% asistencia (coordinador, mes actual):** registros `activo=1`, sesiones en el mes; numerador `presente` + `excusa`; denominador total de registros; si no hay datos → `null` y EmptyState en UI.
+- **Inasistencia ≥ 20 % (instructor/gestor):** mes actual, solo fichas con `ficha_instructor` activo; ratio = horas ausente (falla = `horas_programadas` de la sesión, parcial = `horas_inasistencia`) / suma de `horas_programadas`.
+- **Componentes reutilizables:** `StatCard`, `LoadingSpinner`, `EmptyState`; errores de red con SweetAlert2.
+
 ## Estado actual
 
-**Último módulo completado:** **Módulo 2 — Recuperación de contraseña** ✓ (alineado con PRD v1.0 — abril 2026)
+**Último módulo completado:** **Módulo 4 — Dashboard por rol** ✓ (alineado con PRD v1.0 — abril 2026)
 
-**Próximo módulo:** **Módulo 3 — Layout global** (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum).
+**Próximo módulo:** **Módulo 5 — Gestión de fichas (Admin)**.
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000
