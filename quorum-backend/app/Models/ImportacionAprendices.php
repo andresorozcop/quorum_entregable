@@ -11,7 +11,7 @@ class ImportacionAprendices extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'usuario_id',
+        'importado_por',
         'ficha_id',
         'nombre_archivo',
         'total_registros',
@@ -25,10 +25,10 @@ class ImportacionAprendices extends Model
         'errores' => 'array',
     ];
 
-    // El admin que realizó la importación
-    public function usuario(): BelongsTo
+    // El usuario que realizó la importación (admin)
+    public function importadoPor(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
+        return $this->belongsTo(Usuario::class, 'importado_por');
     }
 
     // La ficha a la que se importaron los aprendices

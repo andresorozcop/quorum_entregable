@@ -115,7 +115,7 @@
 
 ## API backend (referencia)
 
-Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. CRUD usuarios, fichas, asistencia (`getSesion`, `guardar`, `actualizar`, `historial`), `mi-historial`, `reportes/excel/{fichaId}`, `importaciones/aprendices`, centros/programas/días festivos — detalle en PRD sección 12.
+Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. Pendientes M6+: usuarios; asistencia; `mi-historial`; reportes; días festivos — detalle en PRD sección 12.
 
 ## Variables de entorno (nombres; valores solo en `.env` local)
 
@@ -152,7 +152,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - [x] **Módulo 2** — Recuperación de contraseña (token, correo, `/recuperar`, `/reset`, política de contraseña en UI)
 - [x] **Módulo 3** — Layout global (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum)
 - [x] **Módulo 4** — Dashboard por rol (`/api/dashboard`, cards, datos reales BD)
-- [ ] **Módulo 5** — Gestión de fichas Admin (CRUD, jornadas, horarios, instructores/gestor único, detalle, import Excel aprendices)
+- [x] **Módulo 5** — Gestión de fichas Admin (CRUD, jornadas, horarios, instructores/gestor único, detalle, import Excel aprendices)
 - [ ] **Módulo 6** — Gestión de usuarios Admin (CRUD, filtros, soft delete, admin no auto-borra)
 - [ ] **Módulo 7** — Tomar asistencia (Instructor/Gestor: sesión, validaciones festivo/día, lista completa, parcial con horas, barra progreso, marcar todos presentes)
 - [ ] **Módulo 8** — Historial / matriz de asistencia (filtros, edición solo instructor dueño del día, scroll horizontal)
@@ -176,7 +176,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **CSRF:** Se llama a `GET /sanctum/csrf-cookie` antes de cada POST de login para que Sanctum emita el cookie `XSRF-TOKEN`.
 - **Estado de usuario:** Se obtiene con `GET /api/auth/me` al montar el `AuthProvider` y se guarda en React Context (`AuthContext`).
 - **Bloqueo de intentos:** 5 intentos fallidos en 15 minutos → HTTP 429. Usa el scope `recientesFallidos()` del modelo `IntentoLogin`.
-- **Flujo 2FA post-login:** Si `totp_verificado=0` → `/2fa/configurar`; si `totp_verificado=1` → `/2fa/verificar`; aprendiz → directo a `/mi-historial`.
+- **Flujo 2FA post-login:** Si `totp_verificado=0` → `/2fa/configurar` (QR + código); si `totp_verificado=1` → `/2fa/verificar`; aprendiz → directo a `/mi-historial`. Detalle técnico en sección **2FA TOTP operativo** más abajo.
 - **reCAPTCHA:** Obligatorio para staff. El botón de envío queda deshabilitado hasta resolver el widget. Clave real del PRD §14.1 cargada en `.env`.
 - **Mensajes de error:** Genéricos para no revelar si el correo existe. "Tu cuenta está desactivada. Comunícate con el administrador." es el único mensaje específico.
 - **Middleware Next.js:** Protege rutas del grupo `(dashboard)` solo si existe la cookie de sesión del backend (`NEXT_PUBLIC_SESSION_COOKIE` en el front, por defecto `quorum-session`). No se usa `XSRF-TOKEN` como señal de login. Redirige al login con parámetro `redirigir`.
@@ -197,6 +197,8 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 | Laravel | 12.12.2 (PHP 8.2, compatible con el PRD que pedía 11+) |
 | laravel/sanctum | 4.3.1 |
 | phpoffice/phpspreadsheet | 5.6.0 |
+| pragmarx/google2fa | 9.x (2FA TOTP) |
+| qrcode (npm) | generación QR en `/2fa/configurar` |
 | PHP | 8.2.12 (XAMPP) |
 | Composer | 2.9.2 |
 | MySQL | 8.x (XAMPP) |
@@ -248,7 +250,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Accesibilidad:** `--font-scale` en `:root` de `globals.css`; `html { font-size: calc(16px * var(--font-scale)) }`. Alto contraste: clase `high-contrast` en `<html>` con `filter: contrast(1.5)`. Panel en Headbar con botones +/- (rango 0.9–1.3) y toggle switch.
 - **Logout:** confirmación con SweetAlert2 antes de llamar al servicio.
 - **globals.css:** eliminado bloque `@media (prefers-color-scheme: dark)` que sobreescribía los colores de la paleta SENA.
-- **Páginas placeholder:** 4 restantes (`/fichas`, `/usuarios`, `/asistencia/tomar`, `/asistencia/historial`); `/dashboard` implementado en M4 con datos reales.
+- **Páginas placeholder:** 3 restantes (`/usuarios`, `/asistencia/tomar`, `/asistencia/historial`); `/fichas` implementado en M5; `/dashboard` en M4.
 
 ## Decisiones tomadas en M4
 
@@ -258,11 +260,31 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Inasistencia ≥ 20 % (instructor/gestor):** mes actual, solo fichas con `ficha_instructor` activo; ratio = horas ausente (falla = `horas_programadas` de la sesión, parcial = `horas_inasistencia`) / suma de `horas_programadas`.
 - **Componentes reutilizables:** `StatCard`, `LoadingSpinner`, `EmptyState`; errores de red con SweetAlert2.
 
+## 2FA TOTP operativo (complemento M1)
+
+- **Backend:** `pragmarx/google2fa` + `App\Services\TotpService`. `POST /api/auth/2fa/configurar` sin `codigo` devuelve `otpauth_url` y `secreto_manual`; con `codigo` valida y pone `totp_verificado=1` y `totp_sesion_ok` en sesión. `POST /api/auth/2fa/verificar` con `codigo` para usuarios ya configurados.
+- **Sesión:** Tras login staff, `totp_sesion_ok=false`; tras configurar o verificar TOTP, `totp_sesion_ok=true`. Aprendiz: `totp_sesion_ok=true` al iniciar sesión.
+- **GET /api/auth/me:** Incluye `totp_sesion_completa` (boolean). El `AuthContext` guarda `totpSesionCompleta` para el layout.
+- **Middleware `EnsureTotpSessionOk`:** aplicado a `GET /api/dashboard` y al grupo de rutas del **Módulo 5** (fichas, catálogos centro/programa, instructores-disponibles, import); staff sin 2FA completado en sesión recibe 403.
+- **Frontend:** `qrcode` (npm) genera el QR desde `otpauth_url`; `services/totp.service.ts`; layout `(dashboard)` redirige a `/2fa/configurar` o `/2fa/verificar` si el staff aún no completa TOTP en la sesión.
+
+## Decisiones tomadas en M5
+
+- **API fichas:** `FichaController` + `FichaService`; `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST /api/fichas/{id}/instructores`, `POST /api/fichas/{id}/importar-aprendices`; catálogos `GET /api/centros-formacion`, `GET /api/programas-formacion`; `GET /api/instructores-disponibles` (admin, formularios).
+- **Policies:** `FichaPolicy` (admin CRUD; coordinador lectura global; instructor/gestor lectura solo fichas con `ficha_instructor` activo; aprendiz sin acceso). `CentroFormacionPolicy` / `ProgramaFormacionPolicy` — listado solo **admin** (coordinador no consume esos endpoints en UI).
+- **Middleware:** mismo grupo `auth:sanctum` + `EnsureTotpSessionOk` que el dashboard.
+- **Payload crear/editar:** cabecera + `instructores[]` (`usuario_id`, `es_gestor`) con **exactamente un** gestor + `jornadas[]` con `horarios[]` (`dia_semana`, `hora_inicio`, `hora_fin`, `instructor_id`). Cada `instructor_id` debe estar en `instructores[]`; roles permitidos `instructor` y `gestor_grupo` activos.
+- **horas_programadas:** calculada en servidor con diferencia inicio/fin (redondeo a horas enteras, mínimo 1, máximo 24).
+- **Gestor único:** validación en PHP antes de BD; mensaje 422 con **nombre del gestor actual** si hay conflicto; respaldo por trigger SQL existente.
+- **Import Excel:** PhpSpreadsheet; columnas `cedula`, `nombre_completo`, `correo`; validación correo y cédula **únicos** en `usuarios`; registro en `importaciones_aprendices` con columna **`importado_por`** (modelo `ImportacionAprendices` alineado a migración PRD).
+- **Soft delete ficha:** `DELETE /api/fichas/{id}` pone `activo=0` (no borrado físico).
+- **Front:** `components/ui/DataTable.tsx`, `components/fichas/FichaFormulario.tsx`; páginas `/fichas`, `/fichas/nueva`, `/fichas/[id]` con pestañas; modal import con barra de progreso (`onUploadProgress`); SweetAlert2 al desactivar ficha.
+
 ## Estado actual
 
-**Último módulo completado:** **Módulo 4 — Dashboard por rol** ✓ (alineado con PRD v1.0 — abril 2026)
+**Último módulo completado:** **Módulo 5 — Gestión de fichas (Admin)** ✓ (alineado con PRD v1.0 — abril 2026)
 
-**Próximo módulo:** **Módulo 5 — Gestión de fichas (Admin)**.
+**Próximo módulo:** **Módulo 6 — Gestión de usuarios (Admin)**.
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000

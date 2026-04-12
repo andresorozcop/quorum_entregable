@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CentroFormacionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FichaController;
+use App\Http\Controllers\ProgramaFormacionController;
+use App\Http\Middleware\EnsureTotpSessionOk;
 use Illuminate\Support\Facades\Route;
 
 // Rutas de la API QUORUM
@@ -27,13 +31,30 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me',      [AuthController::class, 'me']);
+        Route::post('2fa/configurar', [AuthController::class, 'configurar2FA']);
+        Route::post('2fa/verificar',  [AuthController::class, 'verificar2FA']);
     });
 });
 
 // -----------------------------------------------------------------------
-// Módulo 4 — Dashboard por rol
+// Módulo 4 — Dashboard por rol (requiere 2FA completado en sesión)
 // -----------------------------------------------------------------------
-Route::middleware('auth:sanctum')->get('/dashboard', [DashboardController::class, 'index']);
+Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    // Módulo 5 — Fichas de caracterización y catálogos
+    Route::get('/centros-formacion', [CentroFormacionController::class, 'index']);
+    Route::get('/programas-formacion', [ProgramaFormacionController::class, 'index']);
+    Route::get('/instructores-disponibles', [FichaController::class, 'instructoresDisponibles']);
+
+    Route::get('/fichas', [FichaController::class, 'index']);
+    Route::post('/fichas', [FichaController::class, 'store']);
+    Route::get('/fichas/{ficha}', [FichaController::class, 'show']);
+    Route::put('/fichas/{ficha}', [FichaController::class, 'update']);
+    Route::delete('/fichas/{ficha}', [FichaController::class, 'destroy']);
+    Route::post('/fichas/{ficha}/instructores', [FichaController::class, 'asignarInstructor']);
+    Route::post('/fichas/{ficha}/importar-aprendices', [FichaController::class, 'importarAprendices']);
+});
 
 // -----------------------------------------------------------------------
 // Módulo 2 — Recuperación de contraseña
