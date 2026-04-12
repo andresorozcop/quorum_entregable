@@ -1,0 +1,19 @@
+﻿# Dependencias
+quorum-frontend/node_modules/
+quorum-frontend/.next/
+quorum-backend/vendor/
+
+# Variables de entorno (contienen credenciales)
+quorum-frontend/.env.local
+quorum-backend/.env
+
+# Logs y archivos temporales
+quorum-backend/storage/logs/*.log
+quorum-backend/storage/app/
+quorum-backend/storage/framework/cache/
+quorum-backend/storage/framework/sessions/
+quorum-backend/storage/framework/views/
+quorum-backend/storage/temp/
+
+# Cache de Laravel
+quorum-backend/bootstrap/cache/*.php
