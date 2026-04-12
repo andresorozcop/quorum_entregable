@@ -16,13 +16,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Nombre de la BD conectada (no hardcodear el nombre del proyecto)
+        $db = DB::connection()->getDatabaseName();
+
         // Eliminamos FK e índices usando SQL condicional (idempotente ante estados parciales)
         // Verificar y eliminar FK de sesion_id si existe
         $hasFkSesion = DB::select("
             SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA='quorum' AND TABLE_NAME='registros_asistencia'
+            WHERE TABLE_SCHEMA = ? AND TABLE_NAME='registros_asistencia'
             AND CONSTRAINT_TYPE='FOREIGN KEY' AND CONSTRAINT_NAME='registros_asistencia_sesion_id_foreign'
-        ");
+        ", [$db]);
         if ($hasFkSesion) {
             DB::statement('ALTER TABLE registros_asistencia DROP FOREIGN KEY registros_asistencia_sesion_id_foreign');
         }
@@ -30,21 +33,31 @@ return new class extends Migration
         // Verificar y eliminar UNIQUE uq_registro_sesion_usuario si existe
         $hasUnique = DB::select("
             SELECT INDEX_NAME FROM information_schema.STATISTICS
-            WHERE TABLE_SCHEMA='quorum' AND TABLE_NAME='registros_asistencia'
+            WHERE TABLE_SCHEMA = ? AND TABLE_NAME='registros_asistencia'
             AND INDEX_NAME='uq_registro_sesion_usuario'
             LIMIT 1
-        ");
+        ", [$db]);
         if ($hasUnique) {
             DB::statement('ALTER TABLE registros_asistencia DROP INDEX uq_registro_sesion_usuario');
+        }
+
+        // MariaDB/MySQL: no se puede DROP INDEX si una FK sigue usando ese índice
+        $hasFkUsuario = DB::select("
+            SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
+            WHERE TABLE_SCHEMA = ? AND TABLE_NAME='registros_asistencia'
+            AND CONSTRAINT_TYPE='FOREIGN KEY' AND CONSTRAINT_NAME='registros_asistencia_usuario_id_foreign'
+        ", [$db]);
+        if ($hasFkUsuario) {
+            DB::statement('ALTER TABLE registros_asistencia DROP FOREIGN KEY registros_asistencia_usuario_id_foreign');
         }
 
         // Verificar y eliminar índice simple usuario_id si existe
         $hasIdxUsuario = DB::select("
             SELECT INDEX_NAME FROM information_schema.STATISTICS
-            WHERE TABLE_SCHEMA='quorum' AND TABLE_NAME='registros_asistencia'
+            WHERE TABLE_SCHEMA = ? AND TABLE_NAME='registros_asistencia'
             AND INDEX_NAME='idx_registro_usuario'
             LIMIT 1
-        ");
+        ", [$db]);
         if ($hasIdxUsuario) {
             DB::statement('ALTER TABLE registros_asistencia DROP INDEX idx_registro_usuario');
         }

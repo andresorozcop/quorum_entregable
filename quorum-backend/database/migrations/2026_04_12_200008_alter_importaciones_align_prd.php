@@ -15,29 +15,35 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Eliminar índice suelto sobre usuario_id (si existe) antes de renombrar
-        $hasIdxUsuario = DB::select("
-            SELECT INDEX_NAME FROM information_schema.STATISTICS
-            WHERE TABLE_SCHEMA='quorum' AND TABLE_NAME='importaciones_aprendices'
-            AND INDEX_NAME='importaciones_aprendices_usuario_id_foreign'
-            LIMIT 1
-        ");
-        if ($hasIdxUsuario) {
-            DB::statement('ALTER TABLE importaciones_aprendices DROP INDEX `importaciones_aprendices_usuario_id_foreign`');
+        $db = DB::connection()->getDatabaseName();
+
+        // Quitar FK existentes antes de renombrar columna o volver a crear restricciones
+        // (no usar DROP INDEX sobre el nombre de la FK: MariaDB/MySQL lo rechaza)
+        $fks = [
+            'importaciones_aprendices_usuario_id_foreign',
+            'importaciones_aprendices_ficha_id_foreign',
+        ];
+        foreach ($fks as $nombreFk) {
+            $existe = DB::select("
+                SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = ? AND TABLE_NAME='importaciones_aprendices'
+                AND CONSTRAINT_TYPE='FOREIGN KEY' AND CONSTRAINT_NAME = ?
+            ", [$db, $nombreFk]);
+            if ($existe) {
+                DB::statement("ALTER TABLE importaciones_aprendices DROP FOREIGN KEY `{$nombreFk}`");
+            }
         }
 
         // Renombrar columna usuario_id → importado_por (CHANGE COLUMN para MariaDB)
         DB::statement('ALTER TABLE importaciones_aprendices CHANGE COLUMN usuario_id importado_por BIGINT(20) UNSIGNED NOT NULL');
 
-        // Crear las FK reales según PRD (que M0 nunca creó)
+        // FK según PRD: ficha en CASCADE, quien importó en RESTRICT
         Schema::table('importaciones_aprendices', function (Blueprint $table) {
-            // ficha_id → CASCADE según PRD
             $table->foreign('ficha_id')
                   ->references('id')
                   ->on('fichas_caracterizacion')
                   ->cascadeOnDelete();
 
-            // importado_por → RESTRICT según PRD
             $table->foreign('importado_por')
                   ->references('id')
                   ->on('usuarios')
