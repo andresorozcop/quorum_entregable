@@ -15,15 +15,15 @@ class Configuracion extends Model
         'descripcion',
     ];
 
-    // Método de ayuda para obtener un valor por su clave
-    public static function obtener(string $clave, string $defecto = ''): string
+    // Obtiene un valor de configuración por su clave, con valor por defecto
+    public static function obtener(string $clave, ?string $defecto = null): ?string
     {
         $config = static::where('clave', $clave)->first();
         return $config ? $config->valor : $defecto;
     }
 
-    // Método de ayuda para actualizar un valor por su clave
-    public static function establecer(string $clave, string $valor): void
+    // Crea o actualiza una configuración por clave
+    public static function establecer(string $clave, ?string $valor): void
     {
         static::updateOrCreate(
             ['clave' => $clave],

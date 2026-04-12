@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RegistroAsistencia extends Model
 {
@@ -12,9 +13,10 @@ class RegistroAsistencia extends Model
 
     protected $fillable = [
         'sesion_id',
-        'usuario_id',
+        'aprendiz_id',
         'tipo',
         'horas_inasistencia',
+        'activo',
     ];
 
     // El registro pertenece a una sesión
@@ -26,6 +28,18 @@ class RegistroAsistencia extends Model
     // El aprendiz al que corresponde este registro
     public function aprendiz(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
+        return $this->belongsTo(Usuario::class, 'aprendiz_id');
+    }
+
+    // El historial de modificaciones a este registro (auditoría)
+    public function backups(): HasMany
+    {
+        return $this->hasMany(RegistroAsistenciaBackup::class, 'registro_asistencia_id');
+    }
+
+    // Scope para registros activos (no eliminados logicamente)
+    public function scopeActivos($query)
+    {
+        return $query->where('activo', 1);
     }
 }

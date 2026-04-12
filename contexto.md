@@ -196,8 +196,12 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - El CORS se configuró en `config/cors.php` (publicado con `php artisan config:publish cors`).
 - El modelo `Usuario` extiende `Authenticatable` + usa `HasApiTokens` de Sanctum.
 - `config/auth.php` apunta a `App\Models\Usuario` (no al `User` por defecto de Laravel).
-- La tabla `personal_access_tokens` de Sanctum se incluye en el conteo total (19 migraciones en total).
+- La tabla `personal_access_tokens` de Sanctum se incluye en el conteo total (29 migraciones en total).
 - El `AppServiceProvider` aplica `SET time_zone = '-05:00'` solo cuando la BD está disponible (try/catch).
+- **XAMPP usa MariaDB** (no MySQL puro) — `RENAME COLUMN` no funciona, se usa `CHANGE COLUMN`.
+- El modelo `Usuario` **no** override `getAuthIdentifierName()` — Sanctum usa `id` como identificador por defecto, que es correcto para auth stateful con cookies.
+- El login de aprendices (correo + cédula) se valida **manualmente** en el controlador, no vía `Auth::attempt()`.
+- Modelo `FichaInstructor` creado explícitamente (existía la tabla pero no el modelo en M0).
 
 ## Problemas resueltos
 
@@ -206,7 +210,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 
 ## Estado actual
 
-**Último módulo completado:** **Módulo 0 — Setup inicial** ✓
+**Último módulo completado:** **Módulo 0 — Setup inicial** ✓ (alineado con PRD v1.0 — abril 2026)
 
 **Próximo módulo:** **Módulo 1 — Autenticación**.
 
@@ -215,13 +219,33 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - Backend: `cd quorum-backend && php artisan serve` → http://localhost:8000
 - Verificación API: GET http://localhost:8000/api/ping → `{"status":"ok"}`
 
-### Usuarios de prueba
-| Rol | Correo | Contraseña |
-|-----|--------|------------|
-| admin | admin@quorum.sena.edu.co | Admin1234* |
-| coordinador | coordinador@quorum.sena.edu.co | Coord1234* |
-| instructor | instructor@quorum.sena.edu.co | Inst1234* |
-| aprendiz | aprendiz@quorum.sena.edu.co | cédula: 1000000004 |
+### Usuarios de prueba (PRD §5 y §22 — contraseña: `Admin123!`)
+| Rol | Correo | Contraseña | Documento |
+|-----|--------|------------|-----------|
+| admin | gestradac@sena.edu.co | Admin123! | 12345678 |
+| coordinador | sbecerra@sena.edu.co | Admin123! | 87654321 |
+| instructor | clopez@sena.edu.co | Admin123! | 11111111 |
+| gestor_grupo | mgomez@sena.edu.co | Admin123! | 22222222 |
+| aprendiz | andres@aprendiz.sena.edu.co | — (usa cédula: 33333333) | 33333333 |
+
+### MER — alineación PRD v1.0 (batch 2, 3, 4 de migraciones)
+Las migraciones del batch 1 (M0) construyeron la estructura base. Las del batch 2–4 la alinearon con el PRD:
+
+| Tabla | Cambios aplicados |
+|-------|-------------------|
+| `horarios` | FK ficha+jornada → CASCADE; UNIQUE(ficha, jornada, dia) |
+| `ficha_instructor` | Columna `activo`; FK usuario → CASCADE; índice gestor |
+| `sesiones` | Añadidos `ficha_id`, `instructor_id`, `horas_programadas`; UNIQUE(horario, fecha); eliminado `tomado_por` |
+| `registros_asistencia` | Renombrado `usuario_id` → `aprendiz_id`; añadido `activo`; CHECK constraint parcial |
+| `registros_asistencia_backup` | Reconstruida: campos antes/después (`tipo_anterior`, `tipo_nuevo`, `razon`, `modificado_por`) |
+| `intentos_login` | Eliminado `usuario_id` (no en PRD); ip NOT NULL; índice compuesto (correo, fecha) |
+| `tokens_reset` | token ampliado a VARCHAR(255) |
+| `importaciones_aprendices` | Renombrado `usuario_id` → `importado_por`; FK reales creadas |
+| `historial_actividad` | `usuario_id` → nullable sin FK (permite eventos sin usuario) |
+| `configuracion` | `valor` nullable; `descripcion` → TEXT; eliminado `creado_en` |
+| `ficha_instructor` (trigger) | `trg_un_gestor_por_ficha` + `trg_un_gestor_por_ficha_update` creados |
+
+**Total migraciones ejecutadas:** 29 (18 batch 1 + 11 alter batch 2–4)
 
 ---
 

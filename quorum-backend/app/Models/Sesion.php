@@ -12,11 +12,19 @@ class Sesion extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ficha_id',
         'horario_id',
         'fecha',
+        'instructor_id',
+        'horas_programadas',
         'estado',
-        'tomado_por',
     ];
+
+    // La sesión pertenece a una ficha
+    public function ficha(): BelongsTo
+    {
+        return $this->belongsTo(FichaCaracterizacion::class, 'ficha_id');
+    }
 
     // La sesión pertenece a un horario
     public function horario(): BelongsTo
@@ -27,7 +35,7 @@ class Sesion extends Model
     // El instructor que tomó la asistencia en esta sesión
     public function instructor(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'tomado_por');
+        return $this->belongsTo(Usuario::class, 'instructor_id');
     }
 
     // Los registros de asistencia de todos los aprendices en esta sesión

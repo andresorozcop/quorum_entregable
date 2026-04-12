@@ -32,16 +32,21 @@ class Usuario extends Authenticatable
         'avatar_color',
     ];
 
-    // Campos que NO se deben mostrar en respuestas JSON (por seguridad)
+    // Campos que NO se deben mostrar en respuestas JSON
     protected $hidden = [
         'password',
         'totp_secret',
     ];
 
-    // Usamos 'correo' como campo de autenticación (en lugar de 'email')
-    public function getAuthIdentifierName(): string
+    // Sanctum usa 'id' como identificador por defecto — no se necesita override
+    // getAuthIdentifierName() devuelve 'id' que es el PK correcto para stateful auth
+
+    // El campo de credenciales para autenticación (Laravel lo usa en Auth::attempt())
+    // Para instructores/admin: correo+password
+    // Para aprendices: correo+documento (validado manualmente en el controlador)
+    public function getAuthPasswordName(): string
     {
-        return 'correo';
+        return 'password';
     }
 
     // Los aprendices pertenecen a una sola ficha
@@ -58,25 +63,19 @@ class Usuario extends Authenticatable
             'ficha_instructor',
             'usuario_id',
             'ficha_id'
-        )->withPivot('es_gestor');
+        )->withPivot('es_gestor', 'activo')->wherePivot('activo', 1);
     }
 
     // Las sesiones que tomó este instructor
     public function sesiones(): HasMany
     {
-        return $this->hasMany(Sesion::class, 'tomado_por');
+        return $this->hasMany(Sesion::class, 'instructor_id');
     }
 
     // Los registros de asistencia de este aprendiz
     public function registrosAsistencia(): HasMany
     {
-        return $this->hasMany(RegistroAsistencia::class, 'usuario_id');
-    }
-
-    // Los intentos de login de este usuario
-    public function intentosLogin(): HasMany
-    {
-        return $this->hasMany(IntentoLogin::class, 'usuario_id');
+        return $this->hasMany(RegistroAsistencia::class, 'aprendiz_id');
     }
 
     // Tokens de recuperación de contraseña
@@ -85,7 +84,7 @@ class Usuario extends Authenticatable
         return $this->hasMany(TokenReset::class, 'usuario_id');
     }
 
-    // Historial de actividad
+    // Historial de actividad generado por este usuario
     public function historialActividad(): HasMany
     {
         return $this->hasMany(HistorialActividad::class, 'usuario_id');

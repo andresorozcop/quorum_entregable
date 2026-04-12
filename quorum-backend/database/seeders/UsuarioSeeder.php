@@ -6,58 +6,71 @@ use App\Models\Usuario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+// Usuarios de prueba — exactamente los definidos en el PRD §5 (Seeders) y §22 (README)
+// Contraseña para todos los que tienen login: Admin123!
 class UsuarioSeeder extends Seeder
 {
     public function run(): void
     {
-        // Creamos los usuarios de prueba del sistema QUORUM
-        // Contraseñas hasheadas con bcrypt — nunca guardar en texto plano
-
-        // Usuario administrador del sistema
+        // Admin del sistema — José Germán Estrada Clavijo
         Usuario::create([
-            'nombre'     => 'Admin',
-            'apellido'   => 'QUORUM',
-            'documento'  => '1000000001',
-            'correo'     => 'admin@quorum.sena.edu.co',
-            'password'   => Hash::make('Admin1234*'),
-            'rol'        => 'admin',
-            'activo'     => 1,
+            'nombre'       => 'José Germán',
+            'apellido'     => 'Estrada Clavijo',
+            'documento'    => '12345678',
+            'correo'       => 'gestradac@sena.edu.co',
+            'password'     => Hash::make('Admin123!'),
+            'rol'          => 'admin',
+            'activo'       => 1,
             'avatar_color' => '#7B1FA2',
         ]);
 
-        // Coordinador académico — solo lectura de todas las fichas
+        // Coordinador académico — Santiago Becerra Henao
         Usuario::create([
-            'nombre'     => 'Coordinador',
-            'apellido'   => 'Prueba',
-            'documento'  => '1000000002',
-            'correo'     => 'coordinador@quorum.sena.edu.co',
-            'password'   => Hash::make('Coord1234*'),
-            'rol'        => 'coordinador',
-            'activo'     => 1,
+            'nombre'       => 'Santiago',
+            'apellido'     => 'Becerra Henao',
+            'documento'    => '87654321',
+            'correo'       => 'sbecerra@sena.edu.co',
+            'password'     => Hash::make('Admin123!'),
+            'rol'          => 'coordinador',
+            'activo'       => 1,
             'avatar_color' => '#1565C0',
         ]);
 
-        // Instructor — puede tomar asistencia en sus días asignados
+        // Instructor — Carlos López Martínez
         Usuario::create([
-            'nombre'     => 'Instructor',
-            'apellido'   => 'Prueba',
-            'documento'  => '1000000003',
-            'correo'     => 'instructor@quorum.sena.edu.co',
-            'password'   => Hash::make('Inst1234*'),
-            'rol'        => 'instructor',
-            'activo'     => 1,
+            'nombre'       => 'Carlos',
+            'apellido'     => 'López Martínez',
+            'documento'    => '11111111',
+            'correo'       => 'clopez@sena.edu.co',
+            'password'     => Hash::make('Admin123!'),
+            'rol'          => 'instructor',
+            'activo'       => 1,
             'avatar_color' => '#2E7D22',
         ]);
 
-        // Aprendiz — login con correo + cédula (sin contraseña)
+        // Gestor de Grupo — María Gómez Torres
+        // Rol especial: instructor asignado como gestor de una ficha
         Usuario::create([
-            'nombre'     => 'Aprendiz',
-            'apellido'   => 'Prueba',
-            'documento'  => '1000000004',
-            'correo'     => 'aprendiz@quorum.sena.edu.co',
-            'password'   => null,   // Los aprendices no tienen contraseña
-            'rol'        => 'aprendiz',
-            'activo'     => 1,
+            'nombre'       => 'María',
+            'apellido'     => 'Gómez Torres',
+            'documento'    => '22222222',
+            'correo'       => 'mgomez@sena.edu.co',
+            'password'     => Hash::make('Admin123!'),
+            'rol'          => 'gestor_grupo',
+            'activo'       => 1,
+            'avatar_color' => '#3DAE2B',
+        ]);
+
+        // Aprendiz — Andrés Felipe Orozco Piedrahita
+        // Login especial: correo + documento (sin contraseña)
+        Usuario::create([
+            'nombre'       => 'Andrés Felipe',
+            'apellido'     => 'Orozco Piedrahita',
+            'documento'    => '33333333',
+            'correo'       => 'andres@aprendiz.sena.edu.co',
+            'password'     => null,
+            'rol'          => 'aprendiz',
+            'activo'       => 1,
             'avatar_color' => '#616161',
         ]);
     }

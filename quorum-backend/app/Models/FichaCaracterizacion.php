@@ -46,7 +46,7 @@ class FichaCaracterizacion extends Model
         return $this->hasMany(Horario::class, 'ficha_id');
     }
 
-    // Los instructores asignados a esta ficha (relación many-to-many)
+    // Los instructores asignados a esta ficha (relación many-to-many via ficha_instructor)
     public function instructores(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -54,13 +54,30 @@ class FichaCaracterizacion extends Model
             'ficha_instructor',
             'ficha_id',
             'usuario_id'
-        )->withPivot('es_gestor');
+        )->withPivot('es_gestor', 'activo')->wherePivot('activo', 1);
     }
 
-    // El gestor del grupo de esta ficha (solo uno)
-    public function gestor()
+    // Registros de la tabla pivot con datos completos (es_gestor, activo)
+    public function fichaInstructores(): HasMany
     {
-        return $this->instructores()->wherePivot('es_gestor', 1)->first();
+        return $this->hasMany(FichaInstructor::class, 'ficha_id');
+    }
+
+    // El gestor del grupo de esta ficha (solo uno activo)
+    public function gestorGrupo(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Usuario::class,
+            'ficha_instructor',
+            'ficha_id',
+            'usuario_id'
+        )->wherePivot('es_gestor', 1)->wherePivot('activo', 1);
+    }
+
+    // Las sesiones de esta ficha
+    public function sesiones(): HasMany
+    {
+        return $this->hasMany(Sesion::class, 'ficha_id');
     }
 
     // Los aprendices de esta ficha

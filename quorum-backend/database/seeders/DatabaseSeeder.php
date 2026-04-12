@@ -11,15 +11,18 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // 1. Primero los catálogos base (sin dependencias entre sí)
+            // 1. Catálogos base (sin dependencias entre sí)
             CentroFormacionSeeder::class,
             ProgramaFormacionSeeder::class,
 
-            // 2. Los usuarios de prueba
+            // 2. Usuarios de prueba (exactamente los del PRD §5 y §22)
             UsuarioSeeder::class,
 
-            // 3. La configuración inicial del sistema
+            // 3. Configuración inicial del sistema (claves del PRD §5)
             ConfiguracionSeeder::class,
+
+            // 4. Días festivos Colombia 2026 (PRD §5)
+            DiaFestivoSeeder::class,
         ]);
     }
 }
