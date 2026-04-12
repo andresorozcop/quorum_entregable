@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | URL del frontend Next.js (SPA)
+    |--------------------------------------------------------------------------
+    |
+    | Se usa en correos (p. ej. enlace de recuperación de contraseña).
+    | Sin barra final. Ejemplo: http://localhost:3000 o http://localhost:3001
+    |
+    */
+
+    'frontend_url' => rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

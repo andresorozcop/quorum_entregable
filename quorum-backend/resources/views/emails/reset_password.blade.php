@@ -102,16 +102,20 @@
                 crear una nueva contraseña.
             </p>
 
+            {{-- Enlace de reset: base desde FRONTEND_URL en .env (puerto 3000, 3001, etc.) --}}
+            @php
+                $enlaceReset = config('app.frontend_url') . '/reset?token=' . $token;
+            @endphp
             <!-- Botón principal con el enlace de reset -->
             <div class="boton-contenedor">
-                <a href="{{ url('http://localhost:3000/reset?token=' . $token) }}"
+                <a href="{{ $enlaceReset }}"
                    class="boton">
                     Restablecer contraseña
                 </a>
                 <!-- Enlace en texto plano por si el botón no carga -->
                 <p class="enlace-texto">
                     O copia y pega este enlace en tu navegador:<br>
-                    http://localhost:3000/reset?token={{ $token }}
+                    {{ $enlaceReset }}
                 </p>
             </div>
 

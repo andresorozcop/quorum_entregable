@@ -12,12 +12,12 @@ class UsuarioSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin del sistema — José Germán Estrada Clavijo
+        // Admin del sistema — correo Gmail para pruebas de recuperación de contraseña (M2)
         Usuario::create([
             'nombre'       => 'José Germán',
             'apellido'     => 'Estrada Clavijo',
             'documento'    => '12345678',
-            'correo'       => 'gestradac@sena.edu.co',
+            'correo'       => 'andresfelipeorozcopiedrahita@gmail.com',
             'password'     => Hash::make('Admin123!'),
             'rol'          => 'admin',
             'activo'       => 1,
