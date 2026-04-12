@@ -148,7 +148,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 ## Módulos
 
 - [x] **Módulo 0** — Setup inicial (Next strict + Tailwind + Lucide + SweetAlert2 + axios + recaptcha; Laravel + Sanctum + PhpSpreadsheet + mail + 2FA; CORS; migraciones MER completas; modelos con relaciones; seeders; `migrate --seed`)
-- [ ] **Módulo 1** — Autenticación (login + reCAPTCHA + bloqueo intentos; login aprendiz correo+cédula; Sanctum; 2FA configurar/verificar; páginas login y 2FA)
+- [x] **Módulo 1** — Autenticación (login + reCAPTCHA + bloqueo intentos; login aprendiz correo+cédula; Sanctum; 2FA configurar/verificar; páginas login y 2FA)
 - [ ] **Módulo 2** — Recuperación de contraseña (token, correo, `/recuperar`, `/reset`, política de contraseña en UI)
 - [ ] **Módulo 3** — Layout global (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum)
 - [ ] **Módulo 4** — Dashboard por rol (`/api/dashboard`, cards, datos reales BD)
@@ -169,6 +169,17 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - Tabla espejo `registros_asistencia_backup` para auditoría de cambios en asistencia.
 - Un solo `gestor_grupo` por ficha (validación aplicación + trigger SQL del PRD si se usa).
 - Reporte CPIC: cargar copia en memoria de `plantilla_asistencia.xlsx`; solo inyectar **horas de inasistencia** (falla = horas de sesión; parcial = horas indicadas; presente/excusa según reglas PRD §21).
+
+## Decisiones tomadas en M1
+
+- **Almacenamiento de sesión:** Sanctum stateful con cookie HTTP-only (`laravel_session`). No se usa localStorage ni tokens Bearer.
+- **CSRF:** Se llama a `GET /sanctum/csrf-cookie` antes de cada POST de login para que Sanctum emita el cookie `XSRF-TOKEN`.
+- **Estado de usuario:** Se obtiene con `GET /api/auth/me` al montar el `AuthProvider` y se guarda en React Context (`AuthContext`).
+- **Bloqueo de intentos:** 5 intentos fallidos en 15 minutos → HTTP 429. Usa el scope `recientesFallidos()` del modelo `IntentoLogin`.
+- **Flujo 2FA post-login:** Si `totp_verificado=0` → `/2fa/configurar`; si `totp_verificado=1` → `/2fa/verificar`; aprendiz → directo a `/mi-historial`.
+- **reCAPTCHA:** Obligatorio para staff. El botón de envío queda deshabilitado hasta resolver el widget. Clave real del PRD §14.1 cargada en `.env`.
+- **Mensajes de error:** Genéricos para no revelar si el correo existe. "Tu cuenta está desactivada. Comunícate con el administrador." es el único mensaje específico.
+- **Middleware Next.js:** Protege rutas del grupo `(dashboard)` revisando la cookie `laravel_session` o `XSRF-TOKEN`. Redirige al login con parámetro `redirigir`.
 
 ## Versiones instaladas (M0)
 
@@ -210,9 +221,9 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 
 ## Estado actual
 
-**Último módulo completado:** **Módulo 0 — Setup inicial** ✓ (alineado con PRD v1.0 — abril 2026)
+**Último módulo completado:** **Módulo 1 — Autenticación** ✓ (alineado con PRD v1.0 — abril 2026)
 
-**Próximo módulo:** **Módulo 1 — Autenticación**.
+**Próximo módulo:** **Módulo 2 — Recuperación de contraseña**.
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000

@@ -1,18 +1,30 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas de la API QUORUM
-// Los controladores se implementarán en los módulos correspondientes
 
 // Ruta de prueba — verifica que la API responde correctamente
 Route::get('/ping', function () {
     return response()->json([
-        'status' => 'ok',
+        'status'  => 'ok',
         'mensaje' => 'API QUORUM funcionando correctamente',
         'version' => '1.0',
     ]);
 });
 
-// Las rutas de autenticación, usuarios, fichas y asistencia
-// se agregarán en los módulos 1 al 13
+// -----------------------------------------------------------------------
+// Módulo 1 — Autenticación
+// -----------------------------------------------------------------------
+Route::prefix('auth')->group(function () {
+    // Rutas públicas — no requieren sesión activa
+    Route::post('login',          [AuthController::class, 'login']);
+    Route::post('login-aprendiz', [AuthController::class, 'loginAprendiz']);
+
+    // Rutas protegidas — requieren sesión Sanctum activa
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me',      [AuthController::class, 'me']);
+    });
+});
