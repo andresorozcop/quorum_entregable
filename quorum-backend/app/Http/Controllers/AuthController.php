@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Configurar2FARequest;
 use App\Http\Requests\LoginAprendizRequest;
 use App\Http\Requests\LoginRequest;
-use App\Http\Requests\SolicitarResetRequest;
 use App\Http\Requests\ProcesarResetRequest;
+use App\Http\Requests\SolicitarResetRequest;
+use App\Http\Requests\Verificar2FARequest;
 use App\Mail\ResetPasswordMail;
 use App\Models\IntentoLogin;
 use App\Models\TokenReset;
 use App\Models\Usuario;
 use App\Services\RecaptchaService;
+use App\Services\TotpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -93,6 +96,8 @@ class AuthController extends Controller
         $this->registrarIntento($correo, $ip, true);
         Auth::guard('web')->login($usuario, false);
         $request->session()->regenerate();
+        // Hasta pasar 2FA no se considera sesión completa para API protegidas
+        $request->session()->put('totp_sesion_ok', false);
 
         return response()->json([
             'usuario' => [
@@ -105,18 +110,25 @@ class AuthController extends Controller
                 // El frontend usa este flag para decidir si ir a /2fa/configurar o /2fa/verificar
                 'totp_configurado' => (bool) $usuario->totp_verificado,
             ],
+            'totp_sesion_completa' => false,
         ]);
     }
 
     // -------------------------------------------------------------------------
-    // Login para aprendices: correo + documento (cédula)
-    // Sin reCAPTCHA, sin 2FA
+    // Login para aprendices: correo + documento (cédula) + reCAPTCHA
+    // Sin 2FA
     // -------------------------------------------------------------------------
-    public function loginAprendiz(LoginAprendizRequest $request): JsonResponse
+    public function loginAprendiz(LoginAprendizRequest $request, RecaptchaService $recaptcha): JsonResponse
     {
         $correo    = $request->input('correo');
         $documento = $request->input('documento');
         $ip        = $request->ip();
+
+        if (!$recaptcha->verificar($request->input('recaptcha_token'), $ip)) {
+            return response()->json([
+                'message' => 'La verificación reCAPTCHA no es válida. Por favor, inténtalo de nuevo.',
+            ], 422);
+        }
 
         // Buscamos al usuario que sea aprendiz con ese correo y documento
         $usuario = Usuario::where('correo', $correo)
@@ -146,6 +158,7 @@ class AuthController extends Controller
         // Login exitoso — autenticamos en el guard web y regeneramos la sesión
         Auth::guard('web')->login($usuario, false);
         $request->session()->regenerate();
+        $request->session()->put('totp_sesion_ok', true);
 
         return response()->json([
             'usuario' => [
@@ -157,6 +170,7 @@ class AuthController extends Controller
                 'ficha_id'     => $usuario->ficha_id,
                 'avatar_color' => $usuario->avatar_color,
             ],
+            'totp_sesion_completa' => true,
         ]);
     }
 
@@ -201,6 +215,97 @@ class AuthController extends Controller
                 'activo'           => $usuario->activo,
                 'totp_configurado' => (bool) $usuario->totp_verificado,
             ],
+            'totp_sesion_completa' => $this->totpSesionCompleta($usuario, $request),
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // 2FA TOTP — configurar (QR + activación) o verificar en cada login
+    // -------------------------------------------------------------------------
+
+    public function configurar2FA(Configurar2FARequest $request, TotpService $totp): JsonResponse
+    {
+        $usuario = $request->user();
+
+        if (! $this->esStaffConTotpObligatorio($usuario)) {
+            return response()->json([
+                'message' => 'Esta acción no aplica para tu tipo de cuenta.',
+            ], 403);
+        }
+
+        if ($usuario->totp_verificado) {
+            return response()->json([
+                'message' => 'El doble factor ya está activado. Usa la verificación en cada inicio de sesión.',
+            ], 422);
+        }
+
+        // Fase preparar: devolver URL otpauth y secreto (generar secreto si no existe)
+        if (! $request->filled('codigo')) {
+            if (empty($usuario->totp_secret)) {
+                $secreto = $totp->generarSecreto();
+                $usuario->update(['totp_secret' => $secreto]);
+                $usuario->refresh();
+            }
+
+            return response()->json([
+                'otpauth_url'    => $totp->urlOtpAuth($usuario->correo, $usuario->totp_secret),
+                'secreto_manual' => $usuario->totp_secret,
+            ]);
+        }
+
+        // Fase confirmar: validar código y activar 2FA
+        if (empty($usuario->totp_secret)) {
+            return response()->json([
+                'message' => 'Primero solicita los datos del código QR.',
+            ], 422);
+        }
+
+        if (! $totp->verificar($usuario->totp_secret, $request->input('codigo'))) {
+            return response()->json([
+                'message' => 'El código no es válido. Verifica la hora de tu dispositivo e inténtalo de nuevo.',
+            ], 422);
+        }
+
+        $usuario->update(['totp_verificado' => 1]);
+        $request->session()->put('totp_sesion_ok', true);
+
+        return response()->json([
+            'message' => 'Autenticación en dos pasos activada correctamente.',
+        ]);
+    }
+
+    public function verificar2FA(Verificar2FARequest $request, TotpService $totp): JsonResponse
+    {
+        $usuario = $request->user();
+
+        if (! $this->esStaffConTotpObligatorio($usuario)) {
+            return response()->json([
+                'message' => 'Esta acción no aplica para tu tipo de cuenta.',
+            ], 403);
+        }
+
+        if (! $usuario->totp_verificado) {
+            return response()->json([
+                'message' => 'Primero debes configurar la autenticación en dos pasos.',
+            ], 422);
+        }
+
+        if (empty($usuario->totp_secret)) {
+            return response()->json([
+                'message' => 'Tu cuenta no tiene un secreto 2FA válido. Contacta al administrador.',
+            ], 422);
+        }
+
+        if (! $totp->verificar($usuario->totp_secret, $request->input('codigo'))) {
+            return response()->json([
+                'message' => 'El código no es válido. Verifica la hora de tu dispositivo e inténtalo de nuevo.',
+            ], 422);
+        }
+
+        $request->session()->put('totp_sesion_ok', true);
+
+        return response()->json([
+            'message' => 'Verificación correcta.',
         ]);
     }
 
@@ -310,5 +415,27 @@ class AuthController extends Controller
             'ip'      => $ip,
             'exitoso' => $exitoso ? 1 : 0,
         ]);
+    }
+
+    // Staff con contraseña (no aprendiz) — debe usar 2FA
+    private function esStaffConTotpObligatorio(?Usuario $usuario): bool
+    {
+        return $usuario !== null
+            && $usuario->rol !== 'aprendiz'
+            && ! empty($usuario->password);
+    }
+
+    // ¿Puede usar el dashboard y APIs que exigen 2FA en esta sesión?
+    private function totpSesionCompleta(Usuario $usuario, Request $request): bool
+    {
+        if ($usuario->rol === 'aprendiz') {
+            return true;
+        }
+
+        if (empty($usuario->password)) {
+            return false;
+        }
+
+        return (bool) $request->session()->get('totp_sesion_ok');
     }
 }
