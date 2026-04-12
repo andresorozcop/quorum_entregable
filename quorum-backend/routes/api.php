@@ -28,3 +28,14 @@ Route::prefix('auth')->group(function () {
         Route::get('me',      [AuthController::class, 'me']);
     });
 });
+
+// -----------------------------------------------------------------------
+// Módulo 2 — Recuperación de contraseña
+// throttle:5,1 → máximo 5 solicitudes por minuto por IP (protección anti-spam)
+// -----------------------------------------------------------------------
+Route::prefix('auth')->middleware('throttle:5,1')->group(function () {
+    // Solicitar enlace de recuperación por correo
+    Route::post('recuperar', [AuthController::class, 'solicitarReset']);
+    // Procesar el cambio de contraseña con el token recibido
+    Route::post('reset',     [AuthController::class, 'procesarReset']);
+});

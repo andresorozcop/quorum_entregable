@@ -4,13 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginAprendizRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\SolicitarResetRequest;
+use App\Http\Requests\ProcesarResetRequest;
+use App\Mail\ResetPasswordMail;
 use App\Models\IntentoLogin;
+use App\Models\TokenReset;
 use App\Models\Usuario;
 use App\Services\RecaptchaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 // Controlador de autenticación — maneja los dos flujos de login y el logout
 class AuthController extends Controller
@@ -195,6 +201,102 @@ class AuthController extends Controller
                 'activo'           => $usuario->activo,
                 'totp_configurado' => (bool) $usuario->totp_verificado,
             ],
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Solicitar reset — Módulo 2 Recuperación de contraseña
+    // El usuario ingresa su correo; si existe y no es aprendiz, se envía el link
+    // Siempre se retorna el mismo mensaje para no revelar si el correo existe
+    // -------------------------------------------------------------------------
+    public function solicitarReset(SolicitarResetRequest $request): JsonResponse
+    {
+        $correo  = $request->input('correo');
+        $mensaje = ['message' => 'Si el correo existe, recibirás las instrucciones en tu bandeja de entrada.'];
+
+        // Buscamos el usuario — sin revelar si existe o no en caso de falla
+        $usuario = Usuario::where('correo', $correo)->first();
+
+        // No enviamos correo si: no existe, está inactivo o es aprendiz (sin contraseña)
+        if (!$usuario || $usuario->activo == 0 || empty($usuario->password)) {
+            return response()->json($mensaje);
+        }
+
+        try {
+            // Invalidamos todos los tokens anteriores del usuario antes de crear uno nuevo
+            TokenReset::where('usuario_id', $usuario->id)->update(['usado' => 1]);
+
+            // Generamos un token seguro de 64 caracteres hexadecimales
+            $token = bin2hex(random_bytes(32));
+
+            // Guardamos el nuevo token con expiración de 1 hora
+            TokenReset::create([
+                'usuario_id' => $usuario->id,
+                'token'      => $token,
+                'expira_en'  => now()->addHour(),
+                'usado'      => 0,
+            ]);
+
+            // Enviamos el correo con el enlace de recuperación
+            Mail::to($usuario->correo)->send(
+                new ResetPasswordMail($usuario->nombre, $token)
+            );
+        } catch (\Throwable $e) {
+            // Si falla el envío del correo, registramos el error pero no lo mostramos al usuario
+            // El token sigue válido; el usuario puede reintentar
+            \Log::error('Error al enviar correo de reset: ' . $e->getMessage());
+        }
+
+        // Siempre retornamos el mismo mensaje (no revelamos si el correo existe)
+        return response()->json($mensaje);
+    }
+
+    // -------------------------------------------------------------------------
+    // Procesar reset — Módulo 2 Recuperación de contraseña
+    // Verifica el token y actualiza la contraseña si todo es válido
+    // -------------------------------------------------------------------------
+    public function procesarReset(ProcesarResetRequest $request): JsonResponse
+    {
+        $token       = $request->input('token');
+        $nuevaPass   = $request->input('password');
+
+        // Buscamos el token en la base de datos
+        $tokenReset = TokenReset::where('token', $token)->first();
+
+        // Verificamos que el token exista
+        if (!$tokenReset) {
+            return response()->json([
+                'message' => 'El enlace de recuperación es inválido.',
+            ], 422);
+        }
+
+        // Verificamos que el token no haya sido usado antes
+        if ($tokenReset->usado == 1) {
+            return response()->json([
+                'message' => 'Este enlace ya fue utilizado. Solicita uno nuevo si lo necesitas.',
+            ], 422);
+        }
+
+        // Verificamos que el token no haya expirado (máximo 1 hora)
+        if ($tokenReset->estaExpirado()) {
+            return response()->json([
+                'message' => 'El enlace ha expirado. Solicita uno nuevo.',
+            ], 422);
+        }
+
+        // Actualizamos la contraseña y marcamos el token como usado en una sola transacción
+        DB::transaction(function () use ($tokenReset, $nuevaPass) {
+            // Actualizamos la contraseña del usuario con hash bcrypt
+            $tokenReset->usuario()->update([
+                'password' => bcrypt($nuevaPass),
+            ]);
+
+            // Marcamos el token como usado para que no pueda usarse de nuevo
+            $tokenReset->update(['usado' => 1]);
+        });
+
+        return response()->json([
+            'message' => 'Contraseña actualizada correctamente. Ya puedes iniciar sesión.',
         ]);
     }
 

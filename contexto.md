@@ -149,7 +149,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 
 - [x] **Módulo 0** — Setup inicial (Next strict + Tailwind + Lucide + SweetAlert2 + axios + recaptcha; Laravel + Sanctum + PhpSpreadsheet + mail + 2FA; CORS; migraciones MER completas; modelos con relaciones; seeders; `migrate --seed`)
 - [x] **Módulo 1** — Autenticación (login + reCAPTCHA + bloqueo intentos; login aprendiz correo+cédula; Sanctum; 2FA configurar/verificar; páginas login y 2FA)
-- [ ] **Módulo 2** — Recuperación de contraseña (token, correo, `/recuperar`, `/reset`, política de contraseña en UI)
+- [x] **Módulo 2** — Recuperación de contraseña (token, correo, `/recuperar`, `/reset`, política de contraseña en UI)
 - [ ] **Módulo 3** — Layout global (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum)
 - [ ] **Módulo 4** — Dashboard por rol (`/api/dashboard`, cards, datos reales BD)
 - [ ] **Módulo 5** — Gestión de fichas Admin (CRUD, jornadas, horarios, instructores/gestor único, detalle, import Excel aprendices)
@@ -215,6 +215,18 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - El login de aprendices (correo + cédula) se valida **manualmente** en el controlador, no vía `Auth::attempt()`.
 - Modelo `FichaInstructor` creado explícitamente (existía la tabla pero no el modelo en M0).
 
+## Decisiones tomadas en M2
+
+- **Flujo de reset stateless:** Los endpoints `POST /api/auth/recuperar` y `POST /api/auth/reset` son públicos y no requieren sesión Sanctum. Se llama a `GET /sanctum/csrf-cookie` antes de cada POST por consistencia con M1.
+- **Mensaje siempre genérico:** `solicitarReset()` retorna `200` con el mismo mensaje sin importar si el correo existe, está inactivo o es aprendiz. Evita enumeración de cuentas.
+- **Aprendices excluidos del reset:** Si el correo corresponde a un usuario con `password = null` (aprendiz), se devuelve el mensaje genérico sin enviar correo. No se revela el motivo.
+- **Invalidación de tokens previos:** Antes de crear un nuevo token se marcan como `usado=1` todos los tokens anteriores del mismo usuario, evitando tokens huérfanos válidos.
+- **Token de 64 chars:** Generado con `bin2hex(random_bytes(32))` — cabe en `VARCHAR(100)` de `tokens_reset.token`.
+- **`totp_secret` no se limpia en reset:** Se mantiene para no obligar a reconfigurar 2FA. Documentado para revisión cuando se complete el módulo 2FA completo.
+- **throttle:5,1 en rutas de reset:** Máximo 5 solicitudes por minuto por IP para protección anti-spam.
+- **Suspense en `/reset`:** `useSearchParams()` de Next.js App Router requiere que el componente que lo usa esté envuelto en `<Suspense>`. Se usa un componente interno `ResetForm` para aislar el boundary.
+- **Correo SMTP:** Usa la config Gmail App Password del `.env` (`MAIL_SCHEME=tls`, puerto 587). Verificado en `.env` existente.
+
 ## Problemas resueltos
 
 - Error `Tablespace already exists` al correr `migrate:fresh` — solucionado eliminando y recreando la BD desde PHP.
@@ -222,9 +234,9 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 
 ## Estado actual
 
-**Último módulo completado:** **Módulo 1 — Autenticación** ✓ (alineado con PRD v1.0 — abril 2026)
+**Último módulo completado:** **Módulo 2 — Recuperación de contraseña** ✓ (alineado con PRD v1.0 — abril 2026)
 
-**Próximo módulo:** **Módulo 2 — Recuperación de contraseña**.
+**Próximo módulo:** **Módulo 3 — Layout global** (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum).
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000
