@@ -228,6 +228,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Correo SMTP:** Usa la config Gmail App Password del `.env` (`MAIL_SCHEME=tls`, puerto 587). Verificado en `.env` existente.
 - **URL del front en correos:** Variable `FRONTEND_URL` en `.env` del backend (expuesta como `config('app.frontend_url')`). El correo de reset usa `{FRONTEND_URL}/reset?token=...` para que coincida con el puerto real (3000, 3001, etc.).
 - **Admin de prueba (desarrollo):** el seeder usa `andresfelipeorozcopiedrahita@gmail.com` para recibir correos de recuperación en la misma cuenta SMTP del `.env`. Si la BD ya existía con el correo anterior, ejecutar `php artisan migrate:fresh --seed` o actualizar manualmente la fila en `usuarios`.
+- **Instructor de prueba (desarrollo):** el seeder usa `documentosorozco25@gmail.com` (segundo buzón Gmail) para probar recuperación de contraseña y login sin depender solo del admin.
 
 ## Problemas resueltos
 
@@ -250,7 +251,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 |-----|--------|------------|-----------|
 | admin | andresfelipeorozcopiedrahita@gmail.com | Admin123! | 12345678 |
 | coordinador | sbecerra@sena.edu.co | Admin123! | 87654321 |
-| instructor | clopez@sena.edu.co | Admin123! | 11111111 |
+| instructor | documentosorozco25@gmail.com | Admin123! | 11111111 |
 | gestor_grupo | mgomez@sena.edu.co | Admin123! | 22222222 |
 | aprendiz | andres@aprendiz.sena.edu.co | — (usa cédula: 33333333) | 33333333 |
 

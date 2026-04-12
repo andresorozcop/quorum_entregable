@@ -28,26 +28,31 @@ API disponible en: http://localhost:8000
 ### Frontend (Next.js)
 ```bash
 cd quorum-frontend
-cp .env.local.example .env.local   # Configurar claves reCAPTCHA
+# Crear .env.local con al menos: NEXT_PUBLIC_API_URL=http://localhost:8000
 npm install
 npm run dev
 ```
-App disponible en: http://localhost:3000
+App disponible en: http://localhost:3000 (o el puerto que muestre la consola; alinear `FRONTEND_URL` en el `.env` del backend).
 
 ## Usuarios de prueba
 
-| Rol | Correo | Contraseña |
-|-----|--------|------------|
-| Administrador | admin@quorum.sena.edu.co | Admin1234* |
-| Coordinador | coordinador@quorum.sena.edu.co | Coord1234* |
-| Instructor | instructor@quorum.sena.edu.co | Inst1234* |
-| Aprendiz | aprendiz@quorum.sena.edu.co | cédula: 1000000004 |
+Datos del seeder [`UsuarioSeeder.php`](quorum-backend/database/seeders/UsuarioSeeder.php). Contraseña staff: **`Admin123!`**. Lista detallada en [`contexto.md`](contexto.md).
+
+| Rol | Correo | Notas |
+|-----|--------|--------|
+| Administrador | andresfelipeorozcopiedrahita@gmail.com | Gmail de pruebas (M2) |
+| Coordinador | sbecerra@sena.edu.co | |
+| Instructor | documentosorozco25@gmail.com | Gmail de pruebas (M2) |
+| Gestor de grupo | mgomez@sena.edu.co | |
+| Aprendiz | andres@aprendiz.sena.edu.co | Sin contraseña: usa cédula **33333333** |
+
+> El PRD institucional puede listar otros correos (`@sena.edu.co`); en desarrollo el seeder usa Gmail en admin e instructor para probar correo real y recuperación de contraseña.
 
 ## Estado del Proyecto
 
 - [x] Módulo 0 — Setup inicial
-- [ ] Módulo 1 — Autenticación
-- [ ] Módulo 2 — Recuperación de contraseña
+- [x] Módulo 1 — Autenticación
+- [x] Módulo 2 — Recuperación de contraseña
 - [ ] Módulo 3 — Layout global
 - [ ] Módulo 4 — Dashboard
 - [ ] Módulo 5 — Gestión de fichas

@@ -6,8 +6,8 @@ use App\Models\Usuario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-// Usuarios de prueba — exactamente los definidos en el PRD §5 (Seeders) y §22 (README)
-// Contraseña para todos los que tienen login: Admin123!
+// Usuarios de prueba — basados en PRD §5 / §22; admin e instructor usan Gmail real para pruebas (M2)
+// Contraseña staff: Admin123!
 class UsuarioSeeder extends Seeder
 {
     public function run(): void
@@ -36,12 +36,12 @@ class UsuarioSeeder extends Seeder
             'avatar_color' => '#1565C0',
         ]);
 
-        // Instructor — Carlos López Martínez
+        // Instructor — Carlos López Martínez (Gmail de pruebas para M2 / correo real)
         Usuario::create([
             'nombre'       => 'Carlos',
             'apellido'     => 'López Martínez',
             'documento'    => '11111111',
-            'correo'       => 'clopez@sena.edu.co',
+            'correo'       => 'documentosorozco25@gmail.com',
             'password'     => Hash::make('Admin123!'),
             'rol'          => 'instructor',
             'activo'       => 1,
