@@ -172,14 +172,15 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 
 ## Decisiones tomadas en M1
 
-- **Almacenamiento de sesión:** Sanctum stateful con cookie HTTP-only (`laravel_session`). No se usa localStorage ni tokens Bearer.
+- **Almacenamiento de sesión:** Sanctum stateful con cookie HTTP-only. Por defecto con `APP_NAME=QUORUM` la cookie se llama `quorum-session` (ver `config/session.php` / `SESSION_COOKIE`). Tras validar credenciales, `Auth::guard('web')->login()`. No se usa localStorage ni tokens Bearer.
 - **CSRF:** Se llama a `GET /sanctum/csrf-cookie` antes de cada POST de login para que Sanctum emita el cookie `XSRF-TOKEN`.
 - **Estado de usuario:** Se obtiene con `GET /api/auth/me` al montar el `AuthProvider` y se guarda en React Context (`AuthContext`).
 - **Bloqueo de intentos:** 5 intentos fallidos en 15 minutos → HTTP 429. Usa el scope `recientesFallidos()` del modelo `IntentoLogin`.
 - **Flujo 2FA post-login:** Si `totp_verificado=0` → `/2fa/configurar`; si `totp_verificado=1` → `/2fa/verificar`; aprendiz → directo a `/mi-historial`.
 - **reCAPTCHA:** Obligatorio para staff. El botón de envío queda deshabilitado hasta resolver el widget. Clave real del PRD §14.1 cargada en `.env`.
 - **Mensajes de error:** Genéricos para no revelar si el correo existe. "Tu cuenta está desactivada. Comunícate con el administrador." es el único mensaje específico.
-- **Middleware Next.js:** Protege rutas del grupo `(dashboard)` revisando la cookie `laravel_session` o `XSRF-TOKEN`. Redirige al login con parámetro `redirigir`.
+- **Middleware Next.js:** Protege rutas del grupo `(dashboard)` solo si existe la cookie de sesión del backend (`NEXT_PUBLIC_SESSION_COOKIE` en el front, por defecto `quorum-session`). No se usa `XSRF-TOKEN` como señal de login. Redirige al login con parámetro `redirigir`.
+- **CORS y Sanctum en dev:** Si Next usa el puerto **3001** (porque 3000 está ocupado), hay que permitir ese origen en `config/cors.php` y en `SANCTUM_STATEFUL_DOMAINS`; si no, `GET /api/auth/me` devuelve 401 porque el navegador no trata la SPA como stateful o CORS no refleja el `Origin` correcto.
 
 ## Versiones instaladas (M0)
 

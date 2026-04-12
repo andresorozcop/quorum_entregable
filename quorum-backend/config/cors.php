@@ -19,8 +19,13 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // Solo permitimos peticiones desde el frontend Next.js en desarrollo
-    'allowed_origins' => ['http://localhost:3000'],
+    // Front Next en desarrollo (3001 cuando 3000 está ocupado; 127.0.0.1 por si se usa así)
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+    ],
 
     'allowed_origins_patterns' => [],
 

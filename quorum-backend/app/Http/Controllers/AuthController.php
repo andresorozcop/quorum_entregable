@@ -9,6 +9,7 @@ use App\Models\Usuario;
 use App\Services\RecaptchaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 // Controlador de autenticación — maneja los dos flujos de login y el logout
@@ -64,6 +65,15 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Aprendices u otros sin contraseña no pueden usar este flujo (evita Hash::check con null)
+        if (empty($usuario->password)) {
+            $this->registrarIntento($correo, $ip, false);
+
+            return response()->json([
+                'message' => 'Las credenciales no son correctas.',
+            ], 401);
+        }
+
         // Verificamos que la contraseña sea correcta
         if (!Hash::check($request->input('password'), $usuario->password)) {
             $this->registrarIntento($correo, $ip, false);
@@ -73,8 +83,9 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Login exitoso — registramos el intento y regeneramos la sesión
+        // Login exitoso — registramos el intento, autenticamos en el guard web y regeneramos sesión
         $this->registrarIntento($correo, $ip, true);
+        Auth::guard('web')->login($usuario, false);
         $request->session()->regenerate();
 
         return response()->json([
@@ -126,7 +137,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Login exitoso — regeneramos la sesión
+        // Login exitoso — autenticamos en el guard web y regeneramos la sesión
+        Auth::guard('web')->login($usuario, false);
         $request->session()->regenerate();
 
         return response()->json([
@@ -147,7 +159,8 @@ class AuthController extends Controller
     // -------------------------------------------------------------------------
     public function logout(Request $request): JsonResponse
     {
-        // Invalidamos la sesión y regeneramos el token CSRF
+        // Cerramos sesión en el guard, invalidamos la sesión y renovamos el token CSRF
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -162,6 +175,12 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $usuario = $request->user();
+
+        if (!$usuario) {
+            return response()->json([
+                'message' => 'No autenticado.',
+            ], 401);
+        }
 
         return response()->json([
             'usuario' => [
