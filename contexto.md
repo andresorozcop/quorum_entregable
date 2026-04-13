@@ -104,7 +104,7 @@
 │   ├── app/Services/         # Asistencia, ReporteExcel, Importacion, Totp, etc.
 │   ├── database/migrations/, seeders/, quorum.sql
 │   ├── routes/api.php
-│   └── storage/plantilla_asistencia.xlsx
+│   └── storage/app/plantilla_asistencia.xlsx
 ├── contexto.md
 └── README.md
 ```
@@ -115,7 +115,7 @@
 
 ## API backend (referencia)
 
-Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. **Usuarios (M6):** `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}`, `POST /api/usuarios/{id}/reactivar` (admin). **Asistencia (M7–M8):** `POST /api/asistencia/iniciar-sesion`, `POST /api/asistencia/sesiones/{sesion}/guardar`, `PUT /api/asistencia/registros/{registro}` (corrección con sesión cerrada; instructor dueño de la sesión), `GET /api/asistencia/historial/{ficha}` (query: `desde`, `hasta`, `tipo[]`, `jornada_ficha_id` opcional; admin/coordinador/instructor/gestor; `FichaPolicy::view`). **Aprendiz (M9):** `GET /api/mi-historial` (`auth:sanctum` **sin** `EnsureTotpSessionOk`; solo `rol=aprendiz`; query con `aprendiz_id`/`aprendiz`/`usuario_id`/`user_id` → 403). **Coordinador (M10):** bajo `auth:sanctum` + `EnsureTotpSessionOk` + middleware `coordinador_o_admin`: `GET /api/coordinador/fichas` (listado; por defecto `activo=1`), `GET /api/coordinador/asistencia/ficha/{ficha}` (matriz, misma lógica M8), `GET /api/coordinador/aprendices/buscar?q=`, `GET /api/coordinador/aprendices/{aprendiz}/historial` (misma forma que M9; solo `aprendiz` activo), `GET /api/coordinador/estadisticas?centro_id=` opcional. **Catálogo centros:** `GET /api/centros-formacion` también permitido a `coordinador` (solo lectura). Pendiente M11: Excel CPIC; M12: CRUD días festivos — detalle en PRD sección 12.
+Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. **Usuarios (M6):** `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}`, `POST /api/usuarios/{id}/reactivar` (admin). **Asistencia (M7–M8):** `POST /api/asistencia/iniciar-sesion`, `POST /api/asistencia/sesiones/{sesion}/guardar`, `PUT /api/asistencia/registros/{registro}` (corrección con sesión cerrada; instructor dueño de la sesión), `GET /api/asistencia/historial/{ficha}` (query: `desde`, `hasta`, `tipo[]`, `jornada_ficha_id` opcional; admin/coordinador/instructor/gestor; `FichaPolicy::view`). **Aprendiz (M9):** `GET /api/mi-historial` (`auth:sanctum` **sin** `EnsureTotpSessionOk`; solo `rol=aprendiz`; query con `aprendiz_id`/`aprendiz`/`usuario_id`/`user_id` → 403). **Coordinador (M10):** bajo `auth:sanctum` + `EnsureTotpSessionOk` + middleware `coordinador_o_admin`: `GET /api/coordinador/fichas` (listado; por defecto `activo=1`), `GET /api/coordinador/asistencia/ficha/{ficha}` (matriz, misma lógica M8), `GET /api/coordinador/aprendices/buscar?q=`, `GET /api/coordinador/aprendices/{aprendiz}/historial` (misma forma que M9; solo `aprendiz` activo), `GET /api/coordinador/estadisticas?centro_id=` opcional. **Catálogo centros:** `GET /api/centros-formacion` también permitido a `coordinador` (solo lectura). **Reporte Excel (M11):** `GET /api/reportes/excel/{ficha}?desde=Y-m-d&hasta=Y-m-d` — `auth:sanctum` + `EnsureTotpSessionOk` + `FichaPolicy::view` (admin, coordinador, instructor, gestor); descarga binaria; plantilla `storage/app/plantilla_asistencia.xlsx` solo lectura; salida temporal en `storage/app/temp/` y `deleteFileAfterSend`. M12: CRUD días festivos — detalle en PRD sección 12.
 
 ## Variables de entorno (nombres; valores solo en `.env` local)
 
@@ -158,7 +158,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - [x] **Módulo 8** — Historial / matriz de asistencia (filtros, edición solo instructor dueño del día, scroll horizontal)
 - [x] **Módulo 9** — Vista aprendiz (`mi-historial`, totales, solo lectura, aislamiento)
 - [x] **Módulo 10** — Vista coordinador (pestañas Por Ficha / Por Aprendiz / Estadísticas, filtros cascada, Excel)
-- [ ] **Módulo 11** — Reporte Excel CPIC (PhpSpreadsheet, plantilla en memoria, días hábiles, inyección coordenadas según PRD §21)
+- [x] **Módulo 11** — Reporte Excel CPIC (PhpSpreadsheet, plantilla en memoria, días hábiles, inyección coordenadas según PRD §21)
 - [ ] **Módulo 12** — Configuración y festivos Admin (config clave-valor, CRUD festivos, actividad, cambio contraseña propia)
 - [ ] **Módulo 13** — Perfil usuario (lectura, mensaje contacto admin, cambio contraseña, preferencias accesibilidad en localStorage)
 
@@ -324,13 +324,23 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Historial matriz:** query opcional `jornada_ficha_id` validada con `exists` en `jornadas_ficha` scoped a la ficha; `AsistenciaService::historialMatriz` filtra sesiones por `horario.jornada_ficha_id`.
 - **Listado fichas DRY:** `FichaService::fichasListadoQuery` compartido entre `FichaController@index` y `CoordinadorController@fichas` (este último fuerza `activo=1` por defecto si no viene en query).
 - **Estadísticas:** `CoordinadorService::estadisticasPorFicha` — por ficha activa: aprendices activos, conteo de `sesiones`, `%` por horas (misma fórmula agregada que M9); orden por defecto peor % primero.
-- **Front:** `/coordinador` — admin y coordinador; `MatrizAsistencia` con `soloLectura`; resumen M9 extraído a `ResumenTotalesHistorial` + `ListaRegistrosHistorialAprendiz`; botón Excel → SweetAlert “Módulo 11”; Sidebar: “Vista coordinador” para admin y coordinador.
+- **Front:** `/coordinador` — admin y coordinador; `MatrizAsistencia` con `soloLectura`; resumen M9 extraído a `ResumenTotalesHistorial` + `ListaRegistrosHistorialAprendiz`; Sidebar: “Vista coordinador” para admin y coordinador.
+
+## Decisiones tomadas en M11
+
+- **API:** `GET /api/reportes/excel/{ficha}` con query obligatoria `desde` y `hasta` (`Y-m-d`); `DescargarReporteExcelRequest`; `ReporteController@descargarExcel` + `ReporteExcelService`; autorización `FichaPolicy::view` (no está bajo `coordinador_o_admin` para permitir instructor/gestor).
+- **Sesiones en el Excel:** solo `estado = cerrada`, en rango de fechas, excluyendo domingos y fechas en `dias_festivos` activos (tras cargar, se filtra en colección).
+- **Plantilla:** `storage/app/plantilla_asistencia.xlsx`; carga con `IOFactory::load`; nunca se escribe sobre la plantilla; archivo generado en `storage/app/temp/` y descarga con `deleteFileAfterSend(true)`.
+- **Nombre archivo:** `reporte_{numero_ficha}_{Y-m}.xlsx` con `Y-m` en zona `America/Bogota` (como PRD §21).
+- **Cabecera D6:** nombre real del centro (`centro.nombre`), no texto fijo “CPIC”.
+- **Instructores A5:** gestores (`es_gestor`) primero, luego resto ordenado por apellido/nombre; nombres separados por comas.
+- **Front:** `components/reportes/BtnDescargarExcel.tsx` (modal de fechas, spinner, blob con `responseType: 'blob'`); integrado en `/asistencia/historial` y pestaña “Por ficha” de `/coordinador`; servicio `services/reportes.service.ts`.
 
 ## Estado actual
 
-**Último módulo completado:** **Módulo 10 — Vista coordinador (`/coordinador`)** ✓ (alineado con PRD v1.0 — abril 2026)
+**Último módulo completado:** **Módulo 11 — Reporte Excel CPIC** ✓ (alineado con PRD v1.0 — abril 2026, sección 21)
 
-**Próximo módulo:** **Módulo 11 — Reporte Excel CPIC**.
+**Próximo módulo:** **Módulo 12 — Configuración y festivos**.
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000

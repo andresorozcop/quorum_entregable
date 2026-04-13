@@ -8,6 +8,7 @@ use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FichaController;
 use App\Http\Controllers\ProgramaFormacionController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureTotpSessionOk;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,9 @@ Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function 
 
     // Módulo 8 — Historial / matriz por ficha (admin, coordinador, instructor, gestor)
     Route::get('/asistencia/historial/{ficha}', [AsistenciaController::class, 'historial']);
+
+    // Módulo 11 — Reporte Excel CPIC (mismos roles que historial; FichaPolicy::view)
+    Route::get('/reportes/excel/{ficha}', [ReporteController::class, 'descargarExcel']);
 
     // Módulo 10 — Panel coordinador (solo admin y coordinador)
     Route::middleware('coordinador_o_admin')->prefix('coordinador')->group(function () {
