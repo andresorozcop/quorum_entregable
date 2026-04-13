@@ -115,7 +115,7 @@
 
 ## API backend (referencia)
 
-Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. Pendientes M6+: usuarios; asistencia; `mi-historial`; reportes; días festivos — detalle en PRD sección 12.
+Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. **Usuarios (M6):** `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}`, `POST /api/usuarios/{id}/reactivar` (admin; mismo middleware Sanctum + TOTP que dashboard/fichas). Pendientes M7+: asistencia; `mi-historial`; reportes; días festivos — detalle en PRD sección 12.
 
 ## Variables de entorno (nombres; valores solo en `.env` local)
 
@@ -153,7 +153,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - [x] **Módulo 3** — Layout global (Sidebar por rol, Headbar, Avatar, hamburguesa, accesibilidad, protección Sanctum)
 - [x] **Módulo 4** — Dashboard por rol (`/api/dashboard`, cards, datos reales BD)
 - [x] **Módulo 5** — Gestión de fichas Admin (CRUD, jornadas, horarios, instructores/gestor único, detalle, import Excel aprendices)
-- [ ] **Módulo 6** — Gestión de usuarios Admin (CRUD, filtros, soft delete, admin no auto-borra)
+- [x] **Módulo 6** — Gestión de usuarios Admin (CRUD, filtros, soft delete, admin no auto-borra)
 - [ ] **Módulo 7** — Tomar asistencia (Instructor/Gestor: sesión, validaciones festivo/día, lista completa, parcial con horas, barra progreso, marcar todos presentes)
 - [ ] **Módulo 8** — Historial / matriz de asistencia (filtros, edición solo instructor dueño del día, scroll horizontal)
 - [ ] **Módulo 9** — Vista aprendiz (`mi-historial`, totales, solo lectura, aislamiento)
@@ -250,7 +250,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Accesibilidad:** `--font-scale` en `:root` de `globals.css`; `html { font-size: calc(16px * var(--font-scale)) }`. Alto contraste: clase `high-contrast` en `<html>` con `filter: contrast(1.5)`. Panel en Headbar con botones +/- (rango 0.9–1.3) y toggle switch.
 - **Logout:** confirmación con SweetAlert2 antes de llamar al servicio.
 - **globals.css:** eliminado bloque `@media (prefers-color-scheme: dark)` que sobreescribía los colores de la paleta SENA.
-- **Páginas placeholder:** 3 restantes (`/usuarios`, `/asistencia/tomar`, `/asistencia/historial`); `/fichas` implementado en M5; `/dashboard` en M4.
+- **Páginas placeholder:** 2 restantes (`/asistencia/tomar`, `/asistencia/historial`); `/usuarios` implementado en M6; `/fichas` en M5; `/dashboard` en M4.
 
 ## Decisiones tomadas en M4
 
@@ -265,7 +265,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Backend:** `pragmarx/google2fa` + `App\Services\TotpService`. `POST /api/auth/2fa/configurar` sin `codigo` devuelve `otpauth_url` y `secreto_manual`; con `codigo` valida y pone `totp_verificado=1` y `totp_sesion_ok` en sesión. `POST /api/auth/2fa/verificar` con `codigo` para usuarios ya configurados.
 - **Sesión:** Tras login staff, `totp_sesion_ok=false`; tras configurar o verificar TOTP, `totp_sesion_ok=true`. Aprendiz: `totp_sesion_ok=true` al iniciar sesión.
 - **GET /api/auth/me:** Incluye `totp_sesion_completa` (boolean). El `AuthContext` guarda `totpSesionCompleta` para el layout.
-- **Middleware `EnsureTotpSessionOk`:** aplicado a `GET /api/dashboard` y al grupo de rutas del **Módulo 5** (fichas, catálogos centro/programa, instructores-disponibles, import); staff sin 2FA completado en sesión recibe 403.
+- **Middleware `EnsureTotpSessionOk`:** aplicado a `GET /api/dashboard` y al grupo de rutas del **Módulo 5** (fichas, catálogos centro/programa, instructores-disponibles, import) y **Módulo 6** (`/api/usuarios`); staff sin 2FA completado en sesión recibe 403.
 - **Frontend:** `qrcode` (npm) genera el QR desde `otpauth_url`; `services/totp.service.ts`; layout `(dashboard)` redirige a `/2fa/configurar` o `/2fa/verificar` si el staff aún no completa TOTP en la sesión.
 
 ## Decisiones tomadas en M5
@@ -280,11 +280,23 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Soft delete ficha:** `DELETE /api/fichas/{id}` pone `activo=0` (no borrado físico).
 - **Front:** `components/ui/DataTable.tsx`, `components/fichas/FichaFormulario.tsx`; páginas `/fichas`, `/fichas/nueva`, `/fichas/[id]` con pestañas; modal import con barra de progreso (`onUploadProgress`); SweetAlert2 al desactivar ficha.
 
+## Decisiones tomadas en M6
+
+- **API usuarios:** `UsuarioController` + `StoreUsuarioRequest` / `UpdateUsuarioRequest`; `UsuarioPolicy` (solo `admin`); rutas en grupo `auth:sanctum` + `EnsureTotpSessionOk`.
+- **Listado:** filtros `rol`, `busqueda` (nombre, apellido, documento, correo), `activo` opcional; paginación como fichas.
+- **Alta staff:** contraseña con política PRD; `TotpService::generarSecreto()`, `totp_verificado=0`; `ficha_id` null.
+- **Alta aprendiz:** `password` y `totp_secret` null; `ficha_id` obligatorio (ficha activa).
+- **Unicidad:** correo y documento únicos en toda la tabla (incl. inactivos), alineado con importación de aprendices.
+- **DELETE:** si `activo=1` → soft (`activo=0`); si ya `activo=0` → borrado físico; FK `RESTRICT` → 422 con mensaje amigable. El admin **no** puede desactivarse ni borrarse a sí mismo (422).
+- **Reactivar:** `POST /api/usuarios/{id}/reactivar` pone `activo=1` si estaba inactivo; si ya estaba activo → 422. UI: botón Reactivar con SweetAlert2 (mismo patrón que reactivar ficha).
+- **Modelo `Usuario`:** `creado_en` y `actualizado_en` en `$fillable` para actualizar marcas de tiempo desde el controlador.
+- **Front:** `/usuarios` solo admin (`router.replace` si no); `DataTable` + `components/usuarios/UsuarioModal.tsx`; debounce búsqueda ~300 ms; SweetAlert2 confirmar desactivar y doble confirmación para eliminar permanente; política de contraseña compartida en `lib/politicaContrasena.ts` (también usada desde `/reset`).
+
 ## Estado actual
 
-**Último módulo completado:** **Módulo 5 — Gestión de fichas (Admin)** ✓ (alineado con PRD v1.0 — abril 2026)
+**Último módulo completado:** **Módulo 6 — Gestión de usuarios (Admin)** ✓ (alineado con PRD v1.0 — abril 2026)
 
-**Próximo módulo:** **Módulo 6 — Gestión de usuarios (Admin)**.
+**Próximo módulo:** **Módulo 7 — Tomar asistencia (Instructor / Gestor)**.
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000

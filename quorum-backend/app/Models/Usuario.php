@@ -30,6 +30,8 @@ class Usuario extends Authenticatable
         'totp_secret',
         'totp_verificado',
         'avatar_color',
+        'creado_en',
+        'actualizado_en',
     ];
 
     // Campos que NO se deben mostrar en respuestas JSON

@@ -57,6 +57,8 @@ class FichaService
      */
     public function crearFicha(array $datosCabecera, array $instructores, array $jornadas): FichaCaracterizacion
     {
+        $this->validarSolapeHorariosInstructores(null, $jornadas);
+
         return DB::transaction(function () use ($datosCabecera, $instructores, $jornadas) {
             $ficha = FichaCaracterizacion::query()->create([
                 'numero_ficha'           => $datosCabecera['numero_ficha'],
@@ -81,6 +83,8 @@ class FichaService
      */
     public function actualizarFicha(FichaCaracterizacion $ficha, array $datosCabecera, array $instructores, array $jornadas): FichaCaracterizacion
     {
+        $this->validarSolapeHorariosInstructores($ficha->id, $jornadas);
+
         return DB::transaction(function () use ($ficha, $datosCabecera, $instructores, $jornadas) {
             $ficha->update([
                 'numero_ficha'           => $datosCabecera['numero_ficha'],
@@ -164,11 +168,215 @@ class FichaService
         $ficha->update(['activo' => 0]);
     }
 
+    public function reactivarFicha(FichaCaracterizacion $ficha): void
+    {
+        $ficha->update(['activo' => 1]);
+    }
+
+    /**
+     * Crea un aprendiz asignado a la ficha (misma lógica que una fila válida del Excel).
+     *
+     * @param  array{nombre: string, apellido: string, documento: string, correo: string}  $datos
+     */
+    public function crearAprendizEnFicha(FichaCaracterizacion $ficha, array $datos): Usuario
+    {
+        $this->assertFichaActivaParaGestionAprendices($ficha);
+
+        $correo = strtolower(trim($datos['correo']));
+        $doc    = trim($datos['documento']);
+
+        if ($correo === '' || ! filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            throw ValidationException::withMessages([
+                'correo' => ['El correo no es válido.'],
+            ]);
+        }
+
+        if (Usuario::query()->where('correo', $correo)->exists()) {
+            throw ValidationException::withMessages([
+                'correo' => ['El correo ya está registrado en el sistema.'],
+            ]);
+        }
+
+        if (Usuario::query()->where('documento', $doc)->exists()) {
+            throw ValidationException::withMessages([
+                'documento' => ['La cédula ya está registrada en el sistema.'],
+            ]);
+        }
+
+        return Usuario::query()->create([
+            'nombre'    => trim($datos['nombre']),
+            'apellido'  => trim($datos['apellido']) !== '' ? trim($datos['apellido']) : '-',
+            'documento' => $doc,
+            'correo'    => $correo,
+            'password'  => null,
+            'rol'       => 'aprendiz',
+            'activo'    => 1,
+            'ficha_id'  => $ficha->id,
+        ]);
+    }
+
+    /**
+     * @param  array{nombre: string, apellido: string, documento: string, correo: string}  $datos
+     */
+    public function actualizarAprendizEnFicha(FichaCaracterizacion $ficha, Usuario $aprendiz, array $datos): Usuario
+    {
+        $this->assertFichaActivaParaGestionAprendices($ficha);
+        $this->assertAprendizDeFicha($ficha, $aprendiz);
+
+        $correo = strtolower(trim($datos['correo']));
+        $doc    = trim($datos['documento']);
+
+        if ($correo === '' || ! filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            throw ValidationException::withMessages([
+                'correo' => ['El correo no es válido.'],
+            ]);
+        }
+
+        $apellido = trim($datos['apellido']) !== '' ? trim($datos['apellido']) : '-';
+
+        $aprendiz->update([
+            'nombre'    => trim($datos['nombre']),
+            'apellido'  => $apellido,
+            'documento' => $doc,
+            'correo'    => $correo,
+        ]);
+
+        return $aprendiz->fresh();
+    }
+
+    public function eliminarAprendizDeFicha(FichaCaracterizacion $ficha, Usuario $aprendiz): void
+    {
+        $this->assertFichaActivaParaGestionAprendices($ficha);
+        $this->assertAprendizDeFicha($ficha, $aprendiz);
+
+        $aprendiz->update([
+            'activo'   => 0,
+            'ficha_id' => null,
+        ]);
+    }
+
+    private function assertFichaActivaParaGestionAprendices(FichaCaracterizacion $ficha): void
+    {
+        if (! (int) $ficha->activo) {
+            throw ValidationException::withMessages([
+                'ficha' => ['Reactiva la ficha antes de gestionar aprendices.'],
+            ]);
+        }
+    }
+
+    private function assertAprendizDeFicha(FichaCaracterizacion $ficha, Usuario $aprendiz): void
+    {
+        if ($aprendiz->rol !== 'aprendiz' || (int) $aprendiz->ficha_id !== (int) $ficha->id) {
+            throw ValidationException::withMessages([
+                'aprendiz' => ['El aprendiz no pertenece a esta ficha.'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, array{tipo:string, horarios:array<int, array{dia_semana:string, hora_inicio:string, hora_fin:string, instructor_id:int}>}>  $jornadas
+     */
+    public function validarSolapeHorariosInstructores(?int $excluirFichaId, array $jornadas): void
+    {
+        $slots = [];
+        foreach ($jornadas as $j) {
+            foreach ($j['horarios'] ?? [] as $h) {
+                $slots[] = [
+                    'instructor_id' => (int) $h['instructor_id'],
+                    'dia_semana'    => $h['dia_semana'],
+                    'hora_inicio'   => $h['hora_inicio'],
+                    'hora_fin'      => $h['hora_fin'],
+                ];
+            }
+        }
+
+        $n = count($slots);
+        for ($i = 0; $i < $n; $i++) {
+            for ($j = $i + 1; $j < $n; $j++) {
+                if ($this->horariosSolapanMismoInstructorDia($slots[$i], $slots[$j])) {
+                    throw ValidationException::withMessages([
+                        'jornadas' => ['Hay horarios solapados para el mismo instructor el mismo día dentro de esta ficha. Revisa día y franjas horarias.'],
+                    ]);
+                }
+            }
+        }
+
+        foreach ($slots as $slot) {
+            $q = Horario::query()
+                ->where('activo', 1)
+                ->where('instructor_id', $slot['instructor_id'])
+                ->where('dia_semana', $slot['dia_semana'])
+                ->whereHas('ficha', fn ($q2) => $q2->where('activo', 1));
+
+            if ($excluirFichaId !== null && $excluirFichaId > 0) {
+                $q->where('ficha_id', '!=', $excluirFichaId);
+            }
+
+            $existentes = $q->with('ficha:id,numero_ficha')->get(['id', 'ficha_id', 'hora_inicio', 'hora_fin']);
+
+            foreach ($existentes as $ex) {
+                if ($this->intervalosTiempoSolapan(
+                    $slot['hora_inicio'],
+                    $slot['hora_fin'],
+                    (string) $ex->hora_inicio,
+                    (string) $ex->hora_fin
+                )) {
+                    $num = $ex->ficha?->numero_ficha ?? (string) $ex->ficha_id;
+                    throw ValidationException::withMessages([
+                        'jornadas' => ["El instructor ya tiene clase solapada ese día en la ficha {$num}. Ajusta horarios o asignación."],
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  array{instructor_id: int, dia_semana: string, hora_inicio: string, hora_fin: string}  $a
+     * @param  array{instructor_id: int, dia_semana: string, hora_inicio: string, hora_fin: string}  $b
+     */
+    private function horariosSolapanMismoInstructorDia(array $a, array $b): bool
+    {
+        if ($a['instructor_id'] !== $b['instructor_id'] || $a['dia_semana'] !== $b['dia_semana']) {
+            return false;
+        }
+
+        return $this->intervalosTiempoSolapan(
+            $a['hora_inicio'],
+            $a['hora_fin'],
+            $b['hora_inicio'],
+            $b['hora_fin']
+        );
+    }
+
+    private function intervalosTiempoSolapan(string $iniA, string $finA, string $iniB, string $finB): bool
+    {
+        $a0 = $this->horaAMinutos($iniA);
+        $a1 = $this->horaAMinutos($finA);
+        $b0 = $this->horaAMinutos($iniB);
+        $b1 = $this->horaAMinutos($finB);
+
+        return $a0 < $b1 && $b0 < $a1;
+    }
+
+    private function horaAMinutos(string $hora): int
+    {
+        $hora = substr(trim($hora), 0, 8);
+        $c = Carbon::parse($hora);
+
+        return $c->hour * 60 + $c->minute;
+    }
+
     /**
      * @return array{exitosos: int, fallidos: int, errores: array<int, string>}
      */
     public function importarAprendicesDesdeExcel(FichaCaracterizacion $ficha, UploadedFile $archivo, int $importadoPorId): array
     {
+        if (! (int) $ficha->activo) {
+            throw ValidationException::withMessages([
+                'archivo' => ['Reactiva la ficha antes de importar aprendices.'],
+            ]);
+        }
+
         $errores  = [];
         $exitosos = 0;
 
@@ -188,7 +396,8 @@ class FichaService
         }
         $mapa = $this->mapearColumnasImportacion($cabecera);
 
-        if (count(array_filter($mapa)) < 3) {
+        // No usar array_filter sin callback: el índice de columna A es 0 y PHP lo quita como "falsy".
+        if ($mapa['cedula'] === null || $mapa['nombre_completo'] === null || $mapa['correo'] === null) {
             throw ValidationException::withMessages([
                 'archivo' => ['El Excel debe tener columnas: cedula, nombre_completo, correo (primera fila).'],
             ]);

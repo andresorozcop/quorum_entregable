@@ -46,6 +46,12 @@ class FichaPolicy
         return $usuario->rol === 'admin';
     }
 
+    /** Volver a marcar la ficha activa en el sistema */
+    public function reactivate(Usuario $usuario, FichaCaracterizacion $ficha): bool
+    {
+        return $usuario->rol === 'admin';
+    }
+
     /** Asignar o quitar instructores en la ficha */
     public function asignarInstructores(Usuario $usuario, FichaCaracterizacion $ficha): bool
     {
@@ -56,5 +62,26 @@ class FichaPolicy
     public function importarAprendices(Usuario $usuario, FichaCaracterizacion $ficha): bool
     {
         return $usuario->rol === 'admin';
+    }
+
+    /** Alta manual de un aprendiz en la ficha */
+    public function crearAprendiz(Usuario $usuario, FichaCaracterizacion $ficha): bool
+    {
+        return $usuario->rol === 'admin';
+    }
+
+    public function actualizarAprendiz(Usuario $usuario, FichaCaracterizacion $ficha, Usuario $aprendiz): bool
+    {
+        if ($usuario->rol !== 'admin') {
+            return false;
+        }
+
+        return $aprendiz->rol === 'aprendiz'
+            && (int) $aprendiz->ficha_id === (int) $ficha->id;
+    }
+
+    public function eliminarAprendiz(Usuario $usuario, FichaCaracterizacion $ficha, Usuario $aprendiz): bool
+    {
+        return $this->actualizarAprendiz($usuario, $ficha, $aprendiz);
     }
 }

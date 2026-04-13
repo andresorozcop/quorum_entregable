@@ -5,6 +5,7 @@ use App\Http\Controllers\CentroFormacionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FichaController;
 use App\Http\Controllers\ProgramaFormacionController;
+use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureTotpSessionOk;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,13 @@ Route::prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
+    // Módulo 6 — Usuarios (solo admin vía UsuarioPolicy)
+    Route::get('/usuarios', [UsuarioController::class, 'index']);
+    Route::post('/usuarios', [UsuarioController::class, 'store']);
+    Route::post('/usuarios/{usuario}/reactivar', [UsuarioController::class, 'reactivar']);
+    Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update']);
+    Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy']);
+
     // Módulo 5 — Fichas de caracterización y catálogos
     Route::get('/centros-formacion', [CentroFormacionController::class, 'index']);
     Route::get('/programas-formacion', [ProgramaFormacionController::class, 'index']);
@@ -52,7 +60,11 @@ Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function 
     Route::get('/fichas/{ficha}', [FichaController::class, 'show']);
     Route::put('/fichas/{ficha}', [FichaController::class, 'update']);
     Route::delete('/fichas/{ficha}', [FichaController::class, 'destroy']);
+    Route::post('/fichas/{ficha}/reactivar', [FichaController::class, 'reactivar']);
     Route::post('/fichas/{ficha}/instructores', [FichaController::class, 'asignarInstructor']);
+    Route::post('/fichas/{ficha}/aprendices', [FichaController::class, 'storeAprendiz']);
+    Route::put('/fichas/{ficha}/aprendices/{usuario}', [FichaController::class, 'updateAprendiz']);
+    Route::delete('/fichas/{ficha}/aprendices/{usuario}', [FichaController::class, 'destroyAprendiz']);
     Route::post('/fichas/{ficha}/importar-aprendices', [FichaController::class, 'importarAprendices']);
 });
 

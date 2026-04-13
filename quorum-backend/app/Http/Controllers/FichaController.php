@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AsignarInstructorFichaRequest;
 use App\Http\Requests\ImportarAprendicesFichaRequest;
+use App\Http\Requests\StoreAprendizFichaRequest;
 use App\Http\Requests\StoreFichaRequest;
+use App\Http\Requests\UpdateAprendizFichaRequest;
 use App\Http\Requests\UpdateFichaRequest;
 use App\Models\FichaCaracterizacion;
 use App\Models\Usuario;
@@ -13,6 +15,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 // CRUD de fichas de caracterización, instructores e importación de aprendices (Módulo 5)
 class FichaController extends Controller
@@ -79,6 +82,11 @@ class FichaController extends Controller
                 $request->input('instructores', []),
                 $request->input('jornadas', [])
             );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'No se pudo validar los horarios.',
+                'errors'  => $e->errors(),
+            ], 422);
         } catch (QueryException $e) {
             return $this->respuestaErrorBd($e);
         }
@@ -128,6 +136,11 @@ class FichaController extends Controller
                 $request->input('instructores', []),
                 $request->input('jornadas', [])
             );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'No se pudo validar los horarios.',
+                'errors'  => $e->errors(),
+            ], 422);
         } catch (QueryException $e) {
             return $this->respuestaErrorBd($e);
         }
@@ -146,6 +159,82 @@ class FichaController extends Controller
 
         return response()->json([
             'message' => 'La ficha de caracterización fue desactivada.',
+        ]);
+    }
+
+    public function reactivar(FichaCaracterizacion $ficha): JsonResponse
+    {
+        $this->authorize('reactivate', $ficha);
+
+        $this->fichaService->reactivarFicha($ficha);
+
+        return response()->json([
+            'message' => 'La ficha de caracterización fue reactivada.',
+            'data'    => $this->serializarFicha($ficha->fresh()->load(['centro', 'programa'])),
+        ]);
+    }
+
+    public function storeAprendiz(StoreAprendizFichaRequest $request, FichaCaracterizacion $ficha): JsonResponse
+    {
+        try {
+            $aprendiz = $this->fichaService->crearAprendizEnFicha($ficha, $request->validated());
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'No se pudo registrar el aprendiz.',
+                'errors'  => $e->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Aprendiz registrado correctamente.',
+            'data'    => [
+                'id'        => $aprendiz->id,
+                'nombre'    => $aprendiz->nombre,
+                'apellido'  => $aprendiz->apellido,
+                'documento' => $aprendiz->documento,
+                'correo'    => $aprendiz->correo,
+            ],
+        ], 201);
+    }
+
+    public function updateAprendiz(UpdateAprendizFichaRequest $request, FichaCaracterizacion $ficha, Usuario $usuario): JsonResponse
+    {
+        try {
+            $aprendiz = $this->fichaService->actualizarAprendizEnFicha($ficha, $usuario, $request->validated());
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'No se pudo actualizar el aprendiz.',
+                'errors'  => $e->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Aprendiz actualizado correctamente.',
+            'data'    => [
+                'id'        => $aprendiz->id,
+                'nombre'    => $aprendiz->nombre,
+                'apellido'  => $aprendiz->apellido,
+                'documento' => $aprendiz->documento,
+                'correo'    => $aprendiz->correo,
+            ],
+        ]);
+    }
+
+    public function destroyAprendiz(FichaCaracterizacion $ficha, Usuario $usuario): JsonResponse
+    {
+        $this->authorize('eliminarAprendiz', [$ficha, $usuario]);
+
+        try {
+            $this->fichaService->eliminarAprendizDeFicha($ficha, $usuario);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'No se pudo eliminar el aprendiz.',
+                'errors'  => $e->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'El aprendiz fue dado de baja y desvinculado de la ficha.',
         ]);
     }
 
@@ -184,12 +273,19 @@ class FichaController extends Controller
     {
         $this->authorize('importarAprendices', $ficha);
 
-        $archivo = $request->file('archivo');
-        $resumen = $this->fichaService->importarAprendicesDesdeExcel(
-            $ficha,
-            $archivo,
-            (int) $request->user()->id
-        );
+        try {
+            $archivo = $request->file('archivo');
+            $resumen = $this->fichaService->importarAprendicesDesdeExcel(
+                $ficha,
+                $archivo,
+                (int) $request->user()->id
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'No se pudo importar.',
+                'errors'  => $e->errors(),
+            ], 422);
+        }
 
         return response()->json([
             'message' => 'Importación finalizada.',
