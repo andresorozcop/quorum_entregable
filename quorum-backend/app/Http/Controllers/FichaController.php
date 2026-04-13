@@ -14,7 +14,6 @@ use App\Services\FichaService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 // CRUD de fichas de caracterización, instructores e importación de aprendices (Módulo 5)
@@ -29,44 +28,16 @@ class FichaController extends Controller
     {
         $this->authorize('viewAny', FichaCaracterizacion::class);
 
-        $usuario = $request->user();
-        $q       = FichaCaracterizacion::query()
-            ->with(['centro:id,nombre,codigo', 'programa:id,nombre,codigo']);
+        $perPage = min(50, max(5, (int) $request->input('per_page', 15)));
+        $q       = $this->fichaService->fichasListadoQuery($request->user(), $request);
 
-        if (in_array($usuario->rol, ['instructor', 'gestor_grupo'], true)) {
-            $ids = DB::table('ficha_instructor')
-                ->where('usuario_id', $usuario->id)
-                ->where('activo', 1)
-                ->pluck('ficha_id');
-            if ($ids->isEmpty()) {
-                $paginaVacia = FichaCaracterizacion::query()->whereRaw('1 = 0')->paginate(
-                    perPage: min(50, max(5, (int) $request->input('per_page', 15)))
-                );
+        if ($q === null) {
+            $paginaVacia = FichaCaracterizacion::query()->whereRaw('1 = 0')->paginate(perPage: $perPage);
 
-                return response()->json($paginaVacia);
-            }
-            $q->whereIn('id', $ids);
+            return response()->json($paginaVacia);
         }
 
-        if ($request->filled('busqueda')) {
-            $b = $request->string('busqueda')->trim();
-            $q->where('numero_ficha', 'like', '%'.$b.'%');
-        }
-        if ($request->filled('centro_id')) {
-            $q->where('centro_formacion_id', (int) $request->input('centro_id'));
-        }
-        if ($request->filled('programa_id')) {
-            $q->where('programa_formacion_id', (int) $request->input('programa_id'));
-        }
-        if ($request->filled('activo')) {
-            $q->where('activo', (int) $request->input('activo'));
-        }
-
-        $q->orderByDesc('id');
-
-        $paginado = $q->paginate(perPage: min(50, max(5, (int) $request->input('per_page', 15))));
-
-        return response()->json($paginado);
+        return response()->json($q->paginate(perPage: $perPage));
     }
 
     public function store(StoreFichaRequest $request): JsonResponse

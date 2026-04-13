@@ -31,11 +31,14 @@ class AsistenciaController extends Controller
             $tipos = array_values(array_unique(array_filter($validados['tipo'])));
         }
 
+        $jornadaId = isset($validados['jornada_ficha_id']) ? (int) $validados['jornada_ficha_id'] : null;
+
         $payload = $this->asistenciaService->historialMatriz(
             $ficha,
             isset($validados['desde']) ? (string) $validados['desde'] : null,
             isset($validados['hasta']) ? (string) $validados['hasta'] : null,
-            $tipos
+            $tipos,
+            $jornadaId
         );
 
         return response()->json($payload);

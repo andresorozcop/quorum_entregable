@@ -10,11 +10,11 @@ class CentroFormacionPolicy
 {
     public function viewAny(Usuario $usuario): bool
     {
-        return $usuario->rol === 'admin';
+        return in_array($usuario->rol, ['admin', 'coordinador'], true);
     }
 
     public function view(Usuario $usuario, CentroFormacion $centro): bool
     {
-        return $usuario->rol === 'admin';
+        return in_array($usuario->rol, ['admin', 'coordinador'], true);
     }
 }

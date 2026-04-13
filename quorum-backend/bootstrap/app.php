@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Habilitamos CORS para aceptar peticiones desde el frontend
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+
+        $middleware->alias([
+            'coordinador_o_admin' => \App\Http\Middleware\EnsureCoordinadorOAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Cuando falla la autenticación en rutas API, respondemos JSON (no redirect)

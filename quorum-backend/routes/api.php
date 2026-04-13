@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\AprendizController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CentroFormacionController;
+use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FichaController;
 use App\Http\Controllers\ProgramaFormacionController;
@@ -39,6 +41,11 @@ Route::prefix('auth')->group(function () {
 });
 
 // -----------------------------------------------------------------------
+// Módulo 9 — Mi historial (aprendiz; sin TOTP en sesión)
+// -----------------------------------------------------------------------
+Route::middleware('auth:sanctum')->get('/mi-historial', [AprendizController::class, 'miHistorial']);
+
+// -----------------------------------------------------------------------
 // Módulo 4 — Dashboard por rol (requiere 2FA completado en sesión)
 // -----------------------------------------------------------------------
 Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function () {
@@ -70,6 +77,15 @@ Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function 
 
     // Módulo 8 — Historial / matriz por ficha (admin, coordinador, instructor, gestor)
     Route::get('/asistencia/historial/{ficha}', [AsistenciaController::class, 'historial']);
+
+    // Módulo 10 — Panel coordinador (solo admin y coordinador)
+    Route::middleware('coordinador_o_admin')->prefix('coordinador')->group(function () {
+        Route::get('/fichas', [CoordinadorController::class, 'fichas']);
+        Route::get('/asistencia/ficha/{ficha}', [CoordinadorController::class, 'historialFicha']);
+        Route::get('/aprendices/buscar', [CoordinadorController::class, 'buscarAprendices']);
+        Route::get('/aprendices/{aprendiz}/historial', [CoordinadorController::class, 'historialAprendiz']);
+        Route::get('/estadisticas', [CoordinadorController::class, 'estadisticas']);
+    });
 
     // Módulo 7 — Tomar asistencia (instructor / gestor)
     Route::post('/asistencia/iniciar-sesion', [AsistenciaController::class, 'iniciarSesion']);

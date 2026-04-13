@@ -170,13 +170,15 @@ class AsistenciaService
      * Matriz de historial: aprendices, sesiones en rango y registros activos (Módulo 8).
      *
      * @param  list<string>  $tiposFiltro  Si no está vacío, solo sesiones con al menos un registro de esos tipos.
+     * @param  int|null  $jornadaFichaId  Si se indica, solo sesiones cuyo horario pertenece a esa jornada.
      * @return array{aprendices: list<array<string, mixed>>, sesiones: list<array<string, mixed>>, registros: list<array<string, mixed>>}
      */
     public function historialMatriz(
         FichaCaracterizacion $ficha,
         ?string $desde,
         ?string $hasta,
-        array $tiposFiltro
+        array $tiposFiltro,
+        ?int $jornadaFichaId = null
     ): array {
         $aprendices = $this->listarAprendicesFicha($ficha->id);
         $aprendicesJson = $aprendices->map(fn (Usuario $u) => [
@@ -192,6 +194,12 @@ class AsistenciaService
             ->with(['instructor:id,nombre,apellido'])
             ->orderBy('fecha')
             ->orderBy('id');
+
+        if ($jornadaFichaId !== null) {
+            $q->whereHas('horario', function ($h) use ($jornadaFichaId): void {
+                $h->where('jornada_ficha_id', $jornadaFichaId);
+            });
+        }
 
         if ($desde !== null && $desde !== '') {
             $q->where('fecha', '>=', $desde);

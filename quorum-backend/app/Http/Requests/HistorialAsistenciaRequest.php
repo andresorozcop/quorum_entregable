@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\FichaCaracterizacion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -25,11 +26,20 @@ class HistorialAsistenciaRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
+        $ficha = $this->route('ficha');
+        $fichaId = $ficha instanceof FichaCaracterizacion ? $ficha->id : (int) $ficha;
+
         return [
             'desde'   => ['nullable', 'date_format:Y-m-d'],
             'hasta'   => ['nullable', 'date_format:Y-m-d'],
             'tipo'    => ['nullable', 'array'],
             'tipo.*'  => ['string', Rule::in(['presente', 'falla', 'excusa', 'parcial'])],
+            // Debe ser una jornada de esta misma ficha (evita filtrar sesiones ajenas)
+            'jornada_ficha_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('jornadas_ficha', 'id')->where('ficha_id', $fichaId),
+            ],
         ];
     }
 
@@ -48,10 +58,11 @@ class HistorialAsistenciaRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'desde'   => 'fecha desde',
-            'hasta'   => 'fecha hasta',
-            'tipo'    => 'tipo de asistencia',
-            'tipo.*'  => 'tipo de asistencia',
+            'desde'            => 'fecha desde',
+            'hasta'            => 'fecha hasta',
+            'tipo'             => 'tipo de asistencia',
+            'tipo.*'           => 'tipo de asistencia',
+            'jornada_ficha_id' => 'jornada',
         ];
     }
 }

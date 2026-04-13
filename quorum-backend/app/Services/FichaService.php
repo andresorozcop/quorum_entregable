@@ -9,7 +9,9 @@ use App\Models\ImportacionAprendices;
 use App\Models\JornadaFicha;
 use App\Models\Usuario;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -18,6 +20,45 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 // Lógica de negocio de fichas: jornadas, horarios, instructores e importación (Módulo 5)
 class FichaService
 {
+    /**
+     * Consulta del listado de fichas según rol (instructor solo las suyas).
+     * Si el instructor no tiene fichas, devuelve null.
+     */
+    public function fichasListadoQuery(Usuario $usuario, Request $request): ?Builder
+    {
+        $q = FichaCaracterizacion::query()
+            ->with(['centro:id,nombre,codigo', 'programa:id,nombre,codigo']);
+
+        if (in_array($usuario->rol, ['instructor', 'gestor_grupo'], true)) {
+            $ids = DB::table('ficha_instructor')
+                ->where('usuario_id', $usuario->id)
+                ->where('activo', 1)
+                ->pluck('ficha_id');
+            if ($ids->isEmpty()) {
+                return null;
+            }
+            $q->whereIn('id', $ids);
+        }
+
+        if ($request->filled('busqueda')) {
+            $b = $request->string('busqueda')->trim();
+            $q->where('numero_ficha', 'like', '%'.$b.'%');
+        }
+        if ($request->filled('centro_id')) {
+            $q->where('centro_formacion_id', (int) $request->input('centro_id'));
+        }
+        if ($request->filled('programa_id')) {
+            $q->where('programa_formacion_id', (int) $request->input('programa_id'));
+        }
+        if ($request->filled('activo')) {
+            $q->where('activo', (int) $request->input('activo'));
+        }
+
+        $q->orderByDesc('id');
+
+        return $q;
+    }
+
     /** Diferencia en horas entre inicio y fin (mínimo 1, máximo 24) para horas_programadas */
     public function calcularHorasProgramadas(string $horaInicio, string $horaFin): int
     {
