@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CentroFormacionController;
 use App\Http\Controllers\DashboardController;
@@ -66,6 +67,11 @@ Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function 
     Route::put('/fichas/{ficha}/aprendices/{usuario}', [FichaController::class, 'updateAprendiz']);
     Route::delete('/fichas/{ficha}/aprendices/{usuario}', [FichaController::class, 'destroyAprendiz']);
     Route::post('/fichas/{ficha}/importar-aprendices', [FichaController::class, 'importarAprendices']);
+
+    // Módulo 7 — Tomar asistencia (instructor / gestor)
+    Route::post('/asistencia/iniciar-sesion', [AsistenciaController::class, 'iniciarSesion']);
+    Route::post('/asistencia/sesiones/{sesion}/guardar', [AsistenciaController::class, 'guardar']);
+    Route::put('/asistencia/registros/{registro}', [AsistenciaController::class, 'actualizar']);
 });
 
 // -----------------------------------------------------------------------

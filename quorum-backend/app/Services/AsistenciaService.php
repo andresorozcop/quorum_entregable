@@ -1,0 +1,415 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\DiaFestivo;
+use App\Models\FichaCaracterizacion;
+use App\Models\Horario;
+use App\Models\RegistroAsistencia;
+use App\Models\RegistroAsistenciaBackup;
+use App\Models\Sesion;
+use App\Models\Usuario;
+use Carbon\Carbon;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+// Lógica de negocio para tomar y corregir asistencia (Módulo 7)
+class AsistenciaService
+{
+    /** Convierte la fecha (Y-m-d) en el slug de día que usa la tabla horarios (lunes…sábado). Domingo lanza error. */
+    public function slugDiaSemanaDesdeFecha(string $fechaYmd): string
+    {
+        $d = Carbon::parse($fechaYmd, 'America/Bogota');
+        $n = (int) $d->format('N'); // 1=lunes … 7=domingo (ISO)
+
+        if ($n === 7) {
+            throw ValidationException::withMessages([
+                'fecha' => ['No se toma asistencia los domingos.'],
+            ]);
+        }
+
+        $map = [
+            1 => 'lunes',
+            2 => 'martes',
+            3 => 'miercoles',
+            4 => 'jueves',
+            5 => 'viernes',
+            6 => 'sabado',
+        ];
+
+        return $map[$n];
+    }
+
+    /** Comprueba festivo activo; si existe, lanza validación con la descripción. */
+    public function asegurarNoFestivo(string $fechaYmd): void
+    {
+        $festivo = DiaFestivo::query()
+            ->where('fecha', $fechaYmd)
+            ->where('activo', 1)
+            ->first();
+
+        if ($festivo) {
+            throw ValidationException::withMessages([
+                'fecha' => ["No hay formación ni asistencia en festivo: {$festivo->descripcion}."],
+            ]);
+        }
+    }
+
+    /** El instructor o gestor está asignado a la ficha (pivot activo). */
+    public function estaAsignadoAFicha(Usuario $usuario, int $fichaId): bool
+    {
+        return DB::table('ficha_instructor')
+            ->where('ficha_id', $fichaId)
+            ->where('usuario_id', $usuario->id)
+            ->where('activo', 1)
+            ->exists();
+    }
+
+    /**
+     * Horarios del usuario para esa ficha y ese día de la semana.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Horario>
+     */
+    public function buscarHorariosDelDia(Usuario $usuario, int $fichaId, string $slugDia)
+    {
+        return Horario::query()
+            ->where('ficha_id', $fichaId)
+            ->where('instructor_id', $usuario->id)
+            ->where('activo', 1)
+            ->where('dia_semana', $slugDia)
+            ->with(['jornada:id,tipo'])
+            ->get();
+    }
+
+    /** Etiqueta legible para elegir entre varios horarios el mismo día. */
+    public function etiquetaHorario(Horario $h): string
+    {
+        $tipo = $h->jornada?->tipo ?? 'jornada';
+        $ini = (string) $h->hora_inicio;
+        $fin = (string) $h->hora_fin;
+
+        return ucfirst((string) $tipo)." {$ini}–{$fin}";
+    }
+
+    /**
+     * Resuelve el horario: uno solo, o el indicado, o error con candidatos.
+     */
+    public function resolverHorarioParaIniciar(
+        Usuario $usuario,
+        int $fichaId,
+        string $fechaYmd,
+        ?int $horarioIdSolicitado,
+        string $slugDia
+    ): Horario {
+        $candidatos = $this->buscarHorariosDelDia($usuario, $fichaId, $slugDia);
+
+        if ($candidatos->isEmpty()) {
+            throw ValidationException::withMessages([
+                'fecha' => ['Hoy no tienes formación programada en esta ficha (revisa el día o el horario asignado).'],
+            ]);
+        }
+
+        if ($horarioIdSolicitado !== null) {
+            $horario = $candidatos->firstWhere('id', $horarioIdSolicitado);
+            if (! $horario) {
+                throw ValidationException::withMessages([
+                    'horario_id' => ['El horario elegido no corresponde a tu asignación este día en esta ficha.'],
+                ]);
+            }
+
+            return $horario;
+        }
+
+        if ($candidatos->count() > 1) {
+            $lista = $candidatos->map(fn (Horario $h) => [
+                'id'       => $h->id,
+                'etiqueta' => $this->etiquetaHorario($h),
+            ])->values()->all();
+
+            throw new HttpResponseException(response()->json([
+                'message'               => 'Hay más de un horario este día. Elige uno en la lista e inténtalo de nuevo.',
+                'codigo'                => 'multiples_horarios',
+                'horarios_candidatos'   => $lista,
+            ], 422));
+        }
+
+        return $candidatos->first();
+    }
+
+    /**
+     * @return array<int, int> IDs de aprendices activos de la ficha
+     */
+    public function idsAprendicesEsperados(int $fichaId): array
+    {
+        return Usuario::query()
+            ->where('rol', 'aprendiz')
+            ->where('ficha_id', $fichaId)
+            ->where('activo', 1)
+            ->orderBy('apellido')
+            ->orderBy('nombre')
+            ->pluck('id')
+            ->all();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, Usuario>
+     */
+    public function listarAprendicesFicha(int $fichaId)
+    {
+        return Usuario::query()
+            ->where('rol', 'aprendiz')
+            ->where('ficha_id', $fichaId)
+            ->where('activo', 1)
+            ->orderBy('apellido')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'apellido', 'documento', 'avatar_color']);
+    }
+
+    /**
+     * Crea o reutiliza sesión abierta y devuelve payload para el front.
+     *
+     * @return array{sesion: array, aprendices: array<int, array>, fecha_servidor: string}
+     */
+    public function iniciarSesion(Usuario $usuario, int $fichaId, string $fechaYmd, ?int $horarioId): array
+    {
+        if (! in_array($usuario->rol, ['instructor', 'gestor_grupo'], true)) {
+            abort(403, 'Solo instructores o gestores pueden tomar asistencia.');
+        }
+
+        $ficha = FichaCaracterizacion::query()->find($fichaId);
+        if (! $ficha || ! (int) $ficha->activo) {
+            throw ValidationException::withMessages([
+                'ficha_id' => ['La ficha no existe o está inactiva.'],
+            ]);
+        }
+
+        if (! $this->estaAsignadoAFicha($usuario, $fichaId)) {
+            throw ValidationException::withMessages([
+                'ficha_id' => ['No estás asignado a esta ficha.'],
+            ]);
+        }
+
+        $slugDia = $this->slugDiaSemanaDesdeFecha($fechaYmd);
+        $this->asegurarNoFestivo($fechaYmd);
+
+        $horario = $this->resolverHorarioParaIniciar($usuario, $fichaId, $fechaYmd, $horarioId, $slugDia);
+
+        $aprendicesCol = $this->listarAprendicesFicha($fichaId);
+        if ($aprendicesCol->isEmpty()) {
+            throw ValidationException::withMessages([
+                'ficha_id' => ['No hay aprendices activos en esta ficha; no se puede tomar asistencia.'],
+            ]);
+        }
+
+        $existente = Sesion::query()
+            ->where('horario_id', $horario->id)
+            ->whereDate('fecha', $fechaYmd)
+            ->first();
+
+        if ($existente && $existente->estado === 'cerrada') {
+            throw ValidationException::withMessages([
+                'fecha' => ['La asistencia de esta sesión ya fue registrada.'],
+            ]);
+        }
+
+        if ($existente && $existente->estado === 'abierta') {
+            $sesion = $existente;
+        } else {
+            $sesion = Sesion::query()->create([
+                'ficha_id'           => $fichaId,
+                'horario_id'         => $horario->id,
+                'fecha'              => $fechaYmd,
+                'instructor_id'      => $usuario->id,
+                'horas_programadas'  => (int) $horario->horas_programadas,
+                'estado'             => 'abierta',
+            ]);
+        }
+
+        $aprendices = $aprendicesCol;
+
+        return [
+            'sesion'          => $this->serializarSesion($sesion),
+            'aprendices'      => $aprendices->map(fn (Usuario $a) => [
+                'id'            => $a->id,
+                'nombre'        => $a->nombre,
+                'apellido'      => $a->apellido,
+                'documento'     => $a->documento,
+                'avatar_color'  => $a->avatar_color,
+            ])->values()->all(),
+            'fecha_servidor'  => Carbon::now('America/Bogota')->toDateString(),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function serializarSesion(Sesion $sesion): array
+    {
+        return [
+            'id'                  => $sesion->id,
+            'ficha_id'            => $sesion->ficha_id,
+            'horario_id'          => $sesion->horario_id,
+            'fecha'               => $sesion->fecha instanceof \DateTimeInterface
+                ? $sesion->fecha->format('Y-m-d')
+                : (string) $sesion->fecha,
+            'instructor_id'       => $sesion->instructor_id,
+            'horas_programadas'   => (int) $sesion->horas_programadas,
+            'estado'              => $sesion->estado,
+        ];
+    }
+
+    /**
+     * @param  array<int, array{aprendiz_id: int, tipo: string, horas_inasistencia?: int|null}>  $registros
+     */
+    public function guardarSesionCompleta(Usuario $usuario, Sesion $sesion, array $registros): void
+    {
+        if ($sesion->instructor_id !== $usuario->id) {
+            abort(403, 'No eres el instructor que abrió esta sesión.');
+        }
+
+        if ($sesion->estado !== 'abierta') {
+            throw ValidationException::withMessages([
+                'sesion' => ['Esta sesión ya no está abierta (quizá ya se guardó la asistencia).'],
+            ]);
+        }
+
+        $esperados = $this->idsAprendicesEsperados((int) $sesion->ficha_id);
+        $porAprendiz = collect($registros)->keyBy('aprendiz_id');
+
+        foreach ($esperados as $aid) {
+            if (! $porAprendiz->has($aid)) {
+                $ap = Usuario::query()->find($aid);
+                $nombre = $ap ? trim($ap->nombre.' '.$ap->apellido) : "ID {$aid}";
+                throw ValidationException::withMessages([
+                    'registros' => ["Falta marcar la asistencia de: {$nombre}."],
+                ]);
+            }
+        }
+
+        // No deben sobrar aprendices en el payload
+        foreach ($porAprendiz->keys() as $aid) {
+            if (! in_array((int) $aid, $esperados, true)) {
+                throw ValidationException::withMessages([
+                    'registros' => ['El envío incluye aprendices que no pertenecen a esta ficha.'],
+                ]);
+            }
+        }
+
+        $hp = (int) $sesion->horas_programadas;
+
+        foreach ($registros as $fila) {
+            $this->validarFilaRegistro($fila, $hp);
+        }
+
+        try {
+            DB::transaction(function () use ($sesion, $registros) {
+                $bloqueada = Sesion::query()->whereKey($sesion->id)->lockForUpdate()->first();
+                if (! $bloqueada || $bloqueada->estado !== 'abierta') {
+                    throw ValidationException::withMessages([
+                        'sesion' => ['Esta sesión ya no está abierta.'],
+                    ]);
+                }
+
+                if (RegistroAsistencia::query()->where('sesion_id', $bloqueada->id)->exists()) {
+                    throw ValidationException::withMessages([
+                        'sesion' => ['Esta sesión ya fue guardada.'],
+                    ]);
+                }
+
+                foreach ($registros as $fila) {
+                    RegistroAsistencia::query()->create([
+                        'sesion_id'            => $bloqueada->id,
+                        'aprendiz_id'          => (int) $fila['aprendiz_id'],
+                        'tipo'                 => $fila['tipo'],
+                        'horas_inasistencia'   => $fila['tipo'] === 'parcial' ? (int) $fila['horas_inasistencia'] : null,
+                        'activo'               => 1,
+                    ]);
+                }
+
+                $bloqueada->update(['estado' => 'cerrada']);
+            });
+        } catch (\Illuminate\Database\QueryException) {
+            // Duplicado por doble envío u otra carrera
+            throw ValidationException::withMessages([
+                'sesion' => ['Esta sesión ya fue guardada o hubo un conflicto. Vuelve al historial y verifica.'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  array{aprendiz_id: int, tipo: string, horas_inasistencia?: int|null}  $fila
+     */
+    private function validarFilaRegistro(array $fila, int $horasProgramadas): void
+    {
+        $tipo = $fila['tipo'];
+        $permitidos = ['presente', 'falla', 'excusa', 'parcial'];
+        if (! in_array($tipo, $permitidos, true)) {
+            throw ValidationException::withMessages([
+                'registros' => ['Tipo de asistencia no válido.'],
+            ]);
+        }
+
+        if ($tipo === 'parcial') {
+            if ($horasProgramadas <= 1) {
+                throw ValidationException::withMessages([
+                    'registros' => ['No se puede marcar inasistencia parcial cuando la sesión tiene 1 hora o menos.'],
+                ]);
+            }
+            $h = (int) ($fila['horas_inasistencia'] ?? 0);
+            if ($h < 1 || $h > $horasProgramadas - 1) {
+                throw ValidationException::withMessages([
+                    'registros' => ["Las horas de inasistencia parcial deben estar entre 1 y ".($horasProgramadas - 1).'.'],
+                ]);
+            }
+        } elseif (isset($fila['horas_inasistencia']) && $fila['horas_inasistencia'] !== null) {
+            throw ValidationException::withMessages([
+                'registros' => ['Solo el tipo parcial lleva horas de inasistencia.'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  array{tipo: string, horas_inasistencia?: int|null, razon?: string|null}  $datos
+     */
+    public function actualizarRegistro(Usuario $usuario, RegistroAsistencia $registro, array $datos): void
+    {
+        $registro->load('sesion');
+        $sesion = $registro->sesion;
+        if (! $sesion || $sesion->instructor_id !== $usuario->id) {
+            abort(403, 'No puedes editar este registro.');
+        }
+
+        // Tras cerrar la sesión se permiten correcciones (historial / M8)
+        if ($sesion->estado !== 'cerrada') {
+            throw ValidationException::withMessages([
+                'sesion' => ['Solo se puede corregir asistencia cuando la sesión ya fue cerrada.'],
+            ]);
+        }
+
+        $hp = (int) $sesion->horas_programadas;
+        $fila = [
+            'aprendiz_id'        => $registro->aprendiz_id,
+            'tipo'               => $datos['tipo'],
+            'horas_inasistencia' => $datos['horas_inasistencia'] ?? null,
+        ];
+        $this->validarFilaRegistro($fila, $hp);
+
+        DB::transaction(function () use ($registro, $datos, $usuario, $sesion) {
+            RegistroAsistenciaBackup::query()->create([
+                'registro_asistencia_id'   => $registro->id,
+                'sesion_id'                => $sesion->id,
+                'aprendiz_id'              => $registro->aprendiz_id,
+                'tipo_anterior'            => $registro->tipo,
+                'horas_inasistencia_ant'     => $registro->horas_inasistencia,
+                'tipo_nuevo'               => $datos['tipo'],
+                'horas_inasistencia_new'    => $datos['tipo'] === 'parcial' ? (int) $datos['horas_inasistencia'] : null,
+                'modificado_por'           => $usuario->id,
+                'razon'                    => isset($datos['razon']) ? mb_substr((string) $datos['razon'], 0, 255) : null,
+            ]);
+
+            $registro->update([
+                'tipo'               => $datos['tipo'],
+                'horas_inasistencia' => $datos['tipo'] === 'parcial' ? (int) $datos['horas_inasistencia'] : null,
+            ]);
+        });
+    }
+}

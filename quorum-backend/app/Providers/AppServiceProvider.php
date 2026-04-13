@@ -5,10 +5,14 @@ namespace App\Providers;
 use App\Models\CentroFormacion;
 use App\Models\FichaCaracterizacion;
 use App\Models\ProgramaFormacion;
+use App\Models\RegistroAsistencia;
+use App\Models\Sesion;
 use App\Models\Usuario;
 use App\Policies\CentroFormacionPolicy;
 use App\Policies\FichaPolicy;
 use App\Policies\ProgramaFormacionPolicy;
+use App\Policies\RegistroAsistenciaPolicy;
+use App\Policies\SesionPolicy;
 use App\Policies\UsuarioPolicy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -33,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CentroFormacion::class, CentroFormacionPolicy::class);
         Gate::policy(ProgramaFormacion::class, ProgramaFormacionPolicy::class);
         Gate::policy(Usuario::class, UsuarioPolicy::class);
+        Gate::policy(Sesion::class, SesionPolicy::class);
+        Gate::policy(RegistroAsistencia::class, RegistroAsistenciaPolicy::class);
 
         // Configuramos la zona horaria de MySQL para que coincida con Bogotá
         // Solo lo hacemos si la conexión es MySQL, y capturamos errores de conexión
