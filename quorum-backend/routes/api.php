@@ -68,6 +68,9 @@ Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function 
     Route::delete('/fichas/{ficha}/aprendices/{usuario}', [FichaController::class, 'destroyAprendiz']);
     Route::post('/fichas/{ficha}/importar-aprendices', [FichaController::class, 'importarAprendices']);
 
+    // Módulo 8 — Historial / matriz por ficha (admin, coordinador, instructor, gestor)
+    Route::get('/asistencia/historial/{ficha}', [AsistenciaController::class, 'historial']);
+
     // Módulo 7 — Tomar asistencia (instructor / gestor)
     Route::post('/asistencia/iniciar-sesion', [AsistenciaController::class, 'iniciarSesion']);
     Route::post('/asistencia/sesiones/{sesion}/guardar', [AsistenciaController::class, 'guardar']);

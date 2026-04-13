@@ -115,7 +115,7 @@
 
 ## API backend (referencia)
 
-Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. **Usuarios (M6):** `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}`, `POST /api/usuarios/{id}/reactivar` (admin). **Asistencia (M7):** `POST /api/asistencia/iniciar-sesion`, `POST /api/asistencia/sesiones/{sesion}/guardar`, `PUT /api/asistencia/registros/{registro}` (instructor/gestor; mismo middleware Sanctum + TOTP). Pendientes M8+: historial/matriz; `mi-historial`; reportes; CRUD días festivos — detalle en PRD sección 12.
+Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. **Usuarios (M6):** `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}`, `POST /api/usuarios/{id}/reactivar` (admin). **Asistencia (M7–M8):** `POST /api/asistencia/iniciar-sesion`, `POST /api/asistencia/sesiones/{sesion}/guardar`, `PUT /api/asistencia/registros/{registro}` (corrección con sesión cerrada; instructor dueño de la sesión), `GET /api/asistencia/historial/{ficha}` (query: `desde`, `hasta`, `tipo[]` opcionales; admin/coordinador/instructor/gestor; `FichaPolicy::view`). Pendientes M9+: `mi-historial`; reportes; CRUD días festivos — detalle en PRD sección 12.
 
 ## Variables de entorno (nombres; valores solo en `.env` local)
 
@@ -155,7 +155,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - [x] **Módulo 5** — Gestión de fichas Admin (CRUD, jornadas, horarios, instructores/gestor único, detalle, import Excel aprendices)
 - [x] **Módulo 6** — Gestión de usuarios Admin (CRUD, filtros, soft delete, admin no auto-borra)
 - [x] **Módulo 7** — Tomar asistencia (Instructor/Gestor: sesión, validaciones festivo/día, lista completa, parcial con horas, barra progreso, marcar todos presentes)
-- [ ] **Módulo 8** — Historial / matriz de asistencia (filtros, edición solo instructor dueño del día, scroll horizontal)
+- [x] **Módulo 8** — Historial / matriz de asistencia (filtros, edición solo instructor dueño del día, scroll horizontal)
 - [ ] **Módulo 9** — Vista aprendiz (`mi-historial`, totales, solo lectura, aislamiento)
 - [ ] **Módulo 10** — Vista coordinador (pestañas Por Ficha / Por Aprendiz / Estadísticas, filtros cascada, Excel)
 - [ ] **Módulo 11** — Reporte Excel CPIC (PhpSpreadsheet, plantilla en memoria, días hábiles, inyección coordenadas según PRD §21)
@@ -241,7 +241,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 
 - **Componentes nuevos creados:** `components/ui/Avatar.tsx`, `components/ui/Badge.tsx`, `components/ui/Sidebar.tsx`, `components/ui/Headbar.tsx`.
 - **Layout del dashboard:** `app/(dashboard)/layout.tsx` con `"use client"`, doble capa de protección: middleware (cookie) + `useEffect` que redirige si `!usuario` tras `getMe`.
-- **Menú por rol:** admin (Dashboard, Usuarios, Fichas, Configuración), coordinador (Dashboard, Historial), instructor/gestor (Dashboard, Tomar asistencia, Historial), aprendiz (Mi historial). Ítems adicionales del PRD §11 (Programas, Centros, Festivos) quedan para M5/M12.
+- **Menú por rol:** admin (Dashboard, Usuarios, Fichas, Historial de asistencia, Configuración), coordinador (Dashboard, Historial), instructor/gestor (Dashboard, Tomar asistencia, Historial), aprendiz (Mi historial). Ítems adicionales del PRD §11 (Programas, Centros, Festivos) quedan para M5/M12.
 - **Sidebar en desktop:** `lg:static lg:translate-x-0` — siempre visible sin overlay. En tablet/móvil: `fixed`, controlado por `sidebarAbierto` en el layout.
 - **Overlay móvil:** `<div>` semitransparente que cubre el contenido; clic fuera llama `onCerrar()`.
 - **Ítem activo:** `usePathname()` del App Router; `/dashboard` solo activo si la ruta es exactamente `/dashboard` (para no activar en `/dashboard/algo`).
@@ -250,7 +250,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Accesibilidad:** `--font-scale` en `:root` de `globals.css`; `html { font-size: calc(16px * var(--font-scale)) }`. Alto contraste: clase `high-contrast` en `<html>` con `filter: contrast(1.5)`. Panel en Headbar con botones +/- (rango 0.9–1.3) y toggle switch.
 - **Logout:** confirmación con SweetAlert2 antes de llamar al servicio.
 - **globals.css:** eliminado bloque `@media (prefers-color-scheme: dark)` que sobreescribía los colores de la paleta SENA.
-- **Páginas placeholder:** `/asistencia/historial` pendiente (M8); `/asistencia/tomar` implementado en M7; `/usuarios` en M6; `/fichas` en M5; `/dashboard` en M4.
+- **Páginas dashboard:** `/asistencia/historial` implementado en M8; `/asistencia/tomar` en M7; `/usuarios` en M6; `/fichas` en M5; `/dashboard` en M4.
 
 ## Decisiones tomadas en M4
 
@@ -302,11 +302,18 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - **Policies:** `SesionPolicy::guardarAsistencia`, `RegistroAsistenciaPolicy::update`; `iniciar` autoriza `view` de la ficha (`FichaPolicy`).
 - **Front:** `/asistencia/tomar` — selector de ficha (`GET /api/fichas`), fecha hoy Bogotá (`Intl` `America/Bogota`), `components/asistencia/FilaAprendiz.tsx`, `ProgressBar.tsx`, SweetAlert2, botón guardar deshabilitado solo mientras envía; éxito → `/asistencia/historial`.
 
+## Decisiones tomadas en M8
+
+- **API historial:** `HistorialAsistenciaRequest` valida query `desde`/`hasta` (Y-m-d) y `tipo[]` (multiselect); `AsistenciaService::historialMatriz` devuelve `aprendices`, `sesiones` (orden fecha + id, con instructor nombre completo/corto) y `registros` planos; filtro por tipos = solo columnas de sesiones que tengan al menos un registro activo de esos tipos.
+- **Permisos:** `authorize('view', $ficha)` en `historial`; edición solo con `PUT .../registros/{id}` existente (`RegistroAsistenciaPolicy` + sesión `cerrada` + `instructor_id` = usuario).
+- **Front:** `/asistencia/historial` — roles admin, coordinador, instructor, gestor; aprendiz redirige a `/mi-historial`; selector de ficha vía `GET /api/fichas`; navegación por mes (Bogotá) + rango manual + “Restablecer al mes visible”; `components/asistencia/MatrizAsistencia.tsx` (scroll horizontal, celdas por tipo SENA, modal edición + SweetAlert2 confirmación); servicios `obtenerHistorialAsistencia` / `actualizarRegistroAsistencia`.
+- **Sidebar admin:** ítem “Historial de asistencia” alineado al PRD tabla de rutas.
+
 ## Estado actual
 
-**Último módulo completado:** **Módulo 7 — Tomar asistencia (Instructor / Gestor)** ✓ (alineado con PRD v1.0 — abril 2026)
+**Último módulo completado:** **Módulo 8 — Historial / matriz de asistencia** ✓ (alineado con PRD v1.0 — abril 2026)
 
-**Próximo módulo:** **Módulo 8 — Historial / matriz de asistencia**.
+**Próximo módulo:** **Módulo 9 — Vista aprendiz (`mi-historial`)**.
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000

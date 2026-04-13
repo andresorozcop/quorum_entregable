@@ -167,6 +167,108 @@ class AsistenciaService
     }
 
     /**
+     * Matriz de historial: aprendices, sesiones en rango y registros activos (Módulo 8).
+     *
+     * @param  list<string>  $tiposFiltro  Si no está vacío, solo sesiones con al menos un registro de esos tipos.
+     * @return array{aprendices: list<array<string, mixed>>, sesiones: list<array<string, mixed>>, registros: list<array<string, mixed>>}
+     */
+    public function historialMatriz(
+        FichaCaracterizacion $ficha,
+        ?string $desde,
+        ?string $hasta,
+        array $tiposFiltro
+    ): array {
+        $aprendices = $this->listarAprendicesFicha($ficha->id);
+        $aprendicesJson = $aprendices->map(fn (Usuario $u) => [
+            'id'            => $u->id,
+            'nombre'        => $u->nombre,
+            'apellido'      => $u->apellido,
+            'documento'     => $u->documento,
+            'avatar_color'  => $u->avatar_color,
+        ])->values()->all();
+
+        $q = Sesion::query()
+            ->where('ficha_id', $ficha->id)
+            ->with(['instructor:id,nombre,apellido'])
+            ->orderBy('fecha')
+            ->orderBy('id');
+
+        if ($desde !== null && $desde !== '') {
+            $q->where('fecha', '>=', $desde);
+        }
+        if ($hasta !== null && $hasta !== '') {
+            $q->where('fecha', '<=', $hasta);
+        }
+
+        if ($tiposFiltro !== []) {
+            $q->whereHas('registros', function ($r) use ($tiposFiltro): void {
+                $r->where('activo', 1)->whereIn('tipo', $tiposFiltro);
+            });
+        }
+
+        $sesiones = $q->get();
+        $sesionIds = $sesiones->pluck('id')->all();
+
+        $registrosCol = $sesionIds === []
+            ? collect()
+            : RegistroAsistencia::query()
+                ->whereIn('sesion_id', $sesionIds)
+                ->where('activo', 1)
+                ->get(['id', 'sesion_id', 'aprendiz_id', 'tipo', 'horas_inasistencia']);
+
+        $sesionesJson = $sesiones->map(function (Sesion $s) {
+            $inst = $s->instructor;
+            $nomCompleto = $inst ? trim($inst->nombre.' '.$inst->apellido) : '—';
+            $fecha = $s->fecha;
+            $fechaStr = $fecha instanceof \Carbon\CarbonInterface
+                ? $fecha->format('Y-m-d')
+                : (string) $fecha;
+
+            return [
+                'id'                         => $s->id,
+                'fecha'                      => $fechaStr,
+                'estado'                     => $s->estado,
+                'horas_programadas'          => (int) $s->horas_programadas,
+                'instructor_id'              => (int) $s->instructor_id,
+                'instructor_nombre_completo' => $nomCompleto !== '' ? $nomCompleto : '—',
+                'instructor_nombre_corto'    => $this->nombreCortoInstructor($inst),
+            ];
+        })->values()->all();
+
+        $registrosJson = $registrosCol->map(fn (RegistroAsistencia $r) => [
+            'id'                 => $r->id,
+            'sesion_id'          => $r->sesion_id,
+            'aprendiz_id'        => $r->aprendiz_id,
+            'tipo'               => $r->tipo,
+            'horas_inasistencia' => $r->horas_inasistencia !== null ? (int) $r->horas_inasistencia : null,
+        ])->values()->all();
+
+        return [
+            'aprendices' => $aprendicesJson,
+            'sesiones'   => $sesionesJson,
+            'registros'  => $registrosJson,
+        ];
+    }
+
+    /** Iniciales para encabezado de columna (misma idea que el Avatar del front). */
+    private function nombreCortoInstructor(?Usuario $inst): string
+    {
+        if (! $inst) {
+            return '—';
+        }
+        $n = trim((string) $inst->nombre);
+        $a = trim((string) $inst->apellido);
+        if ($n === '' && $a === '') {
+            return '—';
+        }
+        if ($a === '') {
+            return mb_strtoupper(mb_substr($n, 0, 2));
+        }
+
+        return mb_strtoupper(mb_substr($n, 0, 1).mb_substr($a, 0, 1));
+    }
+
+    /**
      * Crea o reutiliza sesión abierta y devuelve payload para el front.
      *
      * @return array{sesion: array, aprendices: array<int, array>, fecha_servidor: string}

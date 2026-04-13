@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ActualizarRegistroAsistenciaRequest;
 use App\Http\Requests\GuardarAsistenciaRequest;
+use App\Http\Requests\HistorialAsistenciaRequest;
 use App\Http\Requests\IniciarSesionAsistenciaRequest;
 use App\Models\FichaCaracterizacion;
 use App\Models\RegistroAsistencia;
@@ -12,12 +13,33 @@ use App\Services\AsistenciaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-// API tomar asistencia (Módulo 7)
+// API tomar asistencia (Módulo 7) e historial matriz (Módulo 8)
 class AsistenciaController extends Controller
 {
     public function __construct(
         private readonly AsistenciaService $asistenciaService
     ) {}
+
+    /** Matriz de historial por ficha (filtros opcionales en query) */
+    public function historial(HistorialAsistenciaRequest $request, FichaCaracterizacion $ficha): JsonResponse
+    {
+        $this->authorize('view', $ficha);
+
+        $validados = $request->validated();
+        $tipos     = [];
+        if (! empty($validados['tipo']) && is_array($validados['tipo'])) {
+            $tipos = array_values(array_unique(array_filter($validados['tipo'])));
+        }
+
+        $payload = $this->asistenciaService->historialMatriz(
+            $ficha,
+            isset($validados['desde']) ? (string) $validados['desde'] : null,
+            isset($validados['hasta']) ? (string) $validados['hasta'] : null,
+            $tipos
+        );
+
+        return response()->json($payload);
+    }
 
     /** Abre o devuelve sesión abierta + lista de aprendices */
     public function iniciarSesion(IniciarSesionAsistenciaRequest $request): JsonResponse
