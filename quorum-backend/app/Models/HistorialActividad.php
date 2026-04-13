@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\LogActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -25,13 +26,22 @@ class HistorialActividad extends Model
         return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 
-    // Helper estático para registrar una acción fácilmente desde cualquier controlador
+    /**
+     * Compatibilidad — delega en LogActivity (usuario actual o null).
+     * Si necesitas otro usuario_id, usa create() directo.
+     */
     public static function registrar(string $accion, ?int $usuarioId = null, ?string $descripcion = null, ?string $ip = null): void
     {
-        static::create([
+        if ($usuarioId === null && $ip === null) {
+            LogActivity::registrar($accion, $descripcion);
+
+            return;
+        }
+
+        static::query()->create([
             'accion'      => $accion,
             'usuario_id'  => $usuarioId,
-            'descripcion' => $descripcion,
+            'descripcion' => $descripcion ?? '',
             'ip'          => $ip ?? request()->ip(),
         ]);
     }

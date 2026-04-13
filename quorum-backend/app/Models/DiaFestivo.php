@@ -13,5 +13,12 @@ class DiaFestivo extends Model
         'fecha',
         'descripcion',
         'activo',
+        'creado_en',
+        'actualizado_en',
+    ];
+
+    /** @var array<string, string> */
+    protected $casts = [
+        'fecha' => 'date',
     ];
 }

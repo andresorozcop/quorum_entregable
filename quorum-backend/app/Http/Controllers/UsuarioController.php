@@ -6,6 +6,7 @@ use App\Http\Requests\StoreUsuarioRequest;
 use App\Http\Requests\UpdateUsuarioRequest;
 use App\Models\Usuario;
 use App\Services\TotpService;
+use App\Support\LogActivity;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,6 +76,11 @@ class UsuarioController extends Controller
             return $this->respuestaErrorBd($e);
         }
 
+        LogActivity::registrar(
+            'crear_usuario',
+            $usuario->correo.' — rol '.$usuario->rol
+        );
+
         return response()->json([
             'message' => 'Usuario creado correctamente.',
             'data'    => $this->serializarUsuario($usuario->fresh()),
@@ -113,6 +119,11 @@ class UsuarioController extends Controller
             return $this->respuestaErrorBd($e);
         }
 
+        LogActivity::registrar(
+            'actualizar_usuario',
+            'Id '.$usuario->id.' — '.$usuario->correo
+        );
+
         return response()->json([
             'message' => 'Usuario actualizado correctamente.',
             'data'    => $this->serializarUsuario($usuario->fresh()),
@@ -134,6 +145,11 @@ class UsuarioController extends Controller
             'activo'         => 1,
             'actualizado_en' => now(),
         ]);
+
+        LogActivity::registrar(
+            'reactivar_usuario',
+            'Id '.$usuario->id.' — '.$usuario->correo
+        );
 
         return response()->json([
             'message' => 'El usuario fue reactivado.',
@@ -157,16 +173,28 @@ class UsuarioController extends Controller
                 'actualizado_en' => now(),
             ]);
 
+            LogActivity::registrar(
+                'desactivar_usuario',
+                'Id '.$usuario->id.' — '.$usuario->correo
+            );
+
             return response()->json([
                 'message' => 'El usuario fue desactivado.',
             ]);
         }
+
+        $idEliminado = $usuario->id;
 
         try {
             $usuario->delete();
         } catch (QueryException $e) {
             return $this->respuestaErrorFk($e);
         }
+
+        LogActivity::registrar(
+            'eliminar_usuario_permanente',
+            'Id '.$idEliminado
+        );
 
         return response()->json([
             'message' => 'El usuario fue eliminado permanentemente.',

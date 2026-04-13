@@ -16,6 +16,8 @@ class CentroFormacion extends Model
         'nombre',
         'codigo',
         'activo',
+        'creado_en',
+        'actualizado_en',
     ];
 
     // Un centro tiene muchas fichas

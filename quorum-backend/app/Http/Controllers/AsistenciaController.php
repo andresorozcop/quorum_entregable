@@ -10,6 +10,7 @@ use App\Models\FichaCaracterizacion;
 use App\Models\RegistroAsistencia;
 use App\Models\Sesion;
 use App\Services\AsistenciaService;
+use App\Support\LogActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -85,6 +86,12 @@ class AsistenciaController extends Controller
             ], 422);
         }
 
+        $sesion->refresh();
+        LogActivity::registrar(
+            'guardar_asistencia',
+            'Sesión id '.$sesion->id.' — ficha '.$sesion->ficha_id.' — fecha '.$sesion->fecha
+        );
+
         return response()->json([
             'message' => 'Asistencia guardada correctamente.',
         ]);
@@ -107,6 +114,11 @@ class AsistenciaController extends Controller
                 'errors'  => $e->errors(),
             ], 422);
         }
+
+        LogActivity::registrar(
+            'corregir_asistencia',
+            'Registro id '.$registro->id.' — aprendiz '.$registro->aprendiz_id
+        );
 
         return response()->json([
             'message' => 'Registro actualizado correctamente.',

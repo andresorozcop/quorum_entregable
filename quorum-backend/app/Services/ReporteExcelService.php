@@ -9,25 +9,101 @@ use App\Models\RegistroAsistencia;
 use App\Models\Sesion;
 use App\Models\Usuario;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Throwable;
 
-// Genera el Excel CPIC desde plantilla (Módulo 11 — PRD sección 21)
+// Genera el Excel CPIC desde plantilla (M11) — geometría alineada a plantilla institucional
 class ReporteExcelService
 {
-    /** Plantilla oficial: en storage/app (no se sobrescribe nunca) */
+    /** Debe coincidir con plantilla_asistencia.xlsx (columna causal deserción) */
+    private const COL_CAUSAL = 'CG';
+
+    /** Debe coincidir con plantilla_asistencia.xlsx (columna observaciones) */
+    private const COL_OBS = 'CH';
+
+    /** Debe coincidir con plantilla_asistencia.xlsx (columna total horas inasistencia) */
+    private const COL_TOTAL = 'DD';
+
+    /** Celda del centro en la plantilla (etiqueta + nombre; debe coincidir con plantilla_asistencia.xlsx) */
+    private const CELDA_CENTRO = 'D6';
+
+    private const FILA_INICIO_APRENDICES = 10;
+
+    /** Fila donde la plantilla tiene el bloque de firmas (con hasta 46 aprendices) */
+    private const FILA_FIRMAS_PLANTILLA = 56;
+
+    /** Filas de aprendiz reservadas en plantilla antes de insertar más */
+    private const MAX_FILAS_APRENDIZ_PLANTILLA = 46;
+
     private function rutaPlantilla(): string
     {
         return storage_path('app/plantilla_asistencia.xlsx');
     }
 
     /**
-     * Crea el archivo temporal y devuelve [ruta absoluta, nombre para descarga].
+     * Columnas de fechas: F…Z, AA…DF (igual que implementación de referencia CPIC).
      *
+     * @return list<string>
+     */
+    private function getColumnasDisponibles(): array
+    {
+        $columnas = [];
+        for ($i = ord('F'); $i <= ord('Z'); $i++) {
+            $columnas[] = chr($i);
+        }
+        for ($i = ord('A'); $i <= ord('Z'); $i++) {
+            for ($j = ord('A'); $j <= ord('Z'); $j++) {
+                $col = chr($i).chr($j);
+                if ($col >= 'AA' && $col <= 'DF') {
+                    $columnas[] = $col;
+                }
+                if ($col === 'DF') {
+                    break 2;
+                }
+            }
+        }
+
+        return $columnas;
+    }
+
+    /**
+     * Días hábiles entre dos fechas: sin domingo ni festivos activos en BD.
+     *
+     * @return Collection<int, Carbon>
+     */
+    private function diasHabilesEnRango(string $desde, string $hasta): Collection
+    {
+        $festivos = DiaFestivo::query()
+            ->where('activo', 1)
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->pluck('fecha')
+            ->map(fn ($f) => (string) $f)
+            ->flip();
+
+        $salida = collect();
+        $cur = Carbon::parse($desde, 'America/Bogota')->startOfDay();
+        $fin = Carbon::parse($hasta, 'America/Bogota')->startOfDay();
+
+        while ($cur->lte($fin)) {
+            $ymd = $cur->format('Y-m-d');
+            if ((int) $cur->format('N') !== 7 && ! $festivos->has($ymd)) {
+                $salida->push($cur->copy());
+            }
+            $cur->addDay();
+        }
+
+        return $salida;
+    }
+
+    /**
      * @return array{0: string, 1: string}
      */
     public function generarYGuardarTemporal(FichaCaracterizacion $ficha, string $desde, string $hasta): array
@@ -39,10 +115,17 @@ class ReporteExcelService
 
         $ficha->load(['programa', 'centro']);
 
-        $sesiones = $this->sesionesCerradasPeriodo($ficha->id, $desde, $hasta);
-        if ($sesiones->isEmpty()) {
+        $diasHabiles = $this->diasHabilesEnRango($desde, $hasta);
+        if ($diasHabiles->isEmpty()) {
             throw ValidationException::withMessages([
-                'periodo' => ['No hay sesiones cerradas en el periodo seleccionado.'],
+                'periodo' => ['No hay días hábiles en el periodo seleccionado (domingos y festivos excluidos).'],
+            ]);
+        }
+
+        $columnas = $this->getColumnasDisponibles();
+        if ($diasHabiles->count() > count($columnas)) {
+            throw ValidationException::withMessages([
+                'periodo' => ['El periodo tiene más días hábiles que columnas disponibles en la plantilla (máximo '.count($columnas).' días).'],
             ]);
         }
 
@@ -53,12 +136,17 @@ class ReporteExcelService
             ]);
         }
 
-        $sesionIds = $sesiones->pluck('id')->all();
-        $registrosPorSesionYAprendiz = RegistroAsistencia::query()
-            ->whereIn('sesion_id', $sesionIds)
-            ->where('activo', 1)
-            ->get()
-            ->groupBy(fn (RegistroAsistencia $r) => $r->sesion_id.'_'.$r->aprendiz_id);
+        // Una sesión cerrada por fecha (si hay varias el mismo día, la de menor id)
+        $sesionesPorFecha = $this->sesionesCerradasPorFecha($ficha->id, $desde, $hasta);
+
+        $sesionIds = $sesionesPorFecha->values()->pluck('id')->unique()->all();
+        $registrosPorSesionYAprendiz = $sesionIds === []
+            ? collect()
+            : RegistroAsistencia::query()
+                ->whereIn('sesion_id', $sesionIds)
+                ->where('activo', 1)
+                ->get()
+                ->groupBy(fn (RegistroAsistencia $r) => $r->sesion_id.'_'.$r->aprendiz_id);
 
         $dataPrograma = (string) ($ficha->programa?->nombre ?? '');
         $dataInstructores = 'Instructor/Tutor: '.$this->cadenaInstructores($ficha->id);
@@ -70,42 +158,44 @@ class ReporteExcelService
         $hastaFmt = Carbon::parse($hasta, 'America/Bogota')->format('d/m/Y');
         $dataPeriodo = 'Periodo: '.$desdeFmt.' a '.$hastaFmt;
 
-        $fechasCabecera = $sesiones->map(function (Sesion $s) {
-            $fecha = $s->fecha instanceof \Carbon\CarbonInterface
-                ? $s->fecha
-                : Carbon::parse((string) $s->fecha, 'America/Bogota');
+        // Por cada día hábil: columna + sesión + nombre instructor para pie
+        $columnaPorIndice = [];
+        $instructoresPorDia = [];
+        foreach ($diasHabiles->values() as $i => $dia) {
+            $ymd = $dia->format('Y-m-d');
+            $columnaPorIndice[$i] = $columnas[$i];
+            $sesion = $sesionesPorFecha->get($ymd);
+            if ($sesion && $sesion->instructor) {
+                $instructoresPorDia[$i] = trim($sesion->instructor->nombre.' '.$sesion->instructor->apellido);
+            } else {
+                $instructoresPorDia[$i] = '';
+            }
+        }
 
-            return $fecha->format('d/m');
-        })->all();
-
-        $instructoresDiarios = $sesiones->map(function (Sesion $s) {
-            $inst = $s->instructor;
-
-            return $inst ? trim($inst->nombre.' '.$inst->apellido) : '—';
-        })->all();
-
-        // Matriz: por aprendiz, horas por índice de sesión (0 = vacío si no aplica)
+        // Matriz aprendiz × índice_día
         $estudiantes = [];
         foreach ($aprendices as $ap) {
-            $inasistencias = [];
+            $celdas = [];
             $total = 0;
-            foreach ($sesiones as $i => $sesion) {
-                $key = $sesion->id.'_'.$ap->id;
-                /** @var RegistroAsistencia|null $reg */
-                $reg = $registrosPorSesionYAprendiz->get($key)?->first();
-                $horas = $this->horasInasistenciaCelda($reg, $sesion);
-                $inasistencias[$i] = $horas;
+            foreach ($diasHabiles->values() as $i => $dia) {
+                $ymd = $dia->format('Y-m-d');
+                $sesion = $sesionesPorFecha->get($ymd);
+                $horas = 0;
+                if ($sesion) {
+                    $key = $sesion->id.'_'.$ap->id;
+                    $reg = $registrosPorSesionYAprendiz->get($key)?->first();
+                    $horas = $this->horasInasistenciaCelda($reg, $sesion);
+                }
+                $celdas[$i] = $horas;
                 if ($horas > 0) {
                     $total += $horas;
                 }
             }
             $estudiantes[] = [
-                'nombre'                     => trim($ap->nombre.' '.$ap->apellido),
-                'documento'                  => (string) $ap->documento,
-                'inasistencias'              => $inasistencias,
-                'causal'                     => '',
-                'observaciones'              => '',
-                'total_horas_inasistencia'   => $total,
+                'nombre'                   => trim($ap->nombre.' '.$ap->apellido),
+                'documento'                => (string) $ap->documento,
+                'por_dia'                  => $celdas,
+                'total_horas_inasistencia' => $total,
             ];
         }
 
@@ -116,62 +206,102 @@ class ReporteExcelService
             throw new \RuntimeException('No se pudo leer la plantilla Excel.');
         }
 
+        // Quitar comentarios en todas las hojas (evita problemas al guardar)
+        foreach ($spreadsheet->getAllSheets() as $hoja) {
+            if (! $hoja instanceof Worksheet) {
+                continue;
+            }
+            $comentarios = $hoja->getComments();
+            foreach (array_keys($comentarios) as $direccion) {
+                $hoja->removeComment($direccion);
+            }
+        }
+
         $worksheet = $spreadsheet->getActiveSheet();
 
-        // Cabeceras estáticas (PRD §21)
         $worksheet->getCell('A4')->setValue('Programa de Formación: '.$dataPrograma);
         $worksheet->getCell('A5')->setValue($dataInstructores);
         $worksheet->getCell('A6')->setValue($dataFicha);
-        $worksheet->getCell('D6')->setValue($dataCentro);
+        $worksheet->getCell(self::CELDA_CENTRO)->setValue($dataCentro);
         $worksheet->getCell('F8')->setValue($dataPeriodo);
 
-        $colInicio = 6; // Columna F
-        foreach ($fechasCabecera as $i => $fechaTxt) {
-            $colLetra = Coordinate::stringFromColumnIndex($colInicio + $i);
-            $worksheet->getCell($colLetra.'9')->setValue($fechaTxt);
+        $nAprendices = count($estudiantes);
+        if ($nAprendices > self::MAX_FILAS_APRENDIZ_PLANTILLA) {
+            $worksheet->insertNewRowBefore(self::FILA_FIRMAS_PLANTILLA, $nAprendices - self::MAX_FILAS_APRENDIZ_PLANTILLA);
         }
 
-        $numFechas = count($fechasCabecera);
-        $colCausal = $colInicio + $numFechas;
-        $colObservaciones = $colCausal + 1;
-        $colTotal = $colObservaciones + 1;
+        $filaInicio = self::FILA_INICIO_APRENDICES;
+        $filaFirmas = $filaInicio + max($nAprendices, self::MAX_FILAS_APRENDIZ_PLANTILLA);
 
-        $filaBase = 10;
-        if (count($estudiantes) > 1) {
-            // Insertar filas para no romper el pie de página de la plantilla
-            $worksheet->insertNewRowBefore(11, count($estudiantes) - 1);
+        // Cabeceras de fechas (fila 9)
+        foreach ($diasHabiles->values() as $i => $dia) {
+            $col = $columnaPorIndice[$i];
+            $celda = $col.'9';
+            $worksheet->getCell($celda)->setValue($dia->format('d/m/Y'));
+            $this->aplicarEstiloFechaCabecera($worksheet, $celda);
         }
+
+        $totalesPorFila = [];
 
         foreach ($estudiantes as $idx => $aprendiz) {
-            $fila = $filaBase + $idx;
-            $worksheet->getCell('A'.$fila)->setValue($aprendiz['nombre']);
-            $worksheet->getCell('D'.$fila)->setValue($aprendiz['documento']);
+            $fila = $filaInicio + $idx;
+            $totalesPorFila[$fila] = $aprendiz['total_horas_inasistencia'];
 
-            foreach ($aprendiz['inasistencias'] as $i => $horas) {
-                $colLetra = Coordinate::stringFromColumnIndex($colInicio + $i);
-                $celda = $colLetra.$fila;
+            $worksheet->getCell('A'.$fila)->setValue($aprendiz['nombre']);
+            $this->aplicarEstiloCeldaDatos($worksheet, 'A'.$fila, false);
+
+            $worksheet->getCell('D'.$fila)->setValue($aprendiz['documento']);
+            $this->aplicarEstiloCeldaDatos($worksheet, 'D'.$fila, false);
+
+            foreach ($aprendiz['por_dia'] as $i => $horas) {
+                $col = $columnaPorIndice[$i];
+                $celda = $col.$fila;
                 if ($horas > 0) {
                     $worksheet->getCell($celda)->setValue($horas);
                 } else {
-                    // Presente / excusa / sin dato: celda vacía (no cero)
                     $worksheet->getCell($celda)->setValue('');
                 }
+                $this->aplicarEstiloCeldaDatos($worksheet, $celda, true);
             }
 
-            $worksheet->getCell(Coordinate::stringFromColumnIndex($colCausal).$fila)
-                ->setValue($aprendiz['causal'] ?? '');
-            $worksheet->getCell(Coordinate::stringFromColumnIndex($colObservaciones).$fila)
-                ->setValue($aprendiz['observaciones'] ?? '');
-            $worksheet->getCell(Coordinate::stringFromColumnIndex($colTotal).$fila)
-                ->setValue($aprendiz['total_horas_inasistencia']);
+            $worksheet->getCell(self::COL_CAUSAL.$fila)->setValue('');
+            $this->aplicarEstiloCeldaDatos($worksheet, self::COL_CAUSAL.$fila, false);
+
+            $worksheet->getCell(self::COL_OBS.$fila)->setValue('');
+            $this->aplicarEstiloCeldaDatos($worksheet, self::COL_OBS.$fila, false);
         }
 
-        $filaFooter = $filaBase + count($estudiantes) + 1;
-        foreach ($instructoresDiarios as $i => $nombreInstructor) {
-            $colLetra = Coordinate::stringFromColumnIndex($colInicio + $i);
-            $celda = $colLetra.$filaFooter;
-            $worksheet->getCell($celda)->setValue($nombreInstructor);
-            $worksheet->getStyle($celda)->getAlignment()->setTextRotation(90);
+        // Firmas instructores (misma fila que plantilla tras lógica de huecos)
+        foreach ($diasHabiles->values() as $i => $_dia) {
+            $col = $columnaPorIndice[$i];
+            $nombre = $instructoresPorDia[$i] ?? '';
+            $celda = $col.$filaFirmas;
+            $worksheet->getCell($celda)->setValue($nombre);
+            $pie = $worksheet->getStyle($celda);
+            $pie->getFont()
+                ->setColor(new Color('FF000000'))
+                ->setName('Arial')
+                ->setSize(10);
+            $pie->getFill()->setFillType(Fill::FILL_NONE);
+            $pie->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER)
+                ->setWrapText(true)
+                ->setTextRotation(90);
+        }
+
+        $filaUltimoAprendiz = $filaInicio + $nAprendices - 1;
+        if ($filaFirmas > $filaUltimoAprendiz + 1) {
+            $filasAEliminar = $filaFirmas - $filaUltimoAprendiz - 1;
+            $worksheet->removeRow($filaUltimoAprendiz + 1, $filasAEliminar);
+            $filaFirmas -= $filasAEliminar;
+        }
+
+        // Totales en DD (después de removeRow las filas de aprendiz no cambian)
+        foreach ($totalesPorFila as $fila => $total) {
+            $valorTotal = $total > 0 ? $total : '';
+            $worksheet->getCell(self::COL_TOTAL.$fila)->setValue($valorTotal);
+            $this->aplicarEstiloCeldaDatos($worksheet, self::COL_TOTAL.$fila, false);
         }
 
         $dirTemp = storage_path('app/temp');
@@ -195,46 +325,60 @@ class ReporteExcelService
         return [$rutaSalida, $nombreArchivo];
     }
 
-    /**
-     * Sesiones cerradas en rango, sin domingos ni días festivos activos.
-     *
-     * @return \Illuminate\Support\Collection<int, Sesion>
-     */
-    private function sesionesCerradasPeriodo(int $fichaId, string $desde, string $hasta)
+    /** Estilo legible: negro, sin relleno (anula formatos rojos de la plantilla) */
+    private function aplicarEstiloCeldaDatos(Worksheet $sheet, string $coord, bool $centrar): void
     {
-        $festivos = DiaFestivo::query()
-            ->where('activo', 1)
-            ->whereBetween('fecha', [$desde, $hasta])
-            ->pluck('fecha')
-            ->map(fn ($f) => (string) $f)
-            ->flip();
+        $estilo = $sheet->getStyle($coord);
+        $estilo->getFont()
+            ->setColor(new Color('FF000000'))
+            ->setName('Arial')
+            ->setSize(10);
+        $estilo->getFill()->setFillType(Fill::FILL_NONE);
+        if ($centrar) {
+            $estilo->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
+    }
 
-        return Sesion::query()
+    private function aplicarEstiloFechaCabecera(Worksheet $sheet, string $coord): void
+    {
+        $estilo = $sheet->getStyle($coord);
+        $estilo->getFont()
+            ->setColor(new Color('FF000000'))
+            ->setName('Arial')
+            ->setSize(10);
+        $estilo->getFill()->setFillType(Fill::FILL_NONE);
+        $estilo->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    }
+
+    /**
+     * Sesiones cerradas en rango, indexadas por Y-m-d (primera por id si hay varias el mismo día).
+     *
+     * @return Collection<string, Sesion>
+     */
+    private function sesionesCerradasPorFecha(int $fichaId, string $desde, string $hasta): Collection
+    {
+        $lista = Sesion::query()
             ->where('ficha_id', $fichaId)
             ->where('estado', 'cerrada')
             ->whereBetween('fecha', [$desde, $hasta])
             ->with(['instructor:id,nombre,apellido'])
             ->orderBy('fecha')
             ->orderBy('id')
-            ->get()
-            ->filter(function (Sesion $s) use ($festivos) {
-                $fechaStr = $s->fecha instanceof \Carbon\CarbonInterface
-                    ? $s->fecha->format('Y-m-d')
-                    : Carbon::parse((string) $s->fecha, 'America/Bogota')->format('Y-m-d');
-                $d = Carbon::parse($fechaStr, 'America/Bogota');
-                if ((int) $d->format('N') === 7) {
-                    return false;
-                }
-                if ($festivos->has($fechaStr)) {
-                    return false;
-                }
+            ->get();
 
-                return true;
-            })
-            ->values();
+        $mapa = collect();
+        foreach ($lista as $sesion) {
+            $fechaStr = $sesion->fecha instanceof \Carbon\CarbonInterface
+                ? $sesion->fecha->format('Y-m-d')
+                : Carbon::parse((string) $sesion->fecha, 'America/Bogota')->format('Y-m-d');
+            if (! $mapa->has($fechaStr)) {
+                $mapa->put($fechaStr, $sesion);
+            }
+        }
+
+        return $mapa;
     }
 
-    /** Aprendices activos de la ficha (mismo criterio que historial M8) */
     private function listarAprendicesFicha(int $fichaId)
     {
         return Usuario::query()
@@ -246,7 +390,6 @@ class ReporteExcelService
             ->get(['id', 'nombre', 'apellido', 'documento']);
     }
 
-    /** Gestor primero, luego el resto por apellido y nombre */
     private function cadenaInstructores(int $fichaId): string
     {
         $filas = FichaInstructor::query()
@@ -274,7 +417,7 @@ class ReporteExcelService
         return implode(', ', array_filter($nombres));
     }
 
-    /** Horas a mostrar en celda: 0 si presente, excusa o sin registro */
+    /** Horas a mostrar: 0 = celda vacía en Excel */
     private function horasInasistenciaCelda(?RegistroAsistencia $reg, Sesion $sesion): int
     {
         if ($reg === null) {
@@ -283,7 +426,7 @@ class ReporteExcelService
 
         return match ($reg->tipo) {
             'falla' => (int) $sesion->horas_programadas,
-            'parcial' => (int) ($reg->horas_inasistencia ?? 0),
+            'parcial' => max(0, (int) ($reg->horas_inasistencia ?? 0)),
             default => 0,
         };
     }

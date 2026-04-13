@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Configuracion;
 use App\Models\CentroFormacion;
 use App\Models\FichaCaracterizacion;
 use App\Models\ProgramaFormacion;
@@ -49,6 +50,19 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Si la base de datos no está disponible todavía, ignoramos el error
             // Esto evita problemas al correr comandos de artisan antes de crear la BD
+        }
+
+        // Tiempo de vida de la sesión (minutos) según tabla configuracion — M12
+        try {
+            $timeout = Configuracion::obtener('timeout_sesion');
+            if ($timeout !== null && is_numeric($timeout)) {
+                $minutos = (int) $timeout;
+                if ($minutos >= 1 && $minutos <= 999) {
+                    config(['session.lifetime' => $minutos]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Sin BD o sin fila: se usa session.lifetime del .env
         }
     }
 }

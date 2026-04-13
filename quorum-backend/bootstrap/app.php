@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'coordinador_o_admin' => \App\Http\Middleware\EnsureCoordinadorOAdmin::class,
+            'admin'               => \App\Http\Middleware\EnsureAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

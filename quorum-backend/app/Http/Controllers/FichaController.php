@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateFichaRequest;
 use App\Models\FichaCaracterizacion;
 use App\Models\Usuario;
 use App\Services\FichaService;
+use App\Support\LogActivity;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,11 @@ class FichaController extends Controller
         } catch (QueryException $e) {
             return $this->respuestaErrorBd($e);
         }
+
+        LogActivity::registrar(
+            'crear_ficha',
+            'Ficha '.$ficha->numero_ficha.' (id '.$ficha->id.')'
+        );
 
         return response()->json([
             'message' => 'Ficha de caracterización creada correctamente.',
@@ -116,6 +122,11 @@ class FichaController extends Controller
             return $this->respuestaErrorBd($e);
         }
 
+        LogActivity::registrar(
+            'actualizar_ficha',
+            'Ficha '.$ficha->numero_ficha.' (id '.$ficha->id.')'
+        );
+
         return response()->json([
             'message' => 'Ficha de caracterización actualizada correctamente.',
             'data'    => $this->serializarFicha($ficha->load(['centro', 'programa'])),
@@ -128,6 +139,11 @@ class FichaController extends Controller
 
         $this->fichaService->desactivarFicha($ficha);
 
+        LogActivity::registrar(
+            'desactivar_ficha',
+            'Ficha '.$ficha->numero_ficha.' (id '.$ficha->id.')'
+        );
+
         return response()->json([
             'message' => 'La ficha de caracterización fue desactivada.',
         ]);
@@ -138,6 +154,11 @@ class FichaController extends Controller
         $this->authorize('reactivate', $ficha);
 
         $this->fichaService->reactivarFicha($ficha);
+
+        LogActivity::registrar(
+            'reactivar_ficha',
+            'Ficha '.$ficha->numero_ficha.' (id '.$ficha->id.')'
+        );
 
         return response()->json([
             'message' => 'La ficha de caracterización fue reactivada.',
@@ -224,6 +245,11 @@ class FichaController extends Controller
             return $this->respuestaErrorBd($e);
         }
 
+        LogActivity::registrar(
+            'asignar_instructor_ficha',
+            'Ficha id '.$ficha->id.' — acción '.$request->input('accion')
+        );
+
         $ficha->load([
             'fichaInstructores' => fn ($q) => $q->where('activo', 1)->with('usuario:id,nombre,apellido,correo,rol'),
         ]);
@@ -257,6 +283,11 @@ class FichaController extends Controller
                 'errors'  => $e->errors(),
             ], 422);
         }
+
+        LogActivity::registrar(
+            'importar_aprendices',
+            'Ficha id '.$ficha->id.' — '.$ficha->numero_ficha
+        );
 
         return response()->json([
             'message' => 'Importación finalizada.',

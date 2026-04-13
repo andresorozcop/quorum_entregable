@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DescargarReporteExcelRequest;
 use App\Models\FichaCaracterizacion;
 use App\Services\ReporteExcelService;
+use App\Support\LogActivity;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -33,6 +34,11 @@ class ReporteController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+
+        LogActivity::registrar(
+            'descargar_reporte_excel',
+            'Ficha '.$ficha->numero_ficha.' — '.$desde.' a '.$hasta
+        );
 
         return response()->download($rutaAbsoluta, $nombreArchivo, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
