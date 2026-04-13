@@ -111,11 +111,13 @@
 
 ## Rutas frontend (referencia)
 
-`/`, `/login`, `/2fa/configurar`, `/2fa/verificar`, `/recuperar`, `/reset`, `/dashboard`, `/fichas`, `/fichas/nueva`, `/fichas/[id]`, `/asistencia/tomar`, `/asistencia/historial`, `/coordinador`, `/mi-historial`, `/usuarios`, `/usuarios/nuevo`, `/usuarios/[id]/editar`, `/perfil`, `/configuracion` — con roles según PRD (tabla 12 del PRD).
+`/`, `/login`, `/2fa/configurar`, `/2fa/verificar`, `/recuperar`, `/reset`, `/dashboard`, `/fichas`, `/fichas/nueva`, `/fichas/[id]`, `/asistencia/tomar`, `/asistencia/historial`, `/asistencia/auditoria` (solo **admin**), `/centros-formacion` (solo **admin**), `/coordinador`, `/mi-historial`, `/usuarios`, `/usuarios/nuevo`, `/usuarios/[id]/editar`, `/perfil`, `/configuracion` — con roles según PRD (tabla 12 del PRD).
+
+**UI:** modo oscuro con clase `dark` en `html` (Tailwind `darkMode: 'class'`), persistido en `localStorage` (`quorum-theme`), script inicial para evitar flash; SweetAlert2 sincroniza `colorScheme`. Escala de texto global vía `--font-scale` en `html` (`quorum-font-scale` en `localStorage`, rango 0.85–2); **alto contraste** con clase `high-contrast` en `html` y clave `quorum-high-contrast` en `localStorage` (script inicial + Headbar + `/perfil`). Evento `quorum-preferencias-accesibilidad` para sincronizar Headbar y perfil en la misma pestaña. El layout del dashboard usa `min-w-0` y scroll horizontal donde aplica para tablas anchas.
 
 ## API backend (referencia)
 
-Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. **Usuarios (M6):** `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}`, `POST /api/usuarios/{id}/reactivar` (admin). **Asistencia (M7–M8):** `POST /api/asistencia/iniciar-sesion`, `POST /api/asistencia/sesiones/{sesion}/guardar`, `PUT /api/asistencia/registros/{registro}` (corrección con sesión cerrada; instructor dueño de la sesión), `GET /api/asistencia/historial/{ficha}` (query: `desde`, `hasta`, `tipo[]`, `jornada_ficha_id` opcional; admin/coordinador/instructor/gestor; `FichaPolicy::view`). **Aprendiz (M9):** `GET /api/mi-historial` (`auth:sanctum` **sin** `EnsureTotpSessionOk`; solo `rol=aprendiz`; query con `aprendiz_id`/`aprendiz`/`usuario_id`/`user_id` → 403). **Coordinador (M10):** bajo `auth:sanctum` + `EnsureTotpSessionOk` + middleware `coordinador_o_admin`: `GET /api/coordinador/fichas` (listado; por defecto `activo=1`), `GET /api/coordinador/asistencia/ficha/{ficha}` (matriz, misma lógica M8), `GET /api/coordinador/aprendices/buscar?q=`, `GET /api/coordinador/aprendices/{aprendiz}/historial` (misma forma que M9; solo `aprendiz` activo), `GET /api/coordinador/estadisticas?centro_id=` opcional. **Catálogo centros:** `GET /api/centros-formacion` también permitido a `coordinador` (solo lectura). **Reporte Excel (M11):** `GET /api/reportes/excel/{ficha}?desde=Y-m-d&hasta=Y-m-d` — `auth:sanctum` + `EnsureTotpSessionOk` + `FichaPolicy::view` (admin, coordinador, instructor, gestor); descarga binaria; plantilla `storage/app/plantilla_asistencia.xlsx` solo lectura; salida temporal en `storage/app/temp/` y `deleteFileAfterSend`. M12: CRUD días festivos — detalle en PRD sección 12.
+Autenticación: `POST /api/auth/login`, `login-aprendiz`, `logout`, 2FA, `recuperar`, `reset`. **Fichas (M5):** `GET/POST /api/fichas`, `GET/PUT/DELETE /api/fichas/{id}`, `POST .../instructores`, `POST .../importar-aprendices`, `GET /api/centros-formacion`, `GET /api/programas-formacion`, `GET /api/instructores-disponibles`. **Usuarios (M6):** `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}`, `POST /api/usuarios/{id}/reactivar` (admin). **Asistencia (M7–M8):** `POST /api/asistencia/iniciar-sesion`, `POST /api/asistencia/sesiones/{sesion}/guardar`, `PUT /api/asistencia/registros/{registro}` (corrección con sesión cerrada; instructor dueño de la sesión), `GET /api/asistencia/historial/{ficha}` (query: `desde`, `hasta`, `tipo[]`, `jornada_ficha_id` opcional; admin/coordinador/instructor/gestor; `FichaPolicy::view`). **Aprendiz (M9):** `GET /api/mi-historial` (`auth:sanctum` **sin** `EnsureTotpSessionOk`; solo `rol=aprendiz`; query con `aprendiz_id`/`aprendiz`/`usuario_id`/`user_id` → 403). **Coordinador (M10):** bajo `auth:sanctum` + `EnsureTotpSessionOk` + middleware `coordinador_o_admin`: `GET /api/coordinador/fichas` (listado; por defecto `activo=1`), `GET /api/coordinador/asistencia/ficha/{ficha}` (matriz, misma lógica M8), `GET /api/coordinador/aprendices/buscar?q=`, `GET /api/coordinador/aprendices/{aprendiz}/historial` (misma forma que M9; solo `aprendiz` activo), `GET /api/coordinador/estadisticas?centro_id=` opcional. **Catálogo centros:** `GET /api/centros-formacion` también permitido a `coordinador` (solo lectura). **Reporte Excel (M11):** `GET /api/reportes/excel/{ficha}?desde=Y-m-d&hasta=Y-m-d` — `auth:sanctum` + `EnsureTotpSessionOk` + `FichaPolicy::view` (admin, coordinador, instructor, gestor); descarga binaria; una columna por **día hábil** del rango (F…DF); sesión cerrada por día si existe; plantilla `storage/app/plantilla_asistencia.xlsx` solo lectura; salida temporal en `storage/app/temp/` y `deleteFileAfterSend`. **Configuración y festivos (M12):** `GET/PATCH /api/configuracion` (body PATCH: `clave`, `valor`; claves editables acotadas); `GET/POST /api/dias-festivos`, `GET/PUT/DELETE /api/dias-festivos/{id}`; `GET /api/historial-actividad` (últimas 20); todo bajo `auth:sanctum` + `EnsureTotpSessionOk` + middleware `admin`. **Centros de formación (admin):** `GET/POST /api/admin/centros-formacion`, `PUT/DELETE /api/admin/centros-formacion/{id}`, `POST /api/admin/centros-formacion/{id}/reactivar` — solo `admin`; el listado admite filtro `activo` opcional. El **`GET /api/centros-formacion`** existente sigue devolviendo solo centros activos para selects (M5). **Auditoría de correcciones de asistencia (admin):** `GET /api/admin/auditoria-asistencia` con paginación (`page`, `per_page`) y filtros opcionales `desde`, `hasta`, `ficha_id`, `modificado_por` (sobre `registros_asistencia_backup.creado_en` y joins). **Perfil (M13):** `PATCH /api/perfil/contrasena` (body: `password_actual`, `password`, `password_confirmation`) — solo `auth:sanctum`; aprendiz sin `password` en BD → 422; política igual que M2; no permite reutilizar la misma contraseña. **`GET /api/auth/me`** y JSON de **login** (staff y aprendiz) incluyen `documento`, `activo`, `creado_en`, `ficha_id` donde aplica (helper `usuarioParaSesion` en `AuthController`) y `nombre_sistema` para el headbar.
 
 ## Variables de entorno (nombres; valores solo en `.env` local)
 
@@ -159,8 +161,8 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 - [x] **Módulo 9** — Vista aprendiz (`mi-historial`, totales, solo lectura, aislamiento)
 - [x] **Módulo 10** — Vista coordinador (pestañas Por Ficha / Por Aprendiz / Estadísticas, filtros cascada, Excel)
 - [x] **Módulo 11** — Reporte Excel CPIC (PhpSpreadsheet, plantilla en memoria, días hábiles, inyección coordenadas según PRD §21)
-- [ ] **Módulo 12** — Configuración y festivos Admin (config clave-valor, CRUD festivos, actividad, cambio contraseña propia)
-- [ ] **Módulo 13** — Perfil usuario (lectura, mensaje contacto admin, cambio contraseña, preferencias accesibilidad en localStorage)
+- [x] **Módulo 12** — Configuración y festivos Admin (config clave-valor, CRUD festivos, historial de actividad, `LogActivity`, headbar dinámico)
+- [x] **Módulo 13** — Perfil usuario (`/perfil`, avatar xl, lectura + gestradac@sena.edu.co, cambio contraseña staff, accesibilidad localStorage, `PATCH /api/perfil/contrasena`)
 
 ## Decisiones técnicas importantes
 
@@ -241,7 +243,7 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 
 - **Componentes nuevos creados:** `components/ui/Avatar.tsx`, `components/ui/Badge.tsx`, `components/ui/Sidebar.tsx`, `components/ui/Headbar.tsx`.
 - **Layout del dashboard:** `app/(dashboard)/layout.tsx` con `"use client"`, doble capa de protección: middleware (cookie) + `useEffect` que redirige si `!usuario` tras `getMe`.
-- **Menú por rol:** admin (Dashboard, Usuarios, Fichas, Historial, Vista coordinador, Configuración), coordinador (Dashboard, Vista coordinador, Historial), instructor/gestor (Dashboard, Tomar asistencia, Historial), aprendiz (Mi historial). Ítems adicionales del PRD §11 (Programas, Centros, Festivos) quedan para M5/M12.
+- **Menú por rol:** admin (Dashboard, Usuarios, Fichas, Historial, Vista coordinador, Configuración), coordinador (Dashboard, Vista coordinador, Historial), instructor/gestor (Dashboard, Tomar asistencia, Historial), aprendiz (Mi historial). Ítems del PRD §11: Programas/Centros en formularios de ficha (M5); festivos y parámetros globales en `/configuracion` (M12).
 - **Sidebar en desktop:** `lg:static lg:translate-x-0` — siempre visible sin overlay. En tablet/móvil: `fixed`, controlado por `sidebarAbierto` en el layout.
 - **Overlay móvil:** `<div>` semitransparente que cubre el contenido; clic fuera llama `onCerrar()`.
 - **Ítem activo:** `usePathname()` del App Router; `/dashboard` solo activo si la ruta es exactamente `/dashboard` (para no activar en `/dashboard/algo`).
@@ -329,18 +331,49 @@ Sin calificaciones/notas; sin integración SofiaPlus en tiempo real; sin alertas
 ## Decisiones tomadas en M11
 
 - **API:** `GET /api/reportes/excel/{ficha}` con query obligatoria `desde` y `hasta` (`Y-m-d`); `DescargarReporteExcelRequest`; `ReporteController@descargarExcel` + `ReporteExcelService`; autorización `FichaPolicy::view` (no está bajo `coordinador_o_admin` para permitir instructor/gestor).
-- **Sesiones en el Excel:** solo `estado = cerrada`, en rango de fechas, excluyendo domingos y fechas en `dias_festivos` activos (tras cargar, se filtra en colección).
-- **Plantilla:** `storage/app/plantilla_asistencia.xlsx`; carga con `IOFactory::load`; nunca se escribe sobre la plantilla; archivo generado en `storage/app/temp/` y descarga con `deleteFileAfterSend(true)`.
+- **Columnas plantilla CPIC (fijas en código):** fechas en **F…DF** por orden de días hábiles; **CG** causal, **CH** observaciones, **DD** total (deben coincidir con `plantilla_asistencia.xlsx`); centro (`Centro de Formación: {nombre}`) en **D6**; fila de firmas **56** con hasta **46** filas de aprendiz antes de insertar más; `removeRow` para quitar huecos entre último aprendiz y firmas.
+- **Lógica de días:** cada columna = un **día hábil** del rango `desde`–`hasta` (sin domingo ni `dias_festivos` activos); si ese día hay **sesión cerrada**, se toma el registro de asistencia; si no, la columna queda vacía.
+- **Plantilla:** `storage/app/plantilla_asistencia.xlsx`; carga con `IOFactory::load`; comentarios eliminados en todas las hojas al cargar; estilos de datos forzados a **negro / sin relleno / Arial 10** para anular formatos condicionales de la plantilla; nunca se sobrescribe la plantilla; salida en `storage/app/temp/` y `deleteFileAfterSend(true)`.
 - **Nombre archivo:** `reporte_{numero_ficha}_{Y-m}.xlsx` con `Y-m` en zona `America/Bogota` (como PRD §21).
-- **Cabecera D6:** nombre real del centro (`centro.nombre`), no texto fijo “CPIC”.
 - **Instructores A5:** gestores (`es_gestor`) primero, luego resto ordenado por apellido/nombre; nombres separados por comas.
 - **Front:** `components/reportes/BtnDescargarExcel.tsx` (modal de fechas, spinner, blob con `responseType: 'blob'`); integrado en `/asistencia/historial` y pestaña “Por ficha” de `/coordinador`; servicio `services/reportes.service.ts`.
 
+## Decisiones tomadas en M12
+
+- **Middleware:** `EnsureAdmin` (alias `admin`) — solo `rol === admin`; usado junto con `auth:sanctum` y `EnsureTotpSessionOk` en rutas de configuración, festivos e historial de actividad.
+- **LogActivity:** clase `App\Support\LogActivity::registrar($accion, $descripcion)` escribe en `historial_actividad` con `Auth::id()` e IP; `HistorialActividad::registrar()` delega en ella cuando no se pasa `usuario_id` explícito. Registro en: login staff/aprendiz, CRUD ficha (crear/actualizar/desactivar/reactivar), asignar instructores, importar aprendices, usuarios (crear/actualizar/desactivar/reactivar/eliminación permanente), guardar asistencia y corregir registro, descarga Excel, y operaciones de config/festivos.
+- **Configuración:** `ConfiguracionController@index` devuelve todas las filas; `PATCH` con lista blanca de claves (`nombre_sistema`, `nombre_institucion`, `timeout_sesion`, `max_intentos_login`, `minutos_bloqueo`). Login staff usa `max_intentos_login` y `minutos_bloqueo` desde BD (fallback 5 / 15). `AppServiceProvider` aplica `session.lifetime` desde `timeout_sesion` si es entero válido (1–999).
+- **Nombre del sistema:** `GET /api/auth/me` y login / 2FA exitoso devuelven `nombre_sistema`; `AuthContext` + `Headbar` lo muestran; tras guardar en `/configuracion` se llama `recargarUsuario()` para actualizar sin recargar la página.
+- **Festivos:** `DiaFestivoController` — listado año actual (query `anio` opcional), solo `activo=1`; `store` reactiva si ya existe la misma `fecha` con `activo=0` (respeta UNIQUE); `destroy` pone `activo=0`. Modelo `DiaFestivo` con `casts` en `fecha` y `fillable` de marcas de tiempo.
+- **Front:** `/configuracion` — cuatro secciones (datos sistema, seguridad con guardado individual, festivos con SweetAlert2 al desactivar, tabla historial); servicios `configuracion.service.ts`, `diasFestivos.service.ts`, `historialActividad.service.ts`.
+
+## Decisiones tomadas en M13
+
+- **Perfil:** `PerfilController@cambiarContrasena` + `CambiarContrasenaPerfilRequest`; validación JSON 422 con `errores` (mismo estilo que reset). Orden: aprendiz sin hash → 422; `Hash::check` contraseña actual; reglas nueva clave como M2; rechazo si nueva igual a actual; `bcrypt` + `actualizado_en`.
+- **Ruta:** `PATCH /api/perfil/contrasena` bajo `auth:sanctum` **sin** `EnsureTotpSessionOk` (paridad con `mi-historial`).
+- **Front:** `services/perfil.service.ts`; página cliente con `REQUISITOS_CONTRASENA` en vivo; SweetAlert2 en éxito/error; sección contraseña oculta para `rol === aprendiz`; Avatar `size="xl"`.
+- **Sesión JSON unificada:** `AuthController::usuarioParaSesion()` para login staff, login aprendiz y `me` — incluye `creado_en` para “Miembro desde”.
+- **Accesibilidad:** `quorum-high-contrast` en `localStorage`; script inicial en `quorumThemeInitScript.ts`; Headbar y `/perfil` guardan y escuchan `quorum-preferencias-accesibilidad`.
+
 ## Estado actual
 
-**Último módulo completado:** **Módulo 11 — Reporte Excel CPIC** ✓ (alineado con PRD v1.0 — abril 2026, sección 21)
+**Proyecto QUORUM v1.0 (PRD abril 2026): COMPLETO** — Módulos **M0 a M13** implementados y probados según checklist.
 
-**Próximo módulo:** **Módulo 12 — Configuración y festivos**.
+**Último módulo completado:** **Módulo 13 — Perfil de usuario** ✓
+
+### Módulos completados (lista cerrada)
+M0 Setup · M1 Autenticación · M2 Recuperación contraseña · M3 Layout · M4 Dashboard · M5 Fichas · M6 Usuarios · M7 Tomar asistencia · M8 Historial/matriz · M9 Mi historial aprendiz · M10 Coordinador · M11 Excel CPIC · M12 Configuración y festivos · **M13 Perfil**
+
+### Verificación final (PRD)
+- Revisar **§20** (lista de verificación universal) y **§24** (21 criterios de evaluación SENA) antes de entrega formal.
+- Commit sugerido: `feat: M13 perfil usuario - QUORUM v1.0 completo`.
+
+### Notas para despliegue
+- Alinear **`FRONTEND_URL`** en el `.env` del backend con la URL pública del front (correos, enlaces).
+- **`SANCTUM_STATEFUL_DOMAINS`** y **`config/cors.php`**: incluir el dominio/puerto exacto del front (si cambia el puerto de Next, actualizar ambos).
+- Cookies de sesión: mismo sitio o dominio padre según hosting; `SESSION_DOMAIN` y `SESSION_SECURE_COOKIE` en producción HTTPS.
+- Variables SMTP (`MAIL_*`) en servidor real para recuperación de contraseña.
+- Ejecutar `php artisan migrate --seed` (o migraciones + seeders controlados) en el entorno destino; no subir `.env`.
 
 ### Servidores de desarrollo
 - Frontend: `cd quorum-frontend && npm run dev` → http://localhost:3000

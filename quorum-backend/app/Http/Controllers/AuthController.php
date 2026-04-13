@@ -9,10 +9,12 @@ use App\Http\Requests\ProcesarResetRequest;
 use App\Http\Requests\SolicitarResetRequest;
 use App\Http\Requests\Verificar2FARequest;
 use App\Mail\ResetPasswordMail;
+use App\Models\Configuracion;
 use App\Models\IntentoLogin;
 use App\Models\TokenReset;
 use App\Models\Usuario;
 use App\Services\RecaptchaService;
+use App\Support\LogActivity;
 use App\Services\TotpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,10 +26,10 @@ use Illuminate\Support\Facades\Mail;
 // Controlador de autenticación — maneja los dos flujos de login y el logout
 class AuthController extends Controller
 {
-    // Número máximo de intentos fallidos antes de bloquear
-    private const MAX_INTENTOS = 5;
-    // Minutos de ventana para contar intentos fallidos
-    private const MINUTOS_BLOQUEO = 15;
+    // Valores por defecto si la tabla configuracion no tiene dato válido (M12)
+    private const INTENTOS_FALLBACK = 5;
+
+    private const MINUTOS_BLOQUEO_FALLBACK = 15;
 
     // -------------------------------------------------------------------------
     // Login para staff: admin, coordinador, instructor, gestor_grupo
@@ -38,12 +40,15 @@ class AuthController extends Controller
         $correo = $request->input('correo');
         $ip     = $request->ip();
 
-        // Verificamos si el correo está bloqueado por exceso de intentos fallidos
-        $intentosRecientes = IntentoLogin::recientesFallidos($correo, self::MINUTOS_BLOQUEO)->count();
+        $maxIntentos   = $this->maxIntentosLoginDesdeConfig();
+        $minutosBloqueo = $this->minutosBloqueoDesdeConfig();
 
-        if ($intentosRecientes >= self::MAX_INTENTOS) {
+        // Verificamos si el correo está bloqueado por exceso de intentos fallidos
+        $intentosRecientes = IntentoLogin::recientesFallidos($correo, $minutosBloqueo)->count();
+
+        if ($intentosRecientes >= $maxIntentos) {
             return response()->json([
-                'message' => 'Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.',
+                'message' => 'Demasiados intentos fallidos. Intenta de nuevo en '.$minutosBloqueo.' minutos.',
             ], 429);
         }
 
@@ -99,18 +104,12 @@ class AuthController extends Controller
         // Hasta pasar 2FA no se considera sesión completa para API protegidas
         $request->session()->put('totp_sesion_ok', false);
 
+        LogActivity::registrar('login_exitoso', 'Staff: '.$usuario->correo);
+
         return response()->json([
-            'usuario' => [
-                'id'               => $usuario->id,
-                'nombre'           => $usuario->nombre,
-                'apellido'         => $usuario->apellido,
-                'correo'           => $usuario->correo,
-                'rol'              => $usuario->rol,
-                'avatar_color'     => $usuario->avatar_color,
-                // El frontend usa este flag para decidir si ir a /2fa/configurar o /2fa/verificar
-                'totp_configurado' => (bool) $usuario->totp_verificado,
-            ],
+            'usuario'              => $this->usuarioParaSesion($usuario, true),
             'totp_sesion_completa' => false,
+            'nombre_sistema'       => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -160,17 +159,12 @@ class AuthController extends Controller
         $request->session()->regenerate();
         $request->session()->put('totp_sesion_ok', true);
 
+        LogActivity::registrar('login_exitoso', 'Aprendiz: '.$usuario->correo);
+
         return response()->json([
-            'usuario' => [
-                'id'           => $usuario->id,
-                'nombre'       => $usuario->nombre,
-                'apellido'     => $usuario->apellido,
-                'correo'       => $usuario->correo,
-                'rol'          => $usuario->rol,
-                'ficha_id'     => $usuario->ficha_id,
-                'avatar_color' => $usuario->avatar_color,
-            ],
+            'usuario'              => $this->usuarioParaSesion($usuario, false),
             'totp_sesion_completa' => true,
+            'nombre_sistema'       => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -203,19 +197,9 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'usuario' => [
-                'id'               => $usuario->id,
-                'nombre'           => $usuario->nombre,
-                'apellido'         => $usuario->apellido,
-                'correo'           => $usuario->correo,
-                'documento'        => $usuario->documento,
-                'rol'              => $usuario->rol,
-                'ficha_id'         => $usuario->ficha_id,
-                'avatar_color'     => $usuario->avatar_color,
-                'activo'           => $usuario->activo,
-                'totp_configurado' => (bool) $usuario->totp_verificado,
-            ],
+            'usuario'              => $this->usuarioParaSesion($usuario, true),
             'totp_sesion_completa' => $this->totpSesionCompleta($usuario, $request),
+            'nombre_sistema'       => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -270,7 +254,8 @@ class AuthController extends Controller
         $request->session()->put('totp_sesion_ok', true);
 
         return response()->json([
-            'message' => 'Autenticación en dos pasos activada correctamente.',
+            'message'          => 'Autenticación en dos pasos activada correctamente.',
+            'nombre_sistema'   => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -305,7 +290,8 @@ class AuthController extends Controller
         $request->session()->put('totp_sesion_ok', true);
 
         return response()->json([
-            'message' => 'Verificación correcta.',
+            'message'         => 'Verificación correcta.',
+            'nombre_sistema'  => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -405,6 +391,33 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Datos del usuario para respuestas JSON de sesión (login / me).
+     *
+     * @return array<string, mixed>
+     */
+    private function usuarioParaSesion(Usuario $usuario, bool $incluirEstadoTotp): array
+    {
+        $data = [
+            'id'           => $usuario->id,
+            'nombre'       => $usuario->nombre,
+            'apellido'     => $usuario->apellido,
+            'correo'       => $usuario->correo,
+            'documento'    => $usuario->documento,
+            'rol'          => $usuario->rol,
+            'ficha_id'     => $usuario->ficha_id,
+            'avatar_color' => $usuario->avatar_color,
+            'activo'       => (int) $usuario->activo,
+            'creado_en'    => $usuario->creado_en,
+        ];
+        if ($incluirEstadoTotp) {
+            // El frontend usa este flag para decidir si ir a /2fa/configurar o /2fa/verificar
+            $data['totp_configurado'] = (bool) $usuario->totp_verificado;
+        }
+
+        return $data;
+    }
+
     // -------------------------------------------------------------------------
     // Registra un intento de login en la tabla intentos_login
     // -------------------------------------------------------------------------
@@ -437,5 +450,35 @@ class AuthController extends Controller
         }
 
         return (bool) $request->session()->get('totp_sesion_ok');
+    }
+
+    /** Nombre corto del sistema para el headbar de la SPA */
+    private function nombreSistemaParaJson(): string
+    {
+        return (string) (Configuracion::obtener('nombre_sistema') ?: 'QUORUM');
+    }
+
+    /** Lee max_intentos_login de configuracion (1–999) */
+    private function maxIntentosLoginDesdeConfig(): int
+    {
+        $v = Configuracion::obtener('max_intentos_login');
+        if ($v === null || ! is_numeric($v)) {
+            return self::INTENTOS_FALLBACK;
+        }
+        $n = (int) $v;
+
+        return ($n >= 1 && $n <= 999) ? $n : self::INTENTOS_FALLBACK;
+    }
+
+    /** Lee minutos_bloqueo de configuracion (1–999) */
+    private function minutosBloqueoDesdeConfig(): int
+    {
+        $v = Configuracion::obtener('minutos_bloqueo');
+        if ($v === null || ! is_numeric($v)) {
+            return self::MINUTOS_BLOQUEO_FALLBACK;
+        }
+        $n = (int) $v;
+
+        return ($n >= 1 && $n <= 999) ? $n : self::MINUTOS_BLOQUEO_FALLBACK;
     }
 }

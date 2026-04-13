@@ -1,12 +1,18 @@
 <?php
 
 use App\Http\Controllers\AprendizController;
+use App\Http\Controllers\AuditoriaAsistenciaController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CentroFormacionAdminController;
 use App\Http\Controllers\CentroFormacionController;
+use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiaFestivoController;
 use App\Http\Controllers\FichaController;
+use App\Http\Controllers\HistorialActividadController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\ProgramaFormacionController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UsuarioController;
@@ -45,6 +51,9 @@ Route::prefix('auth')->group(function () {
 // Módulo 9 — Mi historial (aprendiz; sin TOTP en sesión)
 // -----------------------------------------------------------------------
 Route::middleware('auth:sanctum')->get('/mi-historial', [AprendizController::class, 'miHistorial']);
+
+// Módulo 13 — cambio de contraseña desde el perfil (sin exigir TOTP en sesión)
+Route::middleware('auth:sanctum')->patch('/perfil/contrasena', [PerfilController::class, 'cambiarContrasena']);
 
 // -----------------------------------------------------------------------
 // Módulo 4 — Dashboard por rol (requiere 2FA completado en sesión)
@@ -95,6 +104,31 @@ Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function 
     Route::post('/asistencia/iniciar-sesion', [AsistenciaController::class, 'iniciarSesion']);
     Route::post('/asistencia/sesiones/{sesion}/guardar', [AsistenciaController::class, 'guardar']);
     Route::put('/asistencia/registros/{registro}', [AsistenciaController::class, 'actualizar']);
+
+    // Módulo 12 — Configuración, festivos e historial (solo admin)
+    Route::middleware('admin')->group(function () {
+        Route::get('/configuracion', [ConfiguracionController::class, 'index']);
+        Route::patch('/configuracion', [ConfiguracionController::class, 'update']);
+
+        Route::get('/dias-festivos', [DiaFestivoController::class, 'index']);
+        Route::post('/dias-festivos', [DiaFestivoController::class, 'store']);
+        Route::get('/dias-festivos/{diaFestivo}', [DiaFestivoController::class, 'show']);
+        Route::put('/dias-festivos/{diaFestivo}', [DiaFestivoController::class, 'update']);
+        Route::delete('/dias-festivos/{diaFestivo}', [DiaFestivoController::class, 'destroy']);
+
+        Route::get('/historial-actividad', [HistorialActividadController::class, 'index']);
+
+        // Administración centros de formación (listado completo + CRUD)
+        Route::prefix('admin')->group(function () {
+            Route::get('/centros-formacion', [CentroFormacionAdminController::class, 'index']);
+            Route::post('/centros-formacion', [CentroFormacionAdminController::class, 'store']);
+            Route::put('/centros-formacion/{centro}', [CentroFormacionAdminController::class, 'update']);
+            Route::delete('/centros-formacion/{centro}', [CentroFormacionAdminController::class, 'destroy']);
+            Route::post('/centros-formacion/{centro}/reactivar', [CentroFormacionAdminController::class, 'reactivar']);
+
+            Route::get('/auditoria-asistencia', [AuditoriaAsistenciaController::class, 'index']);
+        });
+    });
 });
 
 // -----------------------------------------------------------------------
