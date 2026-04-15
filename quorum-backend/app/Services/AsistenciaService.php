@@ -92,6 +92,39 @@ class AsistenciaService
         return ucfirst((string) $tipo)." {$ini}–{$fin}";
     }
 
+    /** Nombre del día en español a partir del slug de `horarios.dia_semana`. */
+    private function etiquetaDiaSemanaSlug(string $slug): string
+    {
+        $map = [
+            'lunes' => 'lunes',
+            'martes' => 'martes',
+            'miercoles' => 'miércoles',
+            'jueves' => 'jueves',
+            'viernes' => 'viernes',
+            'sabado' => 'sábado',
+        ];
+
+        return $map[$slug] ?? $slug;
+    }
+
+    /** Días de la semana (slugs) en los que el instructor tiene al menos un horario activo en la ficha. */
+    private function slugsDiasConHorarioEnFicha(int $usuarioId, int $fichaId): array
+    {
+        $slugs = Horario::query()
+            ->where('ficha_id', $fichaId)
+            ->where('instructor_id', $usuarioId)
+            ->where('activo', 1)
+            ->distinct()
+            ->pluck('dia_semana')
+            ->unique()
+            ->values()
+            ->all();
+        $orden = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        usort($slugs, fn ($a, $b) => (array_search($a, $orden, true) ?: 99) <=> (array_search($b, $orden, true) ?: 99));
+
+        return $slugs;
+    }
+
     /**
      * Resuelve el horario: uno solo, o el indicado, o error con candidatos.
      */
@@ -105,8 +138,16 @@ class AsistenciaService
         $candidatos = $this->buscarHorariosDelDia($usuario, $fichaId, $slugDia);
 
         if ($candidatos->isEmpty()) {
+            $dias = $this->slugsDiasConHorarioEnFicha((int) $usuario->id, $fichaId);
+            $diaPedido = $this->etiquetaDiaSemanaSlug($slugDia);
+            if ($dias === []) {
+                $msg = 'No tienes días con horario asignado en esta ficha. Pide al administrador que registre tu horario en la ficha.';
+            } else {
+                $lista = implode(', ', array_map(fn (string $s) => $this->etiquetaDiaSemanaSlug($s), $dias));
+                $msg = "No tienes formación programada el {$diaPedido} en esta ficha. Días en los que sí tienes horario: {$lista}.";
+            }
             throw ValidationException::withMessages([
-                'fecha' => ['Hoy no tienes formación programada en esta ficha (revisa el día o el horario asignado).'],
+                'fecha' => [$msg],
             ]);
         }
 

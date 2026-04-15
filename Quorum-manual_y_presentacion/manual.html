@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual de usuario — QUORUM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/quorum-docs.css" />
+  </head>
+  <body>
+    <a class="doc-skip" href="#contenido">Ir al contenido</a>
+    <header class="doc-header">
+      <div class="doc-header-inner">
+        <div class="doc-brand">
+          <img
+            class="doc-brand-logo"
+            src="assets/logo-quorum.png"
+            width="57"
+            height="57"
+            alt="Quorum"
+            decoding="async"
+          />
+          <span class="doc-brand-text">
+            <span class="doc-wordmark">QUORUM</span><span class="doc-brand-suffix"> — Manual</span>
+          </span>
+        </div>
+        <button type="button" class="doc-nav-toggle" aria-expanded="false" aria-controls="doc-nav">
+          Menú
+        </button>
+        <nav id="doc-nav" class="doc-nav" aria-label="Principal">
+          <a href="ventas.html" data-doc="ventas.html">Ventas</a>
+          <a href="producto.html" data-doc="producto.html">Producto</a>
+          <a href="manual.html" data-doc="manual.html">Manual</a>
+          <button type="button" class="theme-toggle" data-theme-toggle title="Tema claro/oscuro">
+            Tema
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido" class="doc-main">
+      <div class="hero" style="text-align: left; padding-top: 1rem">
+        <h1>Manual de usuario e instalación</h1>
+        <p class="hero-lead" style="margin-left: 0">
+          QUORUM — Sistema de control de asistencia (SENA CPIC). Este documento se basa en el
+          comportamiento real del repositorio: Next.js (frontend), Laravel (API) y MySQL.
+        </p>
+      </div>
+
+      <div class="manual-layout">
+        <nav class="manual-toc" aria-label="Índice del manual">
+          <strong>Índice</strong>
+          <ul>
+            <li><a href="#introduccion">Introducción</a></li>
+            <li><a href="#requisitos">Requisitos</a></li>
+            <li><a href="#instalacion-ejecucion">Instalación y ejecución</a></li>
+            <li><a href="#primer-acceso">Primer acceso y seguridad</a></li>
+            <li><a href="#rutas-ui">Rutas de la aplicación</a></li>
+            <li><a href="#guia-pantallas">Guía por pantalla</a></li>
+            <li><a href="#por-rol">Operación por rol</a></li>
+            <li><a href="#crud">CRUD y permisos</a></li>
+            <li><a href="#asistencia-tipos">Tipos de asistencia</a></li>
+            <li><a href="#api-resumen">API (resumen)</a></li>
+            <li><a href="#diccionario">Diccionario de datos</a></li>
+            <li><a href="#glosario">Glosario</a></li>
+            <li><a href="#bibliografia">Bibliografía</a></li>
+            <li><a href="#troubleshooting">Problemas frecuentes</a></li>
+            <li><a href="#conclusiones">Conclusiones</a></li>
+          </ul>
+        </nav>
+
+        <div class="manual-body">
+          <section id="introduccion" class="section">
+            <h2>Introducción</h2>
+            <p>
+              QUORUM digitaliza el registro y seguimiento de asistencia de aprendices vinculado a
+              <strong>fichas de caracterización</strong>. Sustituye controles dispersos en papel o
+              hojas de cálculo sueltas por una base centralizada, con roles (administrador,
+              coordinador, instructor, gestor de grupo, aprendiz) y reglas aplicadas en el servidor
+              (Laravel Sanctum, políticas y middleware).
+            </p>
+            <p><strong>Qué automatiza o facilita en la práctica:</strong></p>
+            <ul class="pill-list">
+              <li>Autenticación de personal con reCAPTCHA, sesión stateful y 2FA TOTP cuando aplica.</li>
+              <li>Acceso de aprendices con correo y documento, sin contraseña.</li>
+              <li>Gestión de fichas, instructores, aprendices e importación desde Excel.</li>
+              <li>Sesiones de asistencia, guardado y ajuste de registros según permisos.</li>
+              <li>Historial / matriz por ficha y panel de coordinación.</li>
+              <li>Generación de reporte Excel CPIC a partir de plantilla institucional.</li>
+              <li>Configuración, días festivos, centros de formación y auditoría (según rol).</li>
+            </ul>
+          </section>
+
+          <section id="requisitos" class="section">
+            <h2>Requisitos del entorno</h2>
+            <p>Según el README del proyecto:</p>
+            <ul>
+              <li>XAMPP (o entorno equivalente) con <strong>PHP 8.2</strong> y <strong>MySQL</strong> activos.</li>
+              <li><strong>Node.js 20+</strong> y npm.</li>
+              <li><strong>Composer 2.x</strong>.</li>
+              <li>Navegador actualizado (Chrome, Edge o Firefox recomendados).</li>
+            </ul>
+            <p class="note">
+              El backend debe poder enviar correo (SMTP) para recuperación de contraseña y, en su
+              caso, otras notificaciones. Configura <code>MAIL_*</code> en el <code>.env</code> del
+              backend. reCAPTCHA y claves deben coincidir entre backend y frontend según tu
+              despliegue (<code>.env.example</code> en quorum-backend).
+            </p>
+          </section>
+
+          <section id="instalacion-ejecucion" class="section">
+            <h2>Instalación y ejecución</h2>
+            <p>
+              Las rutas siguientes asumen que el repositorio contiene las carpetas
+              <code>quorum-backend</code> y <code>quorum-frontend</code> al mismo nivel (como en
+              QUORUM_PROYECTO). Ajusta las rutas si tu copia está en otro directorio.
+            </p>
+
+            <h3>1. Base de datos</h3>
+            <ol>
+              <li>Inicia <strong>MySQL</strong> en XAMPP (o tu servicio MySQL).</li>
+              <li>Crea una base de datos llamada <code>quorum</code> (o el nombre que definas en <code>.env</code>).</li>
+            </ol>
+
+            <h3>2. Backend (Laravel)</h3>
+            <pre class="code-block"><code>cd quorum-backend
+copy .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve</code></pre>
+            <p>
+              La API queda habitualmente en <strong>http://localhost:8000</strong>. Comprueba el
+              estado con:
+            </p>
+            <pre class="code-block"><code>GET http://localhost:8000/api/ping</code></pre>
+            <p>Debe responder JSON con <code>status: ok</code>.</p>
+
+            <h3>3. Plantilla Excel CPIC (obligatoria para el reporte)</h3>
+            <p>
+              El servicio de reportes espera el archivo
+              <strong><code>storage/app/plantilla_asistencia.xlsx</code></strong> en el backend
+              (<code>ReporteExcelService</code>). Si falta, la descarga del Excel puede fallar con un
+              error indicando que no se encontró la plantilla. Coloca ahí la plantilla oficial que
+              use tu centro.
+            </p>
+
+            <h3>4. Frontend (Next.js)</h3>
+            <pre class="code-block"><code>cd quorum-frontend
+npm install</code></pre>
+            <p>
+              Crea <code>.env.local</code> en <code>quorum-frontend</code> con al menos:
+            </p>
+            <pre class="code-block"><code>NEXT_PUBLIC_API_URL=http://localhost:8000</code></pre>
+            <p>
+              El <code>.env</code> del backend debe alinear <code>FRONTEND_URL</code>,
+              <code>SESSION_DOMAIN</code> y <code>SANCTUM_STATEFUL_DOMAINS</code> con el host y
+              puerto donde corre Next (por defecto <code>http://localhost:3000</code>). Ver
+              comentarios en <code>quorum-backend/.env.example</code>.
+            </p>
+            <pre class="code-block"><code>npm run dev</code></pre>
+            <p>Abre la URL que muestre la consola (típicamente <strong>http://localhost:3000</strong>).</p>
+
+            <h3>5. Orden de arranque recomendado</h3>
+            <ol>
+              <li>MySQL</li>
+              <li><code>php artisan serve</code></li>
+              <li><code>npm run dev</code> en el frontend</li>
+            </ol>
+
+            <h3>6. Usuarios de prueba</h3>
+            <p>
+              Tras <code>migrate --seed</code>, los usuarios vienen de
+              <code>database/seeders/UsuarioSeeder.php</code>. La contraseña de staff documentada en el
+              README del proyecto es <code>Admin123!</code> (verifica en el seeder si cambió). Los
+              aprendices inician sesión con correo + número de documento, sin contraseña.
+            </p>
+          </section>
+
+          <section id="primer-acceso" class="section">
+            <h2>Primer acceso y seguridad</h2>
+            <ul>
+              <li>
+                <strong>Staff (admin, coordinador, instructor, gestor):</strong> en <code>/login</code>,
+                pestaña de instructor/admin, correo y contraseña, completar reCAPTCHA y enviar. Luego
+                puede solicitarse configuración o verificación 2FA (<code>/2fa/configurar</code>,
+                <code>/2fa/verificar</code>) según el flujo del sistema.
+              </li>
+              <li>
+                <strong>Aprendiz:</strong> en la misma página, pestaña de aprendiz: correo institucional
+                y documento; reCAPTCHA. No usa contraseña.
+              </li>
+              <li>
+                <strong>Recuperación de contraseña (staff):</strong> <code>/recuperar</code> solicita
+                enlace por correo; <code>/reset</code> aplica el nuevo secreto con token válido
+                (endpoints <code>POST /api/auth/recuperar</code> y <code>POST /api/auth/reset</code>).
+              </li>
+              <li>
+                Cuenta inactiva o sin permiso: el backend debe responder con mensajes o redirecciones
+                acordes a las políticas (p. ej. 403 en rutas no autorizadas).
+              </li>
+            </ul>
+            <p class="note warn">
+              La mayoría de rutas de panel exigen sesión Sanctum y, para staff, sesión con 2FA
+              completada (<code>EnsureTotpSessionOk</code> en <code>api.php</code>). Excepciones
+              explícitas en código: <code>GET /api/mi-historial</code> (aprendiz) y
+              <code>PATCH /api/perfil/contrasena</code> sin ese middleware de TOTP.
+            </p>
+          </section>
+
+          <section id="rutas-ui" class="section">
+            <h2>Rutas de la aplicación (Next.js)</h2>
+            <p>Pantallas implementadas bajo <code>quorum-frontend/app/</code>:</p>
+            <div class="table-wrap">
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Ruta</th>
+                    <th>Descripción breve</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>/</code></td>
+                    <td>Redirige (p. ej. a login).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/login</code></td>
+                    <td>Login staff y aprendiz, reCAPTCHA, tema claro/oscuro.</td>
+                  </tr>
+                  <tr>
+                    <td><code>/recuperar</code>, <code>/reset</code></td>
+                    <td>Recuperación de contraseña.</td>
+                  </tr>
+                  <tr>
+                    <td><code>/2fa/configurar</code>, <code>/2fa/verificar</code></td>
+                    <td>Configuración y verificación 2FA TOTP.</td>
+                  </tr>
+                  <tr>
+                    <td><code>/dashboard</code></td>
+                    <td>Panel principal por rol.</td>
+                  </tr>
+                  <tr>
+                    <td><code>/fichas</code>, <code>/fichas/nueva</code>, <code>/fichas/[id]</code></td>
+                    <td>Listado, creación y detalle/gestión de ficha (admin).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/usuarios</code></td>
+                    <td>Gestión de usuarios con modal crear/editar (admin).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/asistencia/tomar</code></td>
+                    <td>Tomar asistencia (instructor / gestor).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/asistencia/historial</code></td>
+                    <td>Historial / matriz por ficha (roles con permiso).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/asistencia/auditoria</code></td>
+                    <td>Auditoría de asistencia (admin).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/coordinador</code></td>
+                    <td>Panel coordinador (admin y coordinador en API).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/mi-historial</code></td>
+                    <td>Historial propio del aprendiz.</td>
+                  </tr>
+                  <tr>
+                    <td><code>/configuracion</code></td>
+                    <td>Configuración del sistema y días festivos (admin).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/centros-formacion</code></td>
+                    <td>Administración de centros (admin).</td>
+                  </tr>
+                  <tr>
+                    <td><code>/perfil</code></td>
+                    <td>Perfil y cambio de contraseña.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="guia-pantallas" class="section">
+            <h2>Guía por pantalla</h2>
+            <p>
+              Sustituye los recuadros grises por capturas (ver <code>LEEME.txt</code>). Los pasos son
+              orientativos; la UI puede variar levemente entre versiones.
+            </p>
+
+            <h3 id="p-login">Inicio de sesión — <code>/login</code></h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/01-login.png"
+                alt="Pantalla de inicio de sesión QUORUM: pestañas Instructor/Admin y Aprendiz, correo, contraseña y reCAPTCHA"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 1. Inicio de sesión — <code>/login</code> (staff y aprendiz).</figcaption>
+            </figure>
+            <ol>
+              <li>Abre la URL del frontend.</li>
+              <li>Elige pestaña Staff o Aprendiz.</li>
+              <li>Completa campos y reCAPTCHA; envía el formulario.</li>
+            </ol>
+
+            <h3>Recuperar y restablecer</h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/02-recuperar.png"
+                alt="Pantalla para solicitar recuperación de contraseña"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 2. Recuperar contraseña — <code>/recuperar</code>.</figcaption>
+            </figure>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/03-reset.png"
+                alt="Pantalla para establecer nueva contraseña con token"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 3. Restablecer contraseña — <code>/reset</code>.</figcaption>
+            </figure>
+            <p>Desde <code>/recuperar</code> ingresa el correo; usa el enlace del correo para llegar a <code>/reset</code>.</p>
+
+            <h3>2FA</h3>
+            <p class="note">
+              Captura de configuración 2FA (<code>04-2fa-configurar.png</code>): pendiente cuando la agregues en
+              <code>assets/screenshots/</code>.
+            </p>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/05-2fa-verificar.png"
+                alt="Verificación de código 2FA TOTP"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 4. Verificación 2FA — <code>/2fa/verificar</code>.</figcaption>
+            </figure>
+
+            <h3>Dashboard</h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/06-dashboard.png"
+                alt="Panel principal del dashboard por rol"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 5. Dashboard — <code>/dashboard</code>.</figcaption>
+            </figure>
+            <p>Punto de entrada al resto de módulos según tu rol y menú lateral.</p>
+
+            <h3>Fichas</h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/07-fichas.png"
+                alt="Listado de fichas de caracterización"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 6. Listado de fichas — <code>/fichas</code>.</figcaption>
+            </figure>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/08-ficha-nueva.png"
+                alt="Formulario de nueva ficha de caracterización"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 7. Nueva ficha — <code>/fichas/nueva</code>.</figcaption>
+            </figure>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/09-ficha-detalle.png"
+                alt="Detalle de ficha con aprendices e instructores"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 8. Detalle de ficha — <code>/fichas/[id]</code>.</figcaption>
+            </figure>
+            <p>Crea fichas, asigna instructores, gestiona aprendices e importación Excel desde el detalle.</p>
+
+            <h3>Usuarios</h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/10-usuarios.png"
+                alt="Gestión de usuarios del sistema"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 9. Usuarios — <code>/usuarios</code>.</figcaption>
+            </figure>
+            <p>Listado, filtros, alta/edición en modal, baja o reactivación según políticas.</p>
+
+            <h3>Asistencia</h3>
+            <p class="note">
+              Pantalla <strong>Tomar asistencia</strong> (<code>/asistencia/tomar</code>): agrega
+              <code>assets/screenshots/11-asistencia-tomar.png</code> para mostrarla aquí.
+            </p>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/12-asistencia-historial.png"
+                alt="Historial o matriz de asistencia por ficha"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 10. Historial de asistencia — <code>/asistencia/historial</code>.</figcaption>
+            </figure>
+            <p>Inicia o continúa sesión en <code>/asistencia/tomar</code>, marca tipos de asistencia y guarda. El historial muestra la matriz por ficha.</p>
+
+            <h3>Auditoría y coordinador</h3>
+            <p class="note">
+              Pantalla <strong>Auditoría de asistencia</strong> (<code>/asistencia/auditoria</code>): agrega
+              <code>13-auditoria.png</code> en <code>assets/screenshots/</code>.
+            </p>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/14-coordinador.png"
+                alt="Panel del coordinador académico"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 11. Panel coordinador — <code>/coordinador</code>.</figcaption>
+            </figure>
+
+            <h3>Aprendiz — Mi historial</h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/15-mi-historial.png"
+                alt="Historial de asistencia del aprendiz"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 12. Mi historial — <code>/mi-historial</code>.</figcaption>
+            </figure>
+
+            <h3>Configuración y centros</h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/16-configuracion.png"
+                alt="Configuración del sistema y días festivos"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 13. Configuración — <code>/configuracion</code>.</figcaption>
+            </figure>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/17-centros-formacion.png"
+                alt="Administración de centros de formación"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 14. Centros de formación — <code>/centros-formacion</code>.</figcaption>
+            </figure>
+
+            <h3>Perfil</h3>
+            <figure class="doc-figure">
+              <img
+                src="assets/screenshots/18-perfil.png"
+                alt="Perfil de usuario y opciones de cuenta"
+                class="doc-screenshot"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Figura 15. Perfil — <code>/perfil</code>.</figcaption>
+            </figure>
+          </section>
+
+          <section id="por-rol" class="section">
+            <h2>Operación por rol (resumen)</h2>
+            <div class="table-wrap">
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Rol</th>
+                    <th>Acciones típicas en la app</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Administrador</td>
+                    <td>Usuarios, fichas, centros, configuración, festivos, auditoría, todo lo que la API expone bajo políticas admin.</td>
+                  </tr>
+                  <tr>
+                    <td>Coordinador</td>
+                    <td>Consulta amplia: panel coordinador, fichas/asistencias según endpoints <code>/api/coordinador/*</code>; sin mutaciones que el API reserve solo a admin.</td>
+                  </tr>
+                  <tr>
+                    <td>Instructor / Gestor de grupo</td>
+                    <td>Tomar asistencia en sesiones permitidas, ver historial de fichas autorizadas, descargar Excel de ficha si la política lo permite.</td>
+                  </tr>
+                  <tr>
+                    <td>Aprendiz</td>
+                    <td>Solo consulta de su historial (<code>/mi-historial</code>, <code>GET /api/mi-historial</code>).</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="note">La autorización definitiva está en Laravel (policies, middleware); la UI solo refleja lo permitido.</p>
+          </section>
+
+          <section id="crud" class="section">
+            <h2>CRUD y entidades principales</h2>
+            <div class="table-wrap">
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Entidad / área</th>
+                    <th>UI</th>
+                    <th>Notas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Usuarios</td>
+                    <td><code>/usuarios</code></td>
+                    <td>CRUD vía API <code>/api/usuarios</code> (admin). Reactivación en ruta dedicada.</td>
+                  </tr>
+                  <tr>
+                    <td>Fichas</td>
+                    <td><code>/fichas*</code></td>
+                    <td>Alta, edición, baja lógica, reactivar; asignación instructores; aprendices e importación.</td>
+                  </tr>
+                  <tr>
+                    <td>Asistencia</td>
+                    <td><code>/asistencia/tomar</code></td>
+                    <td>Iniciar sesión, guardar sesión, actualizar registro puntual.</td>
+                  </tr>
+                  <tr>
+                    <td>Centros de formación</td>
+                    <td><code>/centros-formacion</code></td>
+                    <td>CRUD bajo prefijo <code>/api/admin/centros-formacion</code> (admin).</td>
+                  </tr>
+                  <tr>
+                    <td>Días festivos</td>
+                    <td><code>/configuracion</code></td>
+                    <td>CRUD <code>/api/dias-festivos*</code> (admin).</td>
+                  </tr>
+                  <tr>
+                    <td>Configuración</td>
+                    <td><code>/configuracion</code></td>
+                    <td>Lectura/actualización <code>GET/PATCH /api/configuracion</code> (admin).</td>
+                  </tr>
+                  <tr>
+                    <td>Reporte Excel</td>
+                    <td>Desde flujos de ficha / historial (botón según UI)</td>
+                    <td><code>GET /api/reportes/excel/{ficha}</code>; requiere plantilla en storage.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="asistencia-tipos" class="section">
+            <h2>Tipos de asistencia (colores en UI)</h2>
+            <p>Códigos de color alineados al diseño del proyecto:</p>
+            <p>
+              <span class="badge-asist presente">Presente</span>
+              <span class="badge-asist falla">Falla</span>
+              <span class="badge-asist parcial">Parcial</span>
+              <span class="badge-asist excusa">Excusa</span>
+            </p>
+          </section>
+
+          <section id="api-resumen" class="section">
+            <h2>API REST (resumen por grupos)</h2>
+            <p>Definido en <code>quorum-backend/routes/api.php</code>:</p>
+            <ul class="pill-list">
+              <li><strong>Público / auth:</strong> <code>GET /api/ping</code>; <code>POST .../auth/login</code>, <code>login-aprendiz</code>, <code>recuperar</code>, <code>reset</code>; con sesión: <code>logout</code>, <code>me</code>, 2FA.</li>
+              <li><strong>Con Sanctum + TOTP OK:</strong> dashboard, usuarios, fichas y aprendices, asistencia (iniciar, guardar, actualizar registro), historial por ficha, Excel, coordinador, configuración y festivos, historial de actividad, admin centros, auditoría.</li>
+              <li><strong>Aprendiz:</strong> <code>GET /api/mi-historial</code> (sin middleware TOTP de sesión completa).</li>
+              <li><strong>Perfil:</strong> <code>PATCH /api/perfil/contrasena</code> (sin ese middleware TOTP).</li>
+            </ul>
+          </section>
+
+          <section id="diccionario" class="section">
+            <h2>Diccionario de datos (tablas principales)</h2>
+            <p>Derivado de migraciones en <code>quorum-backend/database/migrations/</code>:</p>
+            <div class="table-wrap">
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Tabla</th>
+                    <th>Descripción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>centros_formacion</code></td>
+                    <td>Centros SENA vinculados al sistema.</td>
+                  </tr>
+                  <tr>
+                    <td><code>programas_formacion</code></td>
+                    <td>Programas asociados a fichas.</td>
+                  </tr>
+                  <tr>
+                    <td><code>usuarios</code></td>
+                    <td>Todos los actores: staff y aprendices; rol, estado, datos de contacto y documento.</td>
+                  </tr>
+                  <tr>
+                    <td><code>fichas_caracterizacion</code></td>
+                    <td>Fichas de caracterización; metadatos de formación y estado.</td>
+                  </tr>
+                  <tr>
+                    <td><code>jornadas_ficha</code>, <code>horarios</code></td>
+                    <td>Jornada y franjas horarias por ficha.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ficha_instructor</code></td>
+                    <td>Asignación de instructores/gestores a ficha.</td>
+                  </tr>
+                  <tr>
+                    <td><code>sesiones</code></td>
+                    <td>Sesiones de toma de asistencia.</td>
+                  </tr>
+                  <tr>
+                    <td><code>registros_asistencia</code></td>
+                    <td>Registro por aprendiz y sesión (tipo, horas parciales, etc.).</td>
+                  </tr>
+                  <tr>
+                    <td><code>registros_asistencia_backup</code></td>
+                    <td>Respaldo / espejo para integridad histórica.</td>
+                  </tr>
+                  <tr>
+                    <td><code>dias_festivos</code></td>
+                    <td>Calendario de festivos para cómputo de días hábiles.</td>
+                  </tr>
+                  <tr>
+                    <td><code>tokens_reset</code></td>
+                    <td>Tokens de recuperación de contraseña.</td>
+                  </tr>
+                  <tr>
+                    <td><code>intentos_login</code></td>
+                    <td>Control de intentos fallidos de login.</td>
+                  </tr>
+                  <tr>
+                    <td><code>importaciones_aprendices</code></td>
+                    <td>Trazabilidad de importaciones desde Excel.</td>
+                  </tr>
+                  <tr>
+                    <td><code>historial_actividad</code></td>
+                    <td>Registro de acciones relevantes para auditoría.</td>
+                  </tr>
+                  <tr>
+                    <td><code>configuracion</code></td>
+                    <td>Parámetros globales del sistema.</td>
+                  </tr>
+                  <tr>
+                    <td><code>personal_access_tokens</code></td>
+                    <td>Tokens Sanctum (técnico).</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="glosario" class="section">
+            <h2>Glosario (terminología institucional)</h2>
+            <ul>
+              <li><strong>Aprendiz:</strong> persona en formación en el SENA (no “estudiante” ni “alumno”).</li>
+              <li><strong>Instructor:</strong> quien imparte formación (no “profesor” en la interfaz).</li>
+              <li><strong>Formación:</strong> actividad académica/técnica (no “clase” genérica).</li>
+              <li><strong>Ambiente de formación:</strong> espacio físico o virtual donde ocurre la formación.</li>
+              <li><strong>Ficha de caracterización / Ficha:</strong> grupo identificado por número de ficha.</li>
+            </ul>
+          </section>
+
+          <section id="bibliografia" class="section">
+            <h2>Bibliografía y webgrafía</h2>
+            <ul>
+              <li>PRD_QUORUM_v1.0.md (repositorio del proyecto).</li>
+              <li>README.md del proyecto QUORUM.</li>
+              <li>Documentación Laravel: https://laravel.com/docs</li>
+              <li>Documentación Next.js: https://nextjs.org/docs</li>
+              <li>SENA Colombia — portal institucional: https://www.sena.edu.co</li>
+            </ul>
+          </section>
+
+          <section id="troubleshooting" class="section">
+            <h2>Problemas frecuentes</h2>
+            <ul class="pill-list">
+              <li><strong>El front no guarda sesión o hay errores CORS/cookies:</strong> revisa <code>FRONTEND_URL</code>, <code>SESSION_DOMAIN</code> y <code>SANCTUM_STATEFUL_DOMAINS</code> en el <code>.env</code> del backend frente al origen real del navegador (puerto incluido).</li>
+              <li><strong>API no responde:</strong> MySQL caído, <code>php artisan serve</code> no iniciado o puerto ocupado.</li>
+              <li><strong>Excel no descarga:</strong> falta <code>storage/app/plantilla_asistencia.xlsx</code> o permisos de lectura en el servidor.</li>
+              <li><strong>reCAPTCHA falla:</strong> claves de sitio y secreto coherentes entre <code>.env</code> backend y variable pública del frontend.</li>
+              <li><strong>Correo de recuperación no llega:</strong> SMTP (<code>MAIL_*</code>) y carpeta de spam.</li>
+            </ul>
+          </section>
+
+          <section id="conclusiones" class="section">
+            <h2>Conclusiones</h2>
+            <p>
+              QUORUM concentra en una sola aplicación web el registro de asistencia, la trazabilidad por
+              ficha y roles, y la salida a formato Excel institucional, reduciendo retrabajo y dispersión
+              de datos. Este manual se apoya en el código vigente del repositorio; ante actualizaciones,
+              contrasta siempre rutas en <code>app/</code> y <code>routes/api.php</code>.
+            </p>
+            <p><strong>Checklist primer día:</strong> BD creada, migraciones y seed, plantilla Excel en <code>storage/app/</code>, <code>.env</code> backend y <code>.env.local</code> front, ping OK, login de prueba staff y aprendiz.</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="doc-footer">
+      <p>QUORUM — SENA CPIC · Material de documentación independiente del código fuente · 2026</p>
+    </footer>
+    <script src="assets/docs.js" defer></script>
+  </body>
+</html>

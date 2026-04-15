@@ -20,10 +20,14 @@ class ResetPasswordMail extends Mailable
     // El token único de recuperación
     public string $token;
 
-    public function __construct(string $nombreUsuario, string $token)
+    /** Base del SPA (sin barra final) — mismo host/puerto desde el que se solicitó el reset cuando aplica */
+    public string $frontendBaseUrl;
+
+    public function __construct(string $nombreUsuario, string $token, string $frontendBaseUrl)
     {
-        $this->nombreUsuario = $nombreUsuario;
-        $this->token         = $token;
+        $this->nombreUsuario    = $nombreUsuario;
+        $this->token            = $token;
+        $this->frontendBaseUrl  = rtrim($frontendBaseUrl, '/');
     }
 
     // Asunto y remitente del correo

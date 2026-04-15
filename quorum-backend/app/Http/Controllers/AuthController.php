@@ -328,9 +328,11 @@ class AuthController extends Controller
                 'usado'      => 0,
             ]);
 
+            $frontendBase = $this->frontendBaseUrlParaCorreoReset($request);
+
             // Enviamos el correo con el enlace de recuperación
             Mail::to($usuario->correo)->send(
-                new ResetPasswordMail($usuario->nombre, $token)
+                new ResetPasswordMail($usuario->nombre, $token, $frontendBase)
             );
         } catch (\Throwable $e) {
             // Si falla el envío del correo, registramos el error pero no lo mostramos al usuario
@@ -480,5 +482,38 @@ class AuthController extends Controller
         $n = (int) $v;
 
         return ($n >= 1 && $n <= 999) ? $n : self::MINUTOS_BLOQUEO_FALLBACK;
+    }
+
+    /**
+     * Base URL del SPA para el enlace del correo de reset.
+     * Si el navegador envía Origin y coincide con un origen permitido en CORS, se usa ese valor
+     * para evitar desajuste cuando FRONTEND_URL en .env no coincide con el puerto real (p. ej. 3000 vs 3001).
+     */
+    private function frontendBaseUrlParaCorreoReset(Request $request): string
+    {
+        $configured = rtrim((string) config('app.frontend_url'), '/');
+        $origin = (string) $request->headers->get('Origin', '');
+        if ($origin !== '' && $this->origenCoincideConCorsPermitido($origin)) {
+            return rtrim($origin, '/');
+        }
+
+        return $configured;
+    }
+
+    private function origenCoincideConCorsPermitido(string $origin): bool
+    {
+        $norm = rtrim($origin, '/');
+        foreach (config('cors.allowed_origins', []) as $allowed) {
+            if (rtrim((string) $allowed, '/') === $norm) {
+                return true;
+            }
+        }
+        foreach (config('cors.allowed_origins_patterns', []) as $pattern) {
+            if (is_string($pattern) && $pattern !== '' && preg_match($pattern, $origin) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

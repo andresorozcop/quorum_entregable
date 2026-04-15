@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Producto — QUORUM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/quorum-docs.css" />
+  </head>
+  <body>
+    <a class="doc-skip" href="#contenido">Ir al contenido</a>
+    <header class="doc-header">
+      <div class="doc-header-inner">
+        <div class="doc-brand">
+          <img
+            class="doc-brand-logo"
+            src="assets/logo-quorum.png"
+            width="57"
+            height="57"
+            alt="Quorum"
+            decoding="async"
+          />
+          <span class="doc-brand-text">
+            <span class="doc-wordmark">QUORUM</span><span class="doc-brand-suffix"> — Producto</span>
+          </span>
+        </div>
+        <button type="button" class="doc-nav-toggle" aria-controls="doc-nav">Menú</button>
+        <nav id="doc-nav" class="doc-nav" aria-label="Principal">
+          <a href="ventas.html" data-doc="ventas.html">Ventas</a>
+          <a href="producto.html" data-doc="producto.html">Producto</a>
+          <a href="manual.html" data-doc="manual.html">Manual</a>
+          <button type="button" class="theme-toggle" data-theme-toggle title="Tema claro/oscuro">
+            Tema
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido" class="doc-main">
+      <div class="hero" style="text-align: left; padding-top: 1rem">
+        <h1>Ficha del software QUORUM</h1>
+        <p class="hero-lead" style="margin-left: 0">
+          Sistema web para digitalizar el control de asistencia de aprendices del SENA — Centro de
+          Procesos Industriales y Construcción (CPIC). Descripción alineada al README y al código del
+          repositorio.
+        </p>
+        <p>
+          <a class="btn btn-primary" href="manual.html#instalacion-ejecucion">Instalación y ejecución</a>
+          <a class="btn btn-secondary" href="manual.html">Manual completo</a>
+        </p>
+      </div>
+
+      <section class="section" id="metadatos">
+        <h2>Metadatos del proyecto</h2>
+        <div class="table-wrap">
+          <table class="doc-table">
+            <tbody>
+              <tr>
+                <th scope="row">Nombre</th>
+                <td>QUORUM</td>
+              </tr>
+              <tr>
+                <th scope="row">Cliente / contexto</th>
+                <td>SENA — CPIC (según documentación del proyecto)</td>
+              </tr>
+              <tr>
+                <th scope="row">Idioma UI</th>
+                <td>Español (Colombia)</td>
+              </tr>
+              <tr>
+                <th scope="row">Repositorio</th>
+                <td>Aplicación dividida en <code>quorum-frontend</code> y <code>quorum-backend</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="stack">
+        <h2>Stack tecnológico (implementado)</h2>
+        <ul class="pill-list">
+          <li><strong>Frontend:</strong> Next.js 14 (App Router), TypeScript estricto, Tailwind CSS, Lucide React, SweetAlert2, Axios.</li>
+          <li><strong>Backend:</strong> Laravel 12, PHP 8.2.</li>
+          <li><strong>Base de datos:</strong> MySQL 8 (entorno típico XAMPP).</li>
+          <li><strong>API:</strong> REST JSON; autenticación SPA con <strong>Laravel Sanctum</strong> (cookies stateful).</li>
+          <li><strong>Reportes:</strong> Excel mediante plantilla <code>storage/app/plantilla_asistencia.xlsx</code> (PhpSpreadsheet en backend).</li>
+        </ul>
+      </section>
+
+      <section class="section" id="arquitectura">
+        <h2>Arquitectura lógica</h2>
+        <div class="mermaid-box" aria-label="Diagrama de capas">
+┌─────────────────┐     HTTPS/JSON      ┌──────────────────┐
+│   Navegador     │ ◄─────────────────► │  Laravel API     │
+│   Next.js SPA   │    Sanctum cookies   │  PHP + MySQL     │
+└─────────────────┘                      └────────┬─────────┘
+                                                  │
+                                                  ▼
+                                          ┌───────────────┐
+                                          │    MySQL 8    │
+                                          └───────────────┘
+        </div>
+        <p>
+          El frontend consume la API bajo el prefijo configurado (p. ej.
+          <code>NEXT_PUBLIC_API_URL=http://localhost:8000</code>). Las reglas de negocio y permisos se
+          aplican en el servidor (policies, middleware, incluido <code>EnsureTotpSessionOk</code> para
+          sesiones staff con 2FA completado).
+        </p>
+      </section>
+
+      <section class="section" id="roles">
+        <h2>Roles de usuario</h2>
+        <div class="card-grid">
+          <div class="card">
+            <h3>Administrador</h3>
+            <p>Gestión de usuarios, fichas, centros, configuración, festivos, auditoría y catálogos según API.</p>
+          </div>
+          <div class="card">
+            <h3>Coordinador académico</h3>
+            <p>Consulta y seguimiento ampliado vía rutas <code>/api/coordinador/*</code> y vistas asociadas.</p>
+          </div>
+          <div class="card">
+            <h3>Instructor / Gestor de grupo</h3>
+            <p>Toma de asistencia, historial de fichas asignadas, exportación Excel cuando corresponda.</p>
+          </div>
+          <div class="card">
+            <h3>Aprendiz</h3>
+            <p>Solo lectura de su propio historial; login con correo y documento (sin contraseña).</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="rutas">
+        <h2>Superficie de la aplicación</h2>
+        <p>
+          Listado de rutas Next.js presentes en <code>quorum-frontend/app/</code>. El detalle operativo
+          está en el <a href="manual.html#rutas-ui">manual</a>.
+        </p>
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Ruta</th>
+                <th>Módulo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>/login</code></td>
+                <td>Autenticación staff y aprendiz</td>
+              </tr>
+              <tr>
+                <td><code>/recuperar</code>, <code>/reset</code></td>
+                <td>Recuperación de contraseña</td>
+              </tr>
+              <tr>
+                <td><code>/2fa/*</code></td>
+                <td>Dos factores TOTP</td>
+              </tr>
+              <tr>
+                <td><code>/dashboard</code></td>
+                <td>Panel</td>
+              </tr>
+              <tr>
+                <td><code>/fichas</code>, <code>/fichas/nueva</code>, <code>/fichas/[id]</code></td>
+                <td>Fichas de caracterización</td>
+              </tr>
+              <tr>
+                <td><code>/usuarios</code></td>
+                <td>Usuarios (admin)</td>
+              </tr>
+              <tr>
+                <td><code>/asistencia/tomar</code>, <code>/asistencia/historial</code></td>
+                <td>Asistencia</td>
+              </tr>
+              <tr>
+                <td><code>/asistencia/auditoria</code></td>
+                <td>Auditoría</td>
+              </tr>
+              <tr>
+                <td><code>/coordinador</code></td>
+                <td>Coordinador</td>
+              </tr>
+              <tr>
+                <td><code>/mi-historial</code></td>
+                <td>Aprendiz</td>
+              </tr>
+              <tr>
+                <td><code>/configuracion</code></td>
+                <td>Configuración y festivos</td>
+              </tr>
+              <tr>
+                <td><code>/centros-formacion</code></td>
+                <td>Centros (admin)</td>
+              </tr>
+              <tr>
+                <td><code>/perfil</code></td>
+                <td>Perfil</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="api">
+        <h2>API REST (grupos)</h2>
+        <p>Definición en <code>quorum-backend/routes/api.php</code>:</p>
+        <ul class="pill-list">
+          <li><code>GET /api/ping</code> — comprobación de vida.</li>
+          <li><code>/api/auth/*</code> — login, logout, me, 2FA, recuperación y reset.</li>
+          <li>Tras autenticación y TOTP de sesión: dashboard, usuarios, fichas, asistencia, reportes Excel, coordinador, configuración, festivos, historial actividad, centros admin, auditoría.</li>
+          <li><code>GET /api/mi-historial</code> — aprendiz autenticado.</li>
+          <li><code>PATCH /api/perfil/contrasena</code> — cambio de contraseña en perfil.</li>
+        </ul>
+      </section>
+
+      <section class="section" id="diferenciadores">
+        <h2>Diferenciadores frente a Excel suelto</h2>
+        <ul class="pill-list">
+          <li>Una sola fuente de verdad en MySQL con políticas por rol.</li>
+          <li>Trazabilidad de sesiones y registros de asistencia; respaldos y auditoría según tablas del sistema.</li>
+          <li>Salida a plantilla Excel CPIC homogénea para cierre de periodo.</li>
+          <li>Flujo de aprendiz aislado: solo ve sus propios datos.</li>
+        </ul>
+      </section>
+
+      <section class="section" id="siguiente">
+        <h2>Siguiente paso</h2>
+        <p>
+          Para instalar y probar en local, sigue la sección
+          <a href="manual.html#instalacion-ejecucion"><strong>Instalación y ejecución</strong></a> del
+          manual.
+        </p>
+      </section>
+    </main>
+
+    <footer class="doc-footer">
+      <p>QUORUM — SENA CPIC · Documentación de producto · 2026</p>
+    </footer>
+    <script src="assets/docs.js" defer></script>
+  </body>
+</html>

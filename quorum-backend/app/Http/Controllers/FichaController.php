@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateFichaRequest;
 use App\Models\FichaCaracterizacion;
 use App\Models\Usuario;
 use App\Services\FichaService;
+use Carbon\Carbon;
 use App\Support\LogActivity;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -320,8 +321,13 @@ class FichaController extends Controller
             'estado'                 => $ficha->estado,
             'centro_formacion_id'    => $ficha->centro_formacion_id,
             'programa_formacion_id'  => $ficha->programa_formacion_id,
-            'fecha_inicio'           => $ficha->fecha_inicio,
-            'fecha_fin'              => $ficha->fecha_fin,
+            // Y-m-d estable para el front (input type="date", comparaciones)
+            'fecha_inicio'           => $ficha->fecha_inicio !== null && $ficha->fecha_inicio !== ''
+                ? Carbon::parse($ficha->fecha_inicio)->timezone('America/Bogota')->toDateString()
+                : $ficha->fecha_inicio,
+            'fecha_fin'              => $ficha->fecha_fin !== null && $ficha->fecha_fin !== ''
+                ? Carbon::parse($ficha->fecha_fin)->timezone('America/Bogota')->toDateString()
+                : $ficha->fecha_fin,
             'activo'                 => (int) $ficha->activo,
             'centro'                 => $ficha->centro,
             'programa'               => $ficha->programa,

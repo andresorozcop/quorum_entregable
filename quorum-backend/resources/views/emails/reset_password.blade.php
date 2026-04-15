@@ -102,9 +102,9 @@
                 crear una nueva contraseña.
             </p>
 
-            {{-- Enlace de reset: base desde FRONTEND_URL en .env (puerto 3000, 3001, etc.) --}}
+            {{-- Enlace de reset: base resuelta en el backend (Origin permitido o FRONTEND_URL) --}}
             @php
-                $enlaceReset = config('app.frontend_url') . '/reset?token=' . $token;
+                $enlaceReset = $frontendBaseUrl . '/reset?token=' . $token;
             @endphp
             <!-- Botón principal con el enlace de reset -->
             <div class="boton-contenedor">
