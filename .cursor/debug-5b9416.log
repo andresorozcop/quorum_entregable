@@ -1,6 +1,0 @@
-{"sessionId":"5b9416","runId":"pre-fix","hypothesisId":"H2","location":"contexts/AuthContext.tsx:getMe-ok","message":"getMe exitoso","data":{"usuarioId":1,"rol":"admin"},"timestamp":1776225030014}
-{"sessionId":"5b9416","runId":"pre-fix","hypothesisId":"H2","location":"contexts/AuthContext.tsx:getMe-ok","message":"getMe exitoso","data":{"usuarioId":1,"rol":"admin"},"timestamp":1776225030254}
-{"sessionId":"5b9416","runId":"pre-fix","hypothesisId":"H2","location":"contexts/AuthContext.tsx:getMe-ok","message":"getMe exitoso","data":{"usuarioId":1,"rol":"admin"},"timestamp":1776225033363}
-{"sessionId":"5b9416","runId":"pre-fix","hypothesisId":"H2","location":"contexts/AuthContext.tsx:getMe-ok","message":"getMe exitoso","data":{"usuarioId":1,"rol":"admin"},"timestamp":1776225034068}
-{"sessionId":"5b9416","runId":"pre-fix","hypothesisId":"H2","location":"contexts/AuthContext.tsx:getMe-ok","message":"getMe exitoso","data":{"usuarioId":1,"rol":"admin"},"timestamp":1776225057854}
-{"sessionId":"5b9416","runId":"pre-fix","hypothesisId":"H2","location":"contexts/AuthContext.tsx:getMe-ok","message":"getMe exitoso","data":{"usuarioId":1,"rol":"admin"},"timestamp":1776225058480}
