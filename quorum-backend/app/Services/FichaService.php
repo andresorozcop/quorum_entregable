@@ -7,6 +7,7 @@ use App\Models\FichaInstructor;
 use App\Models\Horario;
 use App\Models\ImportacionAprendices;
 use App\Models\JornadaFicha;
+use App\Models\Sesion;
 use App\Models\Usuario;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -179,6 +180,11 @@ class FichaService
      */
     public function reemplazarJornadasYHorarios(FichaCaracterizacion $ficha, array $jornadas): void
     {
+        $horarioIds = Horario::query()->where('ficha_id', $ficha->id)->pluck('id');
+        if ($horarioIds->isNotEmpty()) {
+            Sesion::query()->whereIn('horario_id', $horarioIds)->delete();
+        }
+
         JornadaFicha::query()->where('ficha_id', $ficha->id)->delete();
 
         foreach ($jornadas as $j) {
