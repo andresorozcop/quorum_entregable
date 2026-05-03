@@ -34,6 +34,10 @@ export interface HorarioCandidato {
 export interface MarcaAprendiz {
   tipo: TipoAsistencia | null;
   horas_inasistencia: number | null;
+  /** Obligatorio si tipo es excusa (texto del motivo). */
+  excusa_motivo?: string | null;
+  /** Archivo opcional solo para excusa; no se serializa al API como JSON suelto. */
+  excusa_archivo?: File | null;
 }
 
 // Historial / matriz (Módulo 8)
@@ -54,6 +58,9 @@ export interface RegistroHistorialCelda {
   aprendiz_id: number;
   tipo: TipoAsistencia;
   horas_inasistencia: number | null;
+  excusa_motivo?: string | null;
+  excusa_tiene_evidencia?: boolean;
+  excusa_evidencia_nombre_original?: string | null;
 }
 
 export interface HistorialMatrizRespuesta {

@@ -16,6 +16,9 @@ class RegistroAsistencia extends Model
         'aprendiz_id',
         'tipo',
         'horas_inasistencia',
+        'excusa_motivo',
+        'excusa_evidencia_path',
+        'excusa_evidencia_nombre_original',
         'activo',
     ];
 

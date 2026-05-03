@@ -103,6 +103,7 @@ Route::middleware(['auth:sanctum', EnsureTotpSessionOk::class])->group(function 
     // Módulo 7 — Tomar asistencia (instructor / gestor)
     Route::post('/asistencia/iniciar-sesion', [AsistenciaController::class, 'iniciarSesion']);
     Route::post('/asistencia/sesiones/{sesion}/guardar', [AsistenciaController::class, 'guardar']);
+    Route::get('/asistencia/registros/{registro}/excusa-evidencia', [AsistenciaController::class, 'descargarExcusaEvidencia']);
     Route::put('/asistencia/registros/{registro}', [AsistenciaController::class, 'actualizar']);
 
     // Módulo 12 — Configuración, festivos e historial (solo admin)

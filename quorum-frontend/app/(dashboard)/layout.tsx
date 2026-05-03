@@ -8,6 +8,10 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import {
+  guardarSidebarExpandido,
+  leerSidebarExpandido,
+} from "../../lib/sidebarStorage";
 import Sidebar from "../../components/ui/Sidebar";
 import Headbar from "../../components/ui/Headbar";
 
@@ -20,8 +24,28 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { usuario, cargando, totpSesionCompleta } = useAuth();
 
-  // Estado del sidebar: cerrado por defecto en móvil
-  const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  // Sidebar: rail (solo iconos) vs expandido; preferencia en localStorage
+  const [sidebarExpandido, setSidebarExpandido] = useState(false);
+
+  useEffect(() => {
+    const guardado = leerSidebarExpandido();
+    if (guardado !== null) {
+      setSidebarExpandido(guardado);
+    }
+  }, []);
+
+  function toggleSidebar() {
+    setSidebarExpandido((prev) => {
+      const next = !prev;
+      guardarSidebarExpandido(next);
+      return next;
+    });
+  }
+
+  function colapsarSidebar() {
+    setSidebarExpandido(false);
+    guardarSidebarExpandido(false);
+  }
 
   // Cuando termina de cargar y no hay usuario, redirigir al login
   // Esto cubre el caso de cookie expirada que el middleware no pudo detectar
@@ -98,15 +122,18 @@ export default function DashboardLayout({
   }
 
   return (
-    // Contenedor principal — ocupa toda la pantalla dividido en sidebar + contenido
-    <div className="flex h-screen overflow-hidden bg-grisClaro dark:bg-background">
-      <Sidebar
-        abierto={sidebarAbierto}
-        onCerrar={() => setSidebarAbierto(false)}
+    // Headbar a ancho completo; debajo, fila sidebar + contenido (estilo Gmail)
+    <div className="flex h-screen min-h-0 w-full max-w-[100vw] flex-col overflow-hidden bg-grisClaro dark:bg-background">
+      <Headbar
+        sidebarExpandido={sidebarExpandido}
+        onToggleSidebar={toggleSidebar}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Headbar onToggleSidebar={() => setSidebarAbierto(!sidebarAbierto)} />
+      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+        <Sidebar
+          expandido={sidebarExpandido}
+          onColapsarOverlay={colapsarSidebar}
+        />
 
         {/* min-w-0: el flex no corta tablas; overflow-x-auto: scroll si el texto es muy grande */}
         <main className="min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto p-4 md:p-6">

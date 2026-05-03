@@ -1,8 +1,6 @@
 "use client";
 
-// Sidebar — barra lateral de navegación del dashboard
-// Cambia el menú según el rol del usuario autenticado
-// En móvil se oculta y abre con el botón hamburguesa del Headbar
+// Sidebar — rail oscuro (bg-sidebar); toggle solo desde Headbar (Headbar arriba, sidebar debajo)
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,17 +20,14 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import Avatar from "./Avatar";
 import Badge from "./Badge";
-import { QuorumLogo, quorumNombreTextoClases } from "../branding/QuorumMark";
 import type { RolUsuario } from "../../types/usuario";
 
-// Estructura de un ítem del menú lateral
 interface ItemMenu {
   etiqueta: string;
   ruta: string;
   Icono: React.ElementType;
 }
 
-// Menú de navegación diferente para cada rol — PRD §11
 const MENU_POR_ROL: Record<RolUsuario, ItemMenu[]> = {
   admin: [
     { etiqueta: "Dashboard", ruta: "/dashboard", Icono: LayoutDashboard },
@@ -66,118 +61,170 @@ const MENU_POR_ROL: Record<RolUsuario, ItemMenu[]> = {
 };
 
 interface SidebarProps {
-  // Controla si el sidebar está visible en móvil
-  abierto: boolean;
-  // Función para cerrarlo (llamada desde el overlay o el botón X)
-  onCerrar: () => void;
+  expandido: boolean;
+  onColapsarOverlay: () => void;
 }
 
-export default function Sidebar({ abierto, onCerrar }: SidebarProps) {
+const railSurface = "bg-sidebar text-white border-white/10";
+
+function linkClases(esActivo: boolean, compacto: boolean) {
+  const base = compacto
+    ? "flex min-h-[44px] w-full max-w-[44px] items-center justify-center rounded-lg text-sm font-medium transition-colors duration-150"
+    : "flex min-h-[40px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150";
+  const estado = esActivo
+    ? "bg-verdeOscuro text-white shadow-sm"
+    : "text-white/70 hover:bg-white/10 hover:text-white";
+  return `${base} ${estado}`;
+}
+
+export default function Sidebar({
+  expandido,
+  onColapsarOverlay,
+}: SidebarProps) {
   const { usuario } = useAuth();
-  // usePathname devuelve la ruta actual para resaltar el ítem activo
   const pathname = usePathname();
 
-  // Si no hay usuario autenticado, no renderizamos el sidebar
   if (!usuario) return null;
 
   const items = MENU_POR_ROL[usuario.rol] ?? [];
 
-  return (
-    <>
-      {/* Overlay semitransparente — solo visible en móvil cuando el sidebar está abierto */}
-      {/* Al hacer clic cierra el sidebar */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-20 lg:hidden transition-opacity duration-300 ${
-          abierto ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={onCerrar}
-        aria-hidden="true"
-      />
+  function esActivo(ruta: string) {
+    return ruta === "/dashboard"
+      ? pathname === "/dashboard"
+      : pathname.startsWith(ruta);
+  }
 
-      {/* Panel lateral */}
+  const navMini = (
+    <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-1.5 pb-2 pt-3">
+      <ul className="flex flex-col gap-0.5">
+        {items.map(({ etiqueta, ruta, Icono }) => {
+          const activo = esActivo(ruta);
+          return (
+            <li key={ruta} className="flex justify-center">
+              <Link
+                href={ruta}
+                className={linkClases(activo, true)}
+                aria-current={activo ? "page" : undefined}
+                title={etiqueta}
+              >
+                <Icono size={20} className="shrink-0" aria-hidden="true" />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+
+  const navFull = (onNavigate?: () => void) => (
+    <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 pb-4 pt-3">
+      <ul className="space-y-1">
+        {items.map(({ etiqueta, ruta, Icono }) => {
+          const activo = esActivo(ruta);
+          return (
+            <li key={ruta}>
+              <Link
+                href={ruta}
+                onClick={onNavigate}
+                className={linkClases(activo, false)}
+                aria-current={activo ? "page" : undefined}
+              >
+                <Icono size={18} aria-hidden="true" />
+                <span className="min-w-0 flex-1 truncate">{etiqueta}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+
+  const perfilMini = (
+    <div className="shrink-0 border-t border-white/10 px-2 py-3">
+      <Link
+        href="/perfil"
+        className="flex justify-center rounded-lg p-2 transition-colors hover:bg-white/10"
+        title="Ver perfil"
+      >
+        <Avatar
+          nombre={`${usuario.nombre} ${usuario.apellido}`}
+          id={usuario.id}
+          size="sm"
+        />
+      </Link>
+    </div>
+  );
+
+  const perfilFull = (onNavigate?: () => void) => (
+    <div className="shrink-0 border-t border-white/10 px-4 py-4">
+      <Link
+        href="/perfil"
+        onClick={onNavigate}
+        className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-white/10"
+        title="Ver perfil"
+      >
+        <Avatar
+          nombre={`${usuario.nombre} ${usuario.apellido}`}
+          id={usuario.id}
+          size="sm"
+        />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-white">
+            {usuario.nombre} {usuario.apellido}
+          </p>
+          <Badge rol={usuario.rol} size="sm" />
+        </div>
+      </Link>
+    </div>
+  );
+
+  const asideClass = `flex h-full flex-col overflow-hidden border-r border-white/10 ${railSurface}`;
+
+  return (
+    <div className="relative z-0 flex h-full shrink-0">
       <aside
-        className={`
-          fixed top-0 left-0 h-full w-64 z-30 flex flex-col
-          bg-sidebar text-white
-          transition-transform duration-300 ease-in-out
-          lg:static lg:translate-x-0 lg:z-auto
-          ${abierto ? "translate-x-0" : "-translate-x-full"}
-        `}
+        className={`${asideClass} w-[72px] lg:hidden`}
+        aria-label="Menú de navegación compacto"
+      >
+        {navMini}
+        {perfilMini}
+      </aside>
+
+      {expandido && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+            onClick={onColapsarOverlay}
+            aria-hidden="true"
+          />
+          <aside
+            className={`fixed left-0 top-14 z-[45] flex h-[calc(100vh-3.5rem)] w-[min(280px,85vw)] max-w-[280px] flex-col shadow-xl lg:hidden ${asideClass}`}
+            aria-label="Menú de navegación"
+          >
+            {navFull(onColapsarOverlay)}
+            {perfilFull(onColapsarOverlay)}
+          </aside>
+        </>
+      )}
+
+      <aside
+        className={`relative hidden h-full shrink-0 flex-col overflow-hidden border-r border-white/10 transition-[width] duration-300 ease-out lg:flex ${railSurface} ${
+          expandido ? "w-[260px]" : "w-[72px]"
+        }`}
         aria-label="Menú de navegación"
       >
-        {/* Marca Quorum — logo + nombre en blanco (fondo oscuro del sidebar) */}
-        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
-          <QuorumLogo variant="sidebar" />
-          <div className="min-w-0 flex-1">
-            <p className={`text-[1.05875rem] leading-none text-white ${quorumNombreTextoClases}`}>
-              QUORUM
-            </p>
-            <p className="mt-1 text-[0.9075rem] leading-tight text-white/50">SENA</p>
-          </div>
-        </div>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* MENÚ DE NAVEGACIÓN                                                  */}
-        {/* ------------------------------------------------------------------ */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <ul className="space-y-1">
-            {items.map(({ etiqueta, ruta, Icono }) => {
-              // Un ítem está activo si la ruta actual empieza con su ruta
-              // Excepción: /dashboard solo activo si es exactamente /dashboard
-              const esActivo =
-                ruta === "/dashboard"
-                  ? pathname === "/dashboard"
-                  : pathname.startsWith(ruta);
-
-              return (
-                <li key={ruta}>
-                  <Link
-                    href={ruta}
-                    onClick={onCerrar}
-                    className={`
-                      flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                      transition-colors duration-150
-                      ${
-                        esActivo
-                          ? "bg-verdeOscuro text-white"
-                          : "text-white/70 hover:bg-white/10 hover:text-white"
-                      }
-                    `}
-                    aria-current={esActivo ? "page" : undefined}
-                  >
-                    <Icono size={18} aria-hidden="true" />
-                    {etiqueta}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* PERFIL DEL USUARIO — Parte inferior                                 */}
-        {/* ------------------------------------------------------------------ */}
-        <div className="px-4 py-4 border-t border-white/10">
-          <Link
-            href="/perfil"
-            onClick={onCerrar}
-            className="flex items-center gap-3 rounded-lg p-2 hover:bg-white/10 transition-colors"
-            title="Ver perfil"
-          >
-            <Avatar
-              nombre={`${usuario.nombre} ${usuario.apellido}`}
-              id={usuario.id}
-              size="sm"
-            />
-            <div className="min-w-0">
-              <p className="text-white text-sm font-medium truncate">
-                {usuario.nombre} {usuario.apellido}
-              </p>
-              <Badge rol={usuario.rol} size="sm" />
-            </div>
-          </Link>
-        </div>
+        {expandido ? (
+          <>
+            {navFull()}
+            {perfilFull()}
+          </>
+        ) : (
+          <>
+            {navMini}
+            {perfilMini}
+          </>
+        )}
       </aside>
-    </>
+    </div>
   );
 }

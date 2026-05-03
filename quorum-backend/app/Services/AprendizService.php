@@ -67,6 +67,9 @@ class AprendizService
                     'tipo' => $reg->tipo,
                     'horas_inasistencia' => $reg->tipo === 'parcial' ? $reg->horas_inasistencia : null,
                     'horas_programadas' => $sesion?->horas_programadas,
+                    'excusa_motivo' => $reg->tipo === 'excusa' ? $reg->excusa_motivo : null,
+                    'excusa_tiene_evidencia' => $reg->tipo === 'excusa'
+                        && $reg->excusa_evidencia_path !== null && $reg->excusa_evidencia_path !== '',
                 ];
             })
             ->values()

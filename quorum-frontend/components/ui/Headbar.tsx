@@ -33,10 +33,14 @@ import Badge from "./Badge";
 import { QuorumLogo, quorumNombreTextoClases } from "../branding/QuorumMark";
 
 interface HeadbarProps {
+  sidebarExpandido: boolean;
   onToggleSidebar: () => void;
 }
 
-export default function Headbar({ onToggleSidebar }: HeadbarProps) {
+export default function Headbar({
+  sidebarExpandido,
+  onToggleSidebar,
+}: HeadbarProps) {
   const { usuario, nombreSistema, logout } = useAuth();
 
   const [panelAbierto, setPanelAbierto] = useState(false);
@@ -130,11 +134,15 @@ export default function Headbar({ onToggleSidebar }: HeadbarProps) {
   }
 
   return (
-    <header className="z-10 flex h-14 shrink-0 items-center gap-3 border-b border-borderSubtle bg-surface px-4">
+    <header className="relative z-50 flex h-14 w-full min-w-0 shrink-0 items-center gap-3 border-b border-borderSubtle bg-surface px-4">
       <button
+        type="button"
         onClick={onToggleSidebar}
-        className="rounded-lg p-2 text-foreground transition-colors hover:bg-surfaceMuted lg:hidden"
-        aria-label="Abrir menú"
+        className="rounded-lg p-2 text-foreground transition-colors hover:bg-surfaceMuted"
+        aria-label={
+          sidebarExpandido ? "Contraer menú lateral" : "Expandir menú lateral"
+        }
+        title={sidebarExpandido ? "Contraer menú" : "Expandir menú"}
       >
         <Menu size={20} />
       </button>

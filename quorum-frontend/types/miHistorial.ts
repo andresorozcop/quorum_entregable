@@ -20,6 +20,8 @@ export interface MiHistorialRegistro {
   tipo: TipoHistorialAprendiz;
   horas_inasistencia: number | null;
   horas_programadas: number | null;
+  excusa_motivo?: string | null;
+  excusa_tiene_evidencia?: boolean;
 }
 
 export interface MiHistorialTotales {

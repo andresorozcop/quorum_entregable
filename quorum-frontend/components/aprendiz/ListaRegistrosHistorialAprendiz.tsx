@@ -1,5 +1,9 @@
+"use client";
+
 // Lista cronológica de sesiones de un aprendiz (M9 y M10)
 
+import Swal from "sweetalert2";
+import { descargarExcusaEvidencia } from "../../services/asistencia.service";
 import type {
   MiHistorialRegistro,
   TipoHistorialAprendiz,
@@ -77,6 +81,39 @@ export default function ListaRegistrosHistorialAprendiz({
                     {reg.instructor_nombre.trim() || "—"}
                   </span>
                 </p>
+                {reg.tipo === "excusa" && reg.excusa_motivo && (
+                  <p className="mt-1 text-sm text-foreground/90">
+                    <span className="text-muted">Motivo: </span>
+                    {reg.excusa_motivo}
+                  </p>
+                )}
+                {reg.tipo === "excusa" && reg.excusa_tiene_evidencia && (
+                  <p className="mt-1">
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-verde underline"
+                      onClick={() =>
+                        void (async () => {
+                          try {
+                            await descargarExcusaEvidencia(reg.id);
+                          } catch (err) {
+                            await Swal.fire({
+                              icon: "error",
+                              title: "No se pudo descargar",
+                              text:
+                                err instanceof Error
+                                  ? err.message
+                                  : "Inténtalo de nuevo.",
+                              confirmButtonColor: "#3DAE2B",
+                            });
+                          }
+                        })()
+                      }
+                    >
+                      Ver evidencia adjunta
+                    </button>
+                  </p>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <span

@@ -74,9 +74,23 @@ export default function FilaAprendiz({
       onCambio({
         tipo,
         horas_inasistencia: marca.horas_inasistencia ?? (maxHorasParcial >= 1 ? 1 : null),
+        excusa_motivo: null,
+        excusa_archivo: null,
+      });
+    } else if (tipo === "excusa") {
+      onCambio({
+        tipo,
+        horas_inasistencia: null,
+        excusa_motivo: marca.excusa_motivo ?? "",
+        excusa_archivo: marca.excusa_archivo ?? null,
       });
     } else {
-      onCambio({ tipo, horas_inasistencia: null });
+      onCambio({
+        tipo,
+        horas_inasistencia: null,
+        excusa_motivo: null,
+        excusa_archivo: null,
+      });
     }
   }
 
@@ -100,6 +114,57 @@ export default function FilaAprendiz({
           Cédula: {aprendiz.documento}
         </p>
       </div>
+
+      {marca.tipo === "excusa" && (
+        <div className="order-3 w-full space-y-2 sm:order-none sm:max-w-md">
+          <label htmlFor={`exc-motivo-${aprendiz.id}`} className="block text-xs font-medium text-muted">
+            Motivo de la excusa <span className="text-error">*</span>
+          </label>
+          <textarea
+            id={`exc-motivo-${aprendiz.id}`}
+            rows={2}
+            className="w-full rounded-lg border border-borderSubtle bg-input px-2.5 py-1.5 text-xs text-foreground shadow-sm focus:border-verde focus:outline-none focus:ring-2 focus:ring-verde/25"
+            placeholder="Describe brevemente el motivo (ej. cita médica, calamidad…)"
+            value={marca.excusa_motivo ?? ""}
+            onChange={(e) =>
+              onCambio({
+                tipo: "excusa",
+                horas_inasistencia: null,
+                excusa_motivo: e.target.value,
+                excusa_archivo: marca.excusa_archivo ?? null,
+              })
+            }
+          />
+          <div>
+            <label
+              htmlFor={`exc-file-${aprendiz.id}`}
+              className="mb-1 block text-xs text-muted"
+            >
+              Evidencia (opcional, máx. 10&nbsp;MB)
+            </label>
+            <input
+              id={`exc-file-${aprendiz.id}`}
+              type="file"
+              accept="image/*,.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="w-full max-w-full text-xs text-foreground file:mr-2 file:rounded file:border-0 file:bg-surfaceMuted file:px-2 file:py-1"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                onCambio({
+                  tipo: "excusa",
+                  horas_inasistencia: null,
+                  excusa_motivo: marca.excusa_motivo ?? "",
+                  excusa_archivo: f,
+                });
+              }}
+            />
+            {marca.excusa_archivo && (
+              <p className="mt-1 truncate text-xs text-muted" title={marca.excusa_archivo.name}>
+                {marca.excusa_archivo.name}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {marca.tipo === "parcial" && opcionesHoras.length > 0 && (
         <div className="order-3 flex w-full shrink-0 items-center justify-end gap-2 sm:order-none sm:w-auto sm:justify-start">

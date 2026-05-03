@@ -12,6 +12,7 @@ use App\Models\Sesion;
 use App\Services\AsistenciaService;
 use App\Support\LogActivity;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 // API tomar asistencia (Módulo 7) e historial matriz (Módulo 8)
@@ -73,11 +74,18 @@ class AsistenciaController extends Controller
     {
         $this->authorize('guardarAsistencia', $sesion);
 
+        /** @var array<int|string, \Illuminate\Http\UploadedFile|null> $evidencias */
+        $evidencias = $request->file('evidencias', []);
+        if (! is_array($evidencias)) {
+            $evidencias = [];
+        }
+
         try {
             $this->asistenciaService->guardarSesionCompleta(
                 $request->user(),
                 $sesion,
-                $request->input('registros', [])
+                $request->input('registros', []),
+                $evidencias
             );
         } catch (ValidationException $e) {
             return response()->json([
@@ -97,6 +105,21 @@ class AsistenciaController extends Controller
         ]);
     }
 
+    /** Descarga la evidencia adjunta a una excusa (instructor de la sesión o aprendiz dueño). */
+    public function descargarExcusaEvidencia(RegistroAsistencia $registro): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewExcusaEvidencia', $registro);
+
+        $path = $registro->excusa_evidencia_path;
+        if ($path === null || $path === '' || ! Storage::disk('local')->exists($path)) {
+            abort(404, 'No hay evidencia adjunta.');
+        }
+
+        $nombre = $registro->excusa_evidencia_nombre_original ?: basename($path);
+
+        return Storage::disk('local')->response($path, $nombre);
+    }
+
     /** Corrige un registro (sesión ya cerrada) */
     public function actualizar(ActualizarRegistroAsistenciaRequest $request, RegistroAsistencia $registro): JsonResponse
     {
@@ -106,7 +129,8 @@ class AsistenciaController extends Controller
             $this->asistenciaService->actualizarRegistro(
                 $request->user(),
                 $registro,
-                $request->only(['tipo', 'horas_inasistencia', 'razon'])
+                $request->only(['tipo', 'horas_inasistencia', 'razon', 'excusa_motivo']),
+                $request->file('evidencia')
             );
         } catch (ValidationException $e) {
             return response()->json([

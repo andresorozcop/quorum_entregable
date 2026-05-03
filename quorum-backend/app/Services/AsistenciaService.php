@@ -11,7 +11,10 @@ use App\Models\Sesion;
 use App\Models\Usuario;
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 // Lógica de negocio para tomar y corregir asistencia (Módulo 7)
@@ -263,7 +266,16 @@ class AsistenciaService
             : RegistroAsistencia::query()
                 ->whereIn('sesion_id', $sesionIds)
                 ->where('activo', 1)
-                ->get(['id', 'sesion_id', 'aprendiz_id', 'tipo', 'horas_inasistencia']);
+                ->get([
+                    'id',
+                    'sesion_id',
+                    'aprendiz_id',
+                    'tipo',
+                    'horas_inasistencia',
+                    'excusa_motivo',
+                    'excusa_evidencia_path',
+                    'excusa_evidencia_nombre_original',
+                ]);
 
         $sesionesJson = $sesiones->map(function (Sesion $s) {
             $inst = $s->instructor;
@@ -285,11 +297,15 @@ class AsistenciaService
         })->values()->all();
 
         $registrosJson = $registrosCol->map(fn (RegistroAsistencia $r) => [
-            'id'                 => $r->id,
-            'sesion_id'          => $r->sesion_id,
-            'aprendiz_id'        => $r->aprendiz_id,
-            'tipo'               => $r->tipo,
-            'horas_inasistencia' => $r->horas_inasistencia !== null ? (int) $r->horas_inasistencia : null,
+            'id'                               => $r->id,
+            'sesion_id'                        => $r->sesion_id,
+            'aprendiz_id'                      => $r->aprendiz_id,
+            'tipo'                             => $r->tipo,
+            'horas_inasistencia'               => $r->horas_inasistencia !== null ? (int) $r->horas_inasistencia : null,
+            'excusa_motivo'                    => $r->tipo === 'excusa' ? $r->excusa_motivo : null,
+            'excusa_tiene_evidencia'           => $r->tipo === 'excusa'
+                && $r->excusa_evidencia_path !== null && $r->excusa_evidencia_path !== '',
+            'excusa_evidencia_nombre_original' => $r->tipo === 'excusa' ? $r->excusa_evidencia_nombre_original : null,
         ])->values()->all();
 
         return [
@@ -409,9 +425,10 @@ class AsistenciaService
     }
 
     /**
-     * @param  array<int, array{aprendiz_id: int, tipo: string, horas_inasistencia?: int|null}>  $registros
+     * @param  array<int, array{aprendiz_id: int, tipo: string, horas_inasistencia?: int|null, excusa_motivo?: string|null}>  $registros
+     * @param  array<int|string, UploadedFile|null>  $evidenciasPorAprendizId
      */
-    public function guardarSesionCompleta(Usuario $usuario, Sesion $sesion, array $registros): void
+    public function guardarSesionCompleta(Usuario $usuario, Sesion $sesion, array $registros, array $evidenciasPorAprendizId = []): void
     {
         if ($sesion->instructor_id !== $usuario->id) {
             abort(403, 'No eres el instructor que abrió esta sesión.');
@@ -451,8 +468,10 @@ class AsistenciaService
             $this->validarFilaRegistro($fila, $hp);
         }
 
+        $rutasArchivosTemp = [];
+
         try {
-            DB::transaction(function () use ($sesion, $registros) {
+            DB::transaction(function () use ($sesion, $registros, $evidenciasPorAprendizId, &$rutasArchivosTemp) {
                 $bloqueada = Sesion::query()->whereKey($sesion->id)->lockForUpdate()->first();
                 if (! $bloqueada || $bloqueada->estado !== 'abierta') {
                     throw ValidationException::withMessages([
@@ -467,27 +486,85 @@ class AsistenciaService
                 }
 
                 foreach ($registros as $fila) {
-                    RegistroAsistencia::query()->create([
-                        'sesion_id'            => $bloqueada->id,
-                        'aprendiz_id'          => (int) $fila['aprendiz_id'],
-                        'tipo'                 => $fila['tipo'],
-                        'horas_inasistencia'   => $fila['tipo'] === 'parcial' ? (int) $fila['horas_inasistencia'] : null,
-                        'activo'               => 1,
+                    $tipo = $fila['tipo'];
+                    $motivoExcusa = null;
+                    if ($tipo === 'excusa') {
+                        $motivoExcusa = mb_substr(trim((string) ($fila['excusa_motivo'] ?? '')), 0, 500);
+                    }
+
+                    /** @var RegistroAsistencia $reg */
+                    $reg = RegistroAsistencia::query()->create([
+                        'sesion_id'                      => $bloqueada->id,
+                        'aprendiz_id'                    => (int) $fila['aprendiz_id'],
+                        'tipo'                           => $tipo,
+                        'horas_inasistencia'             => $tipo === 'parcial' ? (int) $fila['horas_inasistencia'] : null,
+                        'excusa_motivo'                  => $motivoExcusa,
+                        'excusa_evidencia_path'          => null,
+                        'excusa_evidencia_nombre_original' => null,
+                        'activo'                         => 1,
                     ]);
+
+                    if ($tipo === 'excusa') {
+                        $aid = (int) $fila['aprendiz_id'];
+                        $archivo = $evidenciasPorAprendizId[$aid]
+                            ?? $evidenciasPorAprendizId[(string) $aid]
+                            ?? null;
+                        if ($archivo instanceof UploadedFile && $archivo->isValid()) {
+                            $path = $this->guardarArchivoExcusaEnDisco($reg, $archivo);
+                            $rutasArchivosTemp[] = $path;
+                            $reg->update([
+                                'excusa_evidencia_path'            => $path,
+                                'excusa_evidencia_nombre_original' => mb_substr($archivo->getClientOriginalName(), 0, 255),
+                            ]);
+                        }
+                    }
                 }
 
                 $bloqueada->update(['estado' => 'cerrada']);
             });
         } catch (\Illuminate\Database\QueryException) {
+            foreach ($rutasArchivosTemp as $p) {
+                if ($p !== '') {
+                    Storage::disk('local')->delete($p);
+                }
+            }
             // Duplicado por doble envío u otra carrera
             throw ValidationException::withMessages([
                 'sesion' => ['Esta sesión ya fue guardada o hubo un conflicto. Vuelve al historial y verifica.'],
             ]);
+        } catch (\Throwable $e) {
+            foreach ($rutasArchivosTemp as $p) {
+                if ($p !== '') {
+                    Storage::disk('local')->delete($p);
+                }
+            }
+            throw $e;
+        }
+    }
+
+    private function guardarArchivoExcusaEnDisco(RegistroAsistencia $registro, UploadedFile $file): string
+    {
+        $this->eliminarArchivoExcusaDelDisco($registro->excusa_evidencia_path);
+
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'bin');
+        $nombre = Str::uuid()->toString().'.'.$ext;
+        $dir = 'excusas/'.$registro->sesion_id;
+
+        return $file->storeAs($dir, $nombre, 'local');
+    }
+
+    private function eliminarArchivoExcusaDelDisco(?string $pathRelativo): void
+    {
+        if ($pathRelativo === null || $pathRelativo === '') {
+            return;
+        }
+        if (Storage::disk('local')->exists($pathRelativo)) {
+            Storage::disk('local')->delete($pathRelativo);
         }
     }
 
     /**
-     * @param  array{aprendiz_id: int, tipo: string, horas_inasistencia?: int|null}  $fila
+     * @param  array{aprendiz_id?: int, tipo: string, horas_inasistencia?: int|null, excusa_motivo?: string|null}  $fila
      */
     private function validarFilaRegistro(array $fila, int $horasProgramadas): void
     {
@@ -516,12 +593,25 @@ class AsistenciaService
                 'registros' => ['Solo el tipo parcial lleva horas de inasistencia.'],
             ]);
         }
+
+        if ($tipo === 'excusa') {
+            $motivo = trim((string) ($fila['excusa_motivo'] ?? ''));
+            if ($motivo === '') {
+                throw ValidationException::withMessages([
+                    'registros' => ['El motivo de la excusa es obligatorio.'],
+                ]);
+            }
+        } elseif (! empty(trim((string) ($fila['excusa_motivo'] ?? '')))) {
+            throw ValidationException::withMessages([
+                'registros' => ['El motivo de excusa solo aplica cuando el tipo es excusa.'],
+            ]);
+        }
     }
 
     /**
-     * @param  array{tipo: string, horas_inasistencia?: int|null, razon?: string|null}  $datos
+     * @param  array{tipo: string, horas_inasistencia?: int|null, razon?: string|null, excusa_motivo?: string|null}  $datos
      */
-    public function actualizarRegistro(Usuario $usuario, RegistroAsistencia $registro, array $datos): void
+    public function actualizarRegistro(Usuario $usuario, RegistroAsistencia $registro, array $datos, ?UploadedFile $evidencia = null): void
     {
         $registro->load('sesion');
         $sesion = $registro->sesion;
@@ -541,10 +631,11 @@ class AsistenciaService
             'aprendiz_id'        => $registro->aprendiz_id,
             'tipo'               => $datos['tipo'],
             'horas_inasistencia' => $datos['horas_inasistencia'] ?? null,
+            'excusa_motivo'      => $datos['excusa_motivo'] ?? null,
         ];
         $this->validarFilaRegistro($fila, $hp);
 
-        DB::transaction(function () use ($registro, $datos, $usuario, $sesion) {
+        DB::transaction(function () use ($registro, $datos, $usuario, $sesion, $evidencia) {
             RegistroAsistenciaBackup::query()->create([
                 'registro_asistencia_id'   => $registro->id,
                 'sesion_id'                => $sesion->id,
@@ -557,10 +648,30 @@ class AsistenciaService
                 'razon'                    => isset($datos['razon']) ? mb_substr((string) $datos['razon'], 0, 255) : null,
             ]);
 
-            $registro->update([
-                'tipo'               => $datos['tipo'],
-                'horas_inasistencia' => $datos['tipo'] === 'parcial' ? (int) $datos['horas_inasistencia'] : null,
-            ]);
+            $tipoNuevo = $datos['tipo'];
+            $payload = [
+                'tipo'               => $tipoNuevo,
+                'horas_inasistencia' => $tipoNuevo === 'parcial' ? (int) $datos['horas_inasistencia'] : null,
+            ];
+
+            if ($tipoNuevo === 'excusa') {
+                $payload['excusa_motivo'] = mb_substr(trim((string) ($datos['excusa_motivo'] ?? '')), 0, 500);
+                if ($evidencia instanceof UploadedFile && $evidencia->isValid()) {
+                    $path = $this->guardarArchivoExcusaEnDisco($registro, $evidencia);
+                    $payload['excusa_evidencia_path'] = $path;
+                    $payload['excusa_evidencia_nombre_original'] = mb_substr($evidencia->getClientOriginalName(), 0, 255);
+                } else {
+                    $payload['excusa_evidencia_path'] = $registro->excusa_evidencia_path;
+                    $payload['excusa_evidencia_nombre_original'] = $registro->excusa_evidencia_nombre_original;
+                }
+            } else {
+                $this->eliminarArchivoExcusaDelDisco($registro->excusa_evidencia_path);
+                $payload['excusa_motivo'] = null;
+                $payload['excusa_evidencia_path'] = null;
+                $payload['excusa_evidencia_nombre_original'] = null;
+            }
+
+            $registro->update($payload);
         });
     }
 }

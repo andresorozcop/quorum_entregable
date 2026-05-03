@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import Avatar from "../ui/Avatar";
 import {
   actualizarRegistroAsistencia,
+  descargarExcusaEvidencia,
   type PayloadActualizarRegistro,
 } from "../../services/asistencia.service";
 import type {
@@ -128,6 +129,11 @@ function tituloCelda(
   if (reg.tipo === "parcial" && reg.horas_inasistencia != null) {
     detalle += ` (${reg.horas_inasistencia} h de inasistencia)`;
   }
+  if (reg.tipo === "excusa" && reg.excusa_motivo && reg.excusa_motivo.trim() !== "") {
+    const corto =
+      reg.excusa_motivo.length > 60 ? `${reg.excusa_motivo.slice(0, 60)}…` : reg.excusa_motivo;
+    detalle += ` — ${corto}`;
+  }
   return `${nombreAp} · ${fechaTxt} · ${detalle}`;
 }
 
@@ -159,6 +165,8 @@ export default function MatrizAsistencia({
   const [tipoSel, setTipoSel] = useState<TipoAsistencia>("presente");
   const [horasParcial, setHorasParcial] = useState<number>(1);
   const [razon, setRazon] = useState("");
+  const [excusaMotivo, setExcusaMotivo] = useState("");
+  const [archivoEvidencia, setArchivoEvidencia] = useState<File | null>(null);
   const [guardando, setGuardando] = useState(false);
 
   const abrirEditar = useCallback(
@@ -172,6 +180,8 @@ export default function MatrizAsistencia({
           : 1
       );
       setRazon("");
+      setExcusaMotivo(reg.tipo === "excusa" ? (reg.excusa_motivo ?? "") : "");
+      setArchivoEvidencia(null);
       setModalAbierto(true);
     },
     []
@@ -209,6 +219,16 @@ export default function MatrizAsistencia({
       }
     }
 
+    if (tipoSel === "excusa" && excusaMotivo.trim() === "") {
+      await Swal.fire({
+        icon: "warning",
+        title: "Motivo requerido",
+        text: "Indica el motivo de la excusa.",
+        confirmButtonColor: "#3DAE2B",
+      });
+      return;
+    }
+
     const confirm = await Swal.fire({
       icon: "question",
       title: "¿Guardar cambio?",
@@ -224,11 +244,17 @@ export default function MatrizAsistencia({
       tipo: tipoSel,
       horas_inasistencia: tipoSel === "parcial" ? horasParcial : null,
       razon: razon.trim() !== "" ? razon.trim() : null,
+      excusa_motivo:
+        tipoSel === "excusa" ? excusaMotivo.trim() : undefined,
     };
 
     setGuardando(true);
     try {
-      await actualizarRegistroAsistencia(registroEdit.id, payload);
+      await actualizarRegistroAsistencia(
+        registroEdit.id,
+        payload,
+        archivoEvidencia ?? undefined
+      );
       await Swal.fire({
         icon: "success",
         title: "Listo",
@@ -253,6 +279,8 @@ export default function MatrizAsistencia({
     tipoSel,
     horasParcial,
     razon,
+    excusaMotivo,
+    archivoEvidencia,
     cerrarModal,
     onRegistroActualizado,
   ]);
@@ -496,9 +524,75 @@ export default function MatrizAsistencia({
                 </div>
               )}
 
+              {tipoSel === "excusa" && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground" htmlFor="excusa-motivo-edit">
+                      Motivo de la excusa <span className="text-error">*</span>
+                    </label>
+                    <textarea
+                      id="excusa-motivo-edit"
+                      rows={3}
+                      maxLength={500}
+                      className="mt-1 w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
+                      value={excusaMotivo}
+                      onChange={(e) => setExcusaMotivo(e.target.value)}
+                      disabled={guardando}
+                    />
+                  </div>
+                  {registroEdit.excusa_tiene_evidencia && (
+                    <p className="text-xs text-muted">
+                      <button
+                        type="button"
+                        className="font-medium text-verde underline"
+                        disabled={guardando}
+                        onClick={() =>
+                          void (async () => {
+                            try {
+                              await descargarExcusaEvidencia(registroEdit.id);
+                            } catch (err) {
+                              await Swal.fire({
+                                icon: "error",
+                                title: "No se pudo descargar",
+                                text:
+                                  err instanceof Error
+                                    ? err.message
+                                    : "Inténtalo de nuevo.",
+                                confirmButtonColor: "#3DAE2B",
+                              });
+                            }
+                          })()
+                        }
+                      >
+                        Ver evidencia actual
+                      </button>
+                      {registroEdit.excusa_evidencia_nombre_original
+                        ? ` (${registroEdit.excusa_evidencia_nombre_original})`
+                        : ""}
+                    </p>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground" htmlFor="excusa-archivo-edit">
+                      Nueva evidencia (opcional, máx. 10&nbsp;MB)
+                    </label>
+                    <input
+                      id="excusa-archivo-edit"
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx"
+                      className="mt-1 w-full text-sm text-foreground file:mr-2 file:rounded file:border-0 file:bg-surfaceMuted file:px-2 file:py-1"
+                      disabled={guardando}
+                      onChange={(e) => setArchivoEvidencia(e.target.files?.[0] ?? null)}
+                    />
+                    {archivoEvidencia && (
+                      <p className="mt-1 truncate text-xs text-muted">{archivoEvidencia.name}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-foreground" htmlFor="razon-registro">
-                  Motivo del cambio (opcional)
+                  Motivo de la corrección — auditoría (opcional)
                 </label>
                 <textarea
                   id="razon-registro"

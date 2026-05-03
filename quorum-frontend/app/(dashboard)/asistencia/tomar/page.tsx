@@ -92,7 +92,7 @@ function mensajeDesdeError(err: unknown): string {
 function marcasIniciales(aprendices: AprendizAsistencia[]): Record<number, MarcaAprendiz> {
   const m: Record<number, MarcaAprendiz> = {};
   aprendices.forEach((a) => {
-    m[a.id] = { tipo: null, horas_inasistencia: null };
+    m[a.id] = { tipo: null, horas_inasistencia: null, excusa_motivo: null, excusa_archivo: null };
   });
   return m;
 }
@@ -409,7 +409,12 @@ export default function TomarAsistenciaPage() {
       aprendices.forEach((a) => {
         const actual = next[a.id];
         if (!actual?.tipo) {
-          next[a.id] = { tipo: "presente", horas_inasistencia: null };
+          next[a.id] = {
+            tipo: "presente",
+            horas_inasistencia: null,
+            excusa_motivo: null,
+            excusa_archivo: null,
+          };
         }
       });
       return next;
@@ -428,6 +433,12 @@ export default function TomarAsistenciaPage() {
           m.horas_inasistencia === undefined ||
           m.horas_inasistencia < 1
         ) {
+          return `${a.nombre} ${a.apellido}`.trim();
+        }
+      }
+      if (m.tipo === "excusa") {
+        const t = (m.excusa_motivo ?? "").trim();
+        if (t === "") {
           return `${a.nombre} ${a.apellido}`.trim();
         }
       }
@@ -465,14 +476,30 @@ export default function TomarAsistenciaPage() {
     try {
       const registros: FilaRegistroGuardar[] = aprendices.map((a) => {
         const m = marcas[a.id];
-        return {
+        const base: FilaRegistroGuardar = {
           aprendiz_id: a.id,
           tipo: m.tipo!,
           horas_inasistencia: m.tipo === "parcial" ? m.horas_inasistencia : null,
         };
+        if (m.tipo === "excusa") {
+          base.excusa_motivo = (m.excusa_motivo ?? "").trim();
+        }
+        return base;
       });
 
-      await guardarAsistencia(sesion.id, registros);
+      const evidencias: Record<number, File> = {};
+      aprendices.forEach((a) => {
+        const m = marcas[a.id];
+        if (m.tipo === "excusa" && m.excusa_archivo) {
+          evidencias[a.id] = m.excusa_archivo;
+        }
+      });
+
+      await guardarAsistencia(
+        sesion.id,
+        registros,
+        Object.keys(evidencias).length > 0 ? evidencias : undefined
+      );
 
       await Swal.fire({
         icon: "success",
