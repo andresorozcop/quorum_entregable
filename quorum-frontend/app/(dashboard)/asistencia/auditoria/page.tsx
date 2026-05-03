@@ -136,20 +136,20 @@ export default function AuditoriaAsistenciaPage() {
           <ClipboardList size={22} className="text-verde" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-grisOscuro">Auditoría de asistencia</h1>
-          <p className="text-sm text-grisMedio">
+          <h1 className="text-xl font-bold text-foreground">Auditoría de asistencia</h1>
+          <p className="text-sm text-muted">
             Cambios realizados por instructores sobre registros ya cerrados
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
-        <p className="text-sm text-grisMedio">
+      <div className="rounded-xl border border-borderSubtle bg-surface p-4 space-y-3">
+        <p className="text-sm text-muted">
           Solo aparecen correcciones guardadas desde el historial de asistencia (sesión cerrada).
         </p>
         <div className="flex flex-wrap gap-3 items-end">
           <div>
-            <label htmlFor="aud_desde" className="block text-xs text-grisMedio mb-1">
+            <label htmlFor="aud_desde" className="block text-xs text-muted mb-1">
               Desde
             </label>
             <input
@@ -157,11 +157,11 @@ export default function AuditoriaAsistenciaPage() {
               type="date"
               value={desde}
               onChange={(e) => setDesde(e.target.value)}
-              className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+              className="rounded-lg border border-borderSubtle bg-input px-2 py-1.5 text-sm text-foreground"
             />
           </div>
           <div>
-            <label htmlFor="aud_hasta" className="block text-xs text-grisMedio mb-1">
+            <label htmlFor="aud_hasta" className="block text-xs text-muted mb-1">
               Hasta
             </label>
             <input
@@ -169,18 +169,18 @@ export default function AuditoriaAsistenciaPage() {
               type="date"
               value={hasta}
               onChange={(e) => setHasta(e.target.value)}
-              className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+              className="rounded-lg border border-borderSubtle bg-input px-2 py-1.5 text-sm text-foreground"
             />
           </div>
           <div className="min-w-[12rem]">
-            <label htmlFor="aud_ficha" className="block text-xs text-grisMedio mb-1">
+            <label htmlFor="aud_ficha" className="block text-xs text-muted mb-1">
               Ficha
             </label>
             <select
               id="aud_ficha"
               value={fichaId}
               onChange={(e) => setFichaId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-lg border border-borderSubtle bg-input px-2 py-1.5 text-sm text-foreground"
             >
               <option value="">Todas</option>
               {fichas.map((f) => (
@@ -226,7 +226,7 @@ export default function AuditoriaAsistenciaPage() {
                 <span>
                   {f.aprendiz_nombre}
                   {f.aprendiz_documento ? (
-                    <span className="block text-xs text-grisMedio">{f.aprendiz_documento}</span>
+                    <span className="block text-xs text-muted">{f.aprendiz_documento}</span>
                   ) : null}
                 </span>
               ),
@@ -239,7 +239,7 @@ export default function AuditoriaAsistenciaPage() {
                 <span className="text-xs">
                   {(f.tipo_anterior ?? "—") + " → " + f.tipo_nuevo}
                   {(f.horas_inasistencia_ant != null || f.horas_inasistencia_new != null) && (
-                    <span className="block text-grisMedio">
+                    <span className="block text-muted">
                       h: {f.horas_inasistencia_ant ?? "—"} → {f.horas_inasistencia_new ?? "—"}
                     </span>
                   )}
@@ -253,7 +253,7 @@ export default function AuditoriaAsistenciaPage() {
                 <span className="text-xs">
                   {f.modificado_por_nombre}
                   {f.modificado_por_rol ? (
-                    <span className="block text-grisMedio">{f.modificado_por_rol}</span>
+                    <span className="block text-muted">{f.modificado_por_rol}</span>
                   ) : null}
                 </span>
               ),

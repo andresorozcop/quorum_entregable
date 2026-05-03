@@ -14,6 +14,9 @@ interface FilaAprendizProps {
   onCambio: (marca: MarcaAprendiz) => void;
 }
 
+const BOTON_INACTIVO =
+  "border-borderSubtle bg-surface text-foreground transition-colors hover:bg-surfaceMuted hover:border-borderSubtle";
+
 const BOTONES: {
   tipo: TipoAsistencia;
   Icon: typeof Check;
@@ -26,40 +29,36 @@ const BOTONES: {
     Icon: Check,
     titulo: "Presente",
     activo: "bg-verde text-white border-verde shadow-sm hover:bg-verdeOscuro",
-    inactivo:
-      "border-gray-200 bg-white text-grisOscuro hover:bg-grisClaro hover:border-gray-300",
+    inactivo: BOTON_INACTIVO,
   },
   {
     tipo: "falla",
     Icon: X,
     titulo: "Falla",
     activo: "bg-error text-white border-error shadow-sm hover:bg-red-700",
-    inactivo:
-      "border-gray-200 bg-white text-grisOscuro hover:bg-grisClaro hover:border-gray-300",
+    inactivo: BOTON_INACTIVO,
   },
   {
     tipo: "parcial",
     Icon: Clock,
     titulo: "Inasistencia parcial",
     activo: "bg-info text-white border-info shadow-sm hover:bg-blue-700",
-    inactivo:
-      "border-gray-200 bg-white text-grisOscuro hover:bg-grisClaro hover:border-gray-300",
+    inactivo: BOTON_INACTIVO,
   },
   {
     tipo: "excusa",
     Icon: FileText,
     titulo: "Excusa",
     activo: "bg-advertencia text-white border-advertencia shadow-sm hover:bg-amber-600",
-    inactivo:
-      "border-gray-200 bg-white text-grisOscuro hover:bg-grisClaro hover:border-gray-300",
+    inactivo: BOTON_INACTIVO,
   },
 ];
 
 const FILA_POR_TIPO: Partial<Record<TipoAsistencia, string>> = {
-  presente: "bg-verdeClaro/40 border-verde/25",
-  falla: "bg-red-50 border-error/20",
-  parcial: "bg-blue-50 border-info/25",
-  excusa: "bg-amber-50 border-advertencia/30",
+  presente: "bg-verdeClaro/40 border-verde/25 dark:bg-verdeOscuro/25 dark:border-verde/35",
+  falla: "bg-red-50 border-error/20 dark:bg-red-950/35 dark:border-error/40",
+  parcial: "bg-blue-50 border-info/25 dark:bg-blue-950/40 dark:border-info/35",
+  excusa: "bg-amber-50 border-advertencia/30 dark:bg-amber-950/35 dark:border-advertencia/40",
 };
 
 export default function FilaAprendiz({
@@ -84,7 +83,7 @@ export default function FilaAprendiz({
   const opcionesHoras =
     maxHorasParcial >= 1 ? Array.from({ length: maxHorasParcial }, (_, i) => i + 1) : [];
 
-  const filaTint = marca.tipo ? FILA_POR_TIPO[marca.tipo] : "bg-white border-gray-200";
+  const filaTint = marca.tipo ? FILA_POR_TIPO[marca.tipo] : "bg-surface border-borderSubtle";
 
   return (
     <div
@@ -96,20 +95,20 @@ export default function FilaAprendiz({
       <Avatar nombre={nombreCompleto} id={aprendiz.id} size="md" />
 
       <div className="min-w-0 flex-1 basis-[min(100%,12rem)]">
-        <p className="font-medium text-grisOscuro text-sm leading-tight truncate">{nombreCompleto}</p>
-        <p className="text-xs text-grisMedio leading-tight mt-0.5 truncate">
+        <p className="truncate text-sm font-medium leading-tight text-foreground">{nombreCompleto}</p>
+        <p className="mt-0.5 truncate text-xs leading-tight text-muted">
           Cédula: {aprendiz.documento}
         </p>
       </div>
 
       {marca.tipo === "parcial" && opcionesHoras.length > 0 && (
-        <div className="flex items-center gap-2 shrink-0 order-3 sm:order-none w-full sm:w-auto justify-end sm:justify-start">
+        <div className="order-3 flex w-full shrink-0 items-center justify-end gap-2 sm:order-none sm:w-auto sm:justify-start">
           <label htmlFor={`hrs-${aprendiz.id}`} className="sr-only">
             Horas de inasistencia
           </label>
           <select
             id={`hrs-${aprendiz.id}`}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 text-grisOscuro bg-white min-w-[4.5rem] text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-verde/25 focus:border-verde"
+            className="min-w-[4.5rem] rounded-lg border border-borderSubtle bg-input px-2 py-1.5 text-xs text-foreground shadow-sm focus:border-verde focus:outline-none focus:ring-2 focus:ring-verde/25"
             value={marca.horas_inasistencia ?? ""}
             onChange={(e) =>
               onCambio({
@@ -125,14 +124,14 @@ export default function FilaAprendiz({
               </option>
             ))}
           </select>
-          <span className="text-xs text-grisMedio hidden sm:inline whitespace-nowrap">
+          <span className="hidden whitespace-nowrap text-xs text-muted sm:inline">
             Horas no asistidas
           </span>
-          <span className="text-xs text-grisMedio sm:hidden whitespace-nowrap">Hrs.</span>
+          <span className="whitespace-nowrap text-xs text-muted sm:hidden">Hrs.</span>
         </div>
       )}
 
-      <div className="flex gap-1 shrink-0 ml-auto order-2 sm:order-none">
+      <div className="order-2 ml-auto flex shrink-0 gap-1 sm:order-none">
         {BOTONES.map(({ tipo, Icon, titulo, activo, inactivo }) => {
           const sel = marca.tipo === tipo;
           return (
@@ -144,7 +143,7 @@ export default function FilaAprendiz({
               aria-pressed={sel}
               onClick={() => elegirTipo(tipo)}
               className={`
-                inline-flex items-center justify-center h-9 w-9 rounded-lg border-2 transition-all
+                inline-flex h-9 w-9 items-center justify-center rounded-lg border-2 transition-all
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-verde/35 focus-visible:ring-offset-1
                 ${sel ? activo : inactivo}
               `}

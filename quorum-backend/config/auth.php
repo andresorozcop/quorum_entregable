@@ -114,4 +114,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Bypass TOTP en local (solo desarrollo)
+    |--------------------------------------------------------------------------
+    |
+    | Si es true y APP_ENV=local, no se exige verificación TOTP ni configuración
+    | inicial para staff. En cualquier otro entorno se ignora.
+    |
+    */
+
+    'totp_bypass_local' => filter_var(env('TOTP_BYPASS_LOCAL', false), FILTER_VALIDATE_BOOLEAN),
+
 ];

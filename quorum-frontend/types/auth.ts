@@ -27,13 +27,6 @@ export interface LoginStaffPayload {
   recaptcha_token: string;
 }
 
-// Datos que envía el formulario de login para aprendices (correo + cédula + reCAPTCHA)
-export interface LoginAprendizPayload {
-  correo: string;
-  documento: string;
-  recaptcha_token: string;
-}
-
 // Respuesta del backend al hacer login exitoso
 export interface RespuestaLogin {
   usuario: UsuarioAuth;

@@ -14,13 +14,13 @@ export default function EmptyState({
   descripcion,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center text-center py-10 px-4 bg-white rounded-xl border border-dashed border-gray-200">
-      <div className="w-14 h-14 rounded-full bg-grisClaro flex items-center justify-center text-grisMedio mb-3">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-borderSubtle bg-surface px-4 py-10 text-center">
+      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surfaceMuted text-muted">
         <Icono size={28} aria-hidden="true" />
       </div>
-      <p className="text-sm font-medium text-grisOscuro">{titulo}</p>
+      <p className="text-sm font-medium text-foreground">{titulo}</p>
       {descripcion ? (
-        <p className="text-sm text-grisMedio mt-1 max-w-sm">{descripcion}</p>
+        <p className="mt-1 max-w-sm text-sm text-muted">{descripcion}</p>
       ) : null}
     </div>
   );

@@ -9,6 +9,7 @@ use App\Models\RegistroAsistencia;
 use App\Models\Sesion;
 use App\Models\Usuario;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
@@ -34,6 +35,15 @@ class ReporteExcelService
 
     /** Celda del centro en la plantilla (etiqueta + nombre; debe coincidir con plantilla_asistencia.xlsx) */
     private const CELDA_CENTRO = 'D6';
+
+    /** Fila de cabeceras de fecha (d/m/Y); debe coincidir con plantilla_asistencia.xlsx */
+    private const FILA_CABECERA_FECHAS = 9;
+
+    /** Alto de fila en puntos (Excel) para cabeceras de fecha en vertical */
+    private const ALTURA_FILA_CABECERA_FECHAS = 57.6;
+
+    /** Ancho de columna (unidades Excel) para columnas de fechas / asistencia diaria */
+    private const ANCHO_COLUMNA_FECHAS = 6.56;
 
     private const FILA_INICIO_APRENDICES = 10;
 
@@ -192,9 +202,9 @@ class ReporteExcelService
                 }
             }
             $estudiantes[] = [
-                'nombre'                   => trim($ap->nombre.' '.$ap->apellido),
-                'documento'                => (string) $ap->documento,
-                'por_dia'                  => $celdas,
+                'nombre' => trim($ap->nombre.' '.$ap->apellido),
+                'documento' => (string) $ap->documento,
+                'por_dia' => $celdas,
                 'total_horas_inasistencia' => $total,
             ];
         }
@@ -233,12 +243,16 @@ class ReporteExcelService
         $filaInicio = self::FILA_INICIO_APRENDICES;
         $filaFirmas = $filaInicio + max($nAprendices, self::MAX_FILAS_APRENDIZ_PLANTILLA);
 
-        // Cabeceras de fechas (fila 9)
+        // Cabeceras de fechas
         foreach ($diasHabiles->values() as $i => $dia) {
             $col = $columnaPorIndice[$i];
-            $celda = $col.'9';
+            $celda = $col.self::FILA_CABECERA_FECHAS;
             $worksheet->getCell($celda)->setValue($dia->format('d/m/Y'));
             $this->aplicarEstiloFechaCabecera($worksheet, $celda);
+        }
+        $worksheet->getRowDimension(self::FILA_CABECERA_FECHAS)->setRowHeight(self::ALTURA_FILA_CABECERA_FECHAS);
+        foreach ($columnaPorIndice as $col) {
+            $worksheet->getColumnDimension($col)->setWidth(self::ANCHO_COLUMNA_FECHAS);
         }
 
         $totalesPorFila = [];
@@ -256,11 +270,7 @@ class ReporteExcelService
             foreach ($aprendiz['por_dia'] as $i => $horas) {
                 $col = $columnaPorIndice[$i];
                 $celda = $col.$fila;
-                if ($horas > 0) {
-                    $worksheet->getCell($celda)->setValue($horas);
-                } else {
-                    $worksheet->getCell($celda)->setValue('');
-                }
+                $worksheet->getCell($celda)->setValue($horas);
                 $this->aplicarEstiloCeldaDatos($worksheet, $celda, true);
             }
 
@@ -299,8 +309,7 @@ class ReporteExcelService
 
         // Totales en DD (después de removeRow las filas de aprendiz no cambian)
         foreach ($totalesPorFila as $fila => $total) {
-            $valorTotal = $total > 0 ? $total : '';
-            $worksheet->getCell(self::COL_TOTAL.$fila)->setValue($valorTotal);
+            $worksheet->getCell(self::COL_TOTAL.$fila)->setValue(max(0, $total));
             $this->aplicarEstiloCeldaDatos($worksheet, self::COL_TOTAL.$fila, false);
         }
 
@@ -347,7 +356,11 @@ class ReporteExcelService
             ->setName('Arial')
             ->setSize(10);
         $estilo->getFill()->setFillType(Fill::FILL_NONE);
-        $estilo->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $estilo->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER)
+            ->setWrapText(true)
+            ->setTextRotation(90);
     }
 
     /**
@@ -368,7 +381,7 @@ class ReporteExcelService
 
         $mapa = collect();
         foreach ($lista as $sesion) {
-            $fechaStr = $sesion->fecha instanceof \Carbon\CarbonInterface
+            $fechaStr = $sesion->fecha instanceof CarbonInterface
                 ? $sesion->fecha->format('Y-m-d')
                 : Carbon::parse((string) $sesion->fecha, 'America/Bogota')->format('Y-m-d');
             if (! $mapa->has($fechaStr)) {
@@ -417,7 +430,7 @@ class ReporteExcelService
         return implode(', ', array_filter($nombres));
     }
 
-    /** Horas a mostrar: 0 = celda vacía en Excel */
+    /** Horas de inasistencia por celda (0 = asistencia completa; se escribe 0 en el Excel). */
     private function horasInasistenciaCelda(?RegistroAsistencia $reg, Sesion $sesion): int
     {
         if ($reg === null) {

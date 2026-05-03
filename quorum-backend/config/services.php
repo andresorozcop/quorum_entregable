@@ -35,10 +35,15 @@ return [
         ],
     ],
 
-    // Claves de reCAPTCHA v2 para el formulario de login
+    // reCAPTCHA v3 — login (score)
     'recaptcha' => [
-        'site'   => env('RECAPTCHA_SITE_KEY'),
+        'site' => env('RECAPTCHA_SITE_KEY'),
         'secret' => env('RECAPTCHA_SECRET_KEY'),
+        'min_score' => (float) env('RECAPTCHA_V3_MIN_SCORE', 0.5),
+        'actions' => [
+            'login_staff' => env('RECAPTCHA_V3_ACTION_LOGIN_STAFF', 'login_staff'),
+            'login_aprendiz' => env('RECAPTCHA_V3_ACTION_LOGIN_APRENDIZ', 'login_aprendiz'),
+        ],
     ],
 
 ];

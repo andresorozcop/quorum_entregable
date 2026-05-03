@@ -259,27 +259,27 @@ export default function FichaFormulario({
         </div>
       )}
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-grisOscuro">
+      <section className="rounded-xl border border-borderSubtle bg-surface p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">
           Datos de la Ficha de Caracterización
         </h2>
-        <p className="text-sm text-grisMedio">
+        <p className="text-sm text-muted">
           Centro y programa definen el contexto de Formación del grupo.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="font-medium text-grisOscuro">Número de ficha</span>
+            <span className="font-medium text-foreground">Número de ficha</span>
             <input
               required
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+              className="mt-1 quorum-input"
               value={numeroFicha}
               onChange={(e) => setNumeroFicha(e.target.value)}
             />
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-grisOscuro">Estado</span>
+            <span className="font-medium text-foreground">Estado</span>
             <select
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+              className="mt-1 quorum-input"
               value={estado}
               onChange={(e) =>
                 setEstado(e.target.value as "activa" | "suspendida")
@@ -290,10 +290,10 @@ export default function FichaFormulario({
             </select>
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-grisOscuro">Centro de formación</span>
+            <span className="font-medium text-foreground">Centro de formación</span>
             <select
               required
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+              className="mt-1 quorum-input"
               value={centroId || ""}
               onChange={(e) => setCentroId(Number(e.target.value))}
             >
@@ -306,10 +306,10 @@ export default function FichaFormulario({
             </select>
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-grisOscuro">Programa de formación</span>
+            <span className="font-medium text-foreground">Programa de formación</span>
             <select
               required
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+              className="mt-1 quorum-input"
               value={programaId || ""}
               onChange={(e) => setProgramaId(Number(e.target.value))}
             >
@@ -322,21 +322,21 @@ export default function FichaFormulario({
             </select>
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-grisOscuro">Fecha de inicio</span>
+            <span className="font-medium text-foreground">Fecha de inicio</span>
             <input
               required
               type="date"
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+              className="mt-1 quorum-input"
               value={fechaInicio}
               onChange={(e) => setFechaInicio(e.target.value)}
             />
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-grisOscuro">Fecha de fin</span>
+            <span className="font-medium text-foreground">Fecha de fin</span>
             <input
               required
               type="date"
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+              className="mt-1 quorum-input"
               value={fechaFin}
               onChange={(e) => setFechaFin(e.target.value)}
             />
@@ -344,12 +344,12 @@ export default function FichaFormulario({
         </div>
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-grisOscuro">Instructores</h2>
-        <p className="text-sm text-grisMedio">
+      <section className="rounded-xl border border-borderSubtle bg-surface p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Instructores</h2>
+        <p className="text-sm text-muted">
           Marca quién acompaña la Formación y un único Gestor de Grupo.
         </p>
-        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+        <ul className="divide-y divide-borderSubtle/70 rounded-lg border border-borderSubtle/70">
           {instructoresDisponibles.map((ins) => (
             <li
               key={ins.id}
@@ -363,7 +363,7 @@ export default function FichaFormulario({
                 />
                 <span>
                   {ins.nombre} {ins.apellido}{" "}
-                  <span className="text-grisMedio">({ins.correo})</span>
+                  <span className="text-muted">({ins.correo})</span>
                 </span>
               </label>
               <label className="flex items-center gap-2 text-sm">
@@ -381,14 +381,14 @@ export default function FichaFormulario({
         </ul>
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
+      <section className="rounded-xl border border-borderSubtle bg-surface p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-grisOscuro">
+          <h2 className="text-lg font-semibold text-foreground">
             Jornadas y horario semanal
           </h2>
           {tiposLibres.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-grisMedio">Agregar jornada:</span>
+              <span className="text-sm text-muted">Agregar jornada:</span>
               {tiposLibres.map((t) => (
                 <button
                   key={t}
@@ -406,10 +406,10 @@ export default function FichaFormulario({
         {jornadas.map((bloque) => (
           <div
             key={bloque.tipo}
-            className="rounded-lg border border-gray-100 p-4 space-y-3"
+            className="rounded-lg space-y-3 rounded-lg border border-borderSubtle/70 p-4"
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold capitalize text-grisOscuro">
+              <h3 className="font-semibold capitalize text-foreground">
                 Jornada: {bloque.tipo.replace("_", " ")}
               </h3>
               <button
@@ -424,7 +424,7 @@ export default function FichaFormulario({
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="text-left text-grisMedio border-b">
+                  <tr className="text-left text-muted border-b">
                     <th className="py-2 pr-2">Día</th>
                     <th className="py-2 pr-2">Inicio</th>
                     <th className="py-2 pr-2">Fin</th>
@@ -434,10 +434,10 @@ export default function FichaFormulario({
                 </thead>
                 <tbody>
                   {bloque.horarios.map((h, idx) => (
-                    <tr key={idx} className="border-b border-gray-50">
+                    <tr key={idx} className="border-b border-borderSubtle/50">
                       <td className="py-2 pr-2">
                         <select
-                          className="rounded border border-gray-200 px-2 py-1"
+                          className="rounded border border-borderSubtle bg-input px-2 py-1 text-foreground"
                           value={h.dia_semana}
                           onChange={(e) =>
                             actualizarHorario(bloque.tipo, idx, {
@@ -455,7 +455,7 @@ export default function FichaFormulario({
                       <td className="py-2 pr-2">
                         <input
                           type="time"
-                          className="rounded border border-gray-200 px-2 py-1"
+                          className="rounded border border-borderSubtle bg-input px-2 py-1 text-foreground"
                           value={h.hora_inicio}
                           onChange={(e) =>
                             actualizarHorario(bloque.tipo, idx, {
@@ -467,7 +467,7 @@ export default function FichaFormulario({
                       <td className="py-2 pr-2">
                         <input
                           type="time"
-                          className="rounded border border-gray-200 px-2 py-1"
+                          className="rounded border border-borderSubtle bg-input px-2 py-1 text-foreground"
                           value={h.hora_fin}
                           onChange={(e) =>
                             actualizarHorario(bloque.tipo, idx, {
@@ -478,7 +478,7 @@ export default function FichaFormulario({
                       </td>
                       <td className="py-2 pr-2">
                         <select
-                          className="rounded border border-gray-200 px-2 py-1 min-w-[10rem]"
+                          className="min-w-[10rem] rounded border border-borderSubtle bg-input px-2 py-1 text-foreground"
                           value={h.instructor_id || ""}
                           onChange={(e) =>
                             actualizarHorario(bloque.tipo, idx, {

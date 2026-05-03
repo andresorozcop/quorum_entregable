@@ -127,31 +127,31 @@ export default function Configurar2FAPage() {
 
   if (cargando || !usuario || usuario.rol === "aprendiz") {
     return (
-      <main className="min-h-screen bg-grisClaro flex items-center justify-center p-4">
-        <p className="text-sm text-grisMedio">Cargando...</p>
+      <main className="flex min-h-screen items-center justify-center bg-grisClaro p-4 dark:bg-background">
+        <p className="text-sm text-muted">Cargando...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-grisClaro flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-verdeClaro mb-4">
-          <ShieldCheck className="text-verde" size={32} aria-hidden="true" />
+    <main className="flex min-h-screen items-center justify-center bg-grisClaro p-4 dark:bg-background">
+      <div className="w-full max-w-md rounded-xl border border-borderSubtle bg-surface p-8 text-center shadow-md">
+        <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-verdeClaro dark:bg-verdeOscuro/35">
+          <ShieldCheck className="text-verde dark:text-verdeClaro" size={32} aria-hidden="true" />
         </div>
 
-        <h1 className="text-xl font-bold text-grisOscuro mb-2">
+        <h1 className="mb-2 text-xl font-bold text-foreground">
           Configura tu autenticación en dos pasos
         </h1>
 
-        <p className="text-sm text-grisMedio mb-6 text-left">
+        <p className="mb-6 text-left text-sm text-muted">
           Escanea el código QR con Google Authenticator, Microsoft Authenticator
           o Authy e ingresa el código de 6 dígitos para confirmar.
         </p>
 
-        <div className="bg-grisClaro rounded-lg p-4 mb-4 min-h-[200px] flex items-center justify-center">
+        <div className="mb-4 flex min-h-[200px] items-center justify-center rounded-lg bg-grisClaro p-4 dark:bg-surfaceMuted">
           {cargandoQr ? (
-            <p className="text-sm text-grisMedio">Generando QR...</p>
+            <p className="text-sm text-muted">Generando QR...</p>
           ) : qrDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -168,10 +168,10 @@ export default function Configurar2FAPage() {
 
         {secreto ? (
           <div className="text-left mb-6">
-            <p className="text-xs font-medium text-grisOscuro mb-1">
+            <p className="mb-1 text-xs font-medium text-foreground">
               Si no puedes escanear, ingresa manualmente:
             </p>
-            <code className="block text-xs bg-white border border-gray-200 rounded p-2 break-all text-grisOscuro select-all">
+            <code className="block select-all break-all rounded border border-borderSubtle bg-input p-2 text-xs text-foreground">
               {secreto}
             </code>
           </div>
@@ -193,7 +193,7 @@ export default function Configurar2FAPage() {
               onChange={(e) =>
                 setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))
               }
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-center text-lg tracking-widest text-grisOscuro focus:ring-2 focus:ring-verde focus:border-verde outline-none"
+              className="quorum-input py-3 text-center text-lg tracking-widest focus:border-verde focus:ring-verde"
             />
           </div>
           <button

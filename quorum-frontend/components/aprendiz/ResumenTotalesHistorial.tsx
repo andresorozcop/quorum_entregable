@@ -21,22 +21,22 @@ export default function ResumenTotalesHistorial({
 
   const pct = totales.porcentaje_asistencia;
   const pctColorClass =
-    pct == null ? "text-grisMedio" : pct >= 80 ? "text-verde" : "text-error";
+    pct == null ? "text-muted" : pct >= 80 ? "text-verde" : "text-error";
 
   return (
     <section
-      className="rounded-xl border border-gray-200 bg-white p-5 md:p-6 mb-6 shadow-sm"
+      className="mb-6 rounded-xl border border-borderSubtle bg-surface p-5 shadow-sm md:p-6"
       aria-label="Resumen de asistencia"
     >
-      <h2 className="text-sm font-semibold text-grisOscuro mb-4">Resumen</h2>
+      <h2 className="mb-4 text-sm font-semibold text-foreground">Resumen</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <p className="text-xs text-grisMedio uppercase tracking-wide">
+          <p className="text-xs text-muted uppercase tracking-wide">
             Horas de inasistencia
           </p>
           <p
             className={`text-3xl font-bold tabular-nums ${
-              inasistenciaAlta ? "text-error" : "text-grisOscuro"
+              inasistenciaAlta ? "text-error" : "text-foreground"
             }`}
           >
             {totales.total_horas_inasistencia}
@@ -46,7 +46,7 @@ export default function ResumenTotalesHistorial({
           ) : null}
         </div>
         <div>
-          <p className="text-xs text-grisMedio uppercase tracking-wide">
+          <p className="text-xs text-muted uppercase tracking-wide">
             Asistencia (horas)
           </p>
           <p className={`text-3xl font-bold tabular-nums ${pctColorClass}`}>
@@ -54,10 +54,10 @@ export default function ResumenTotalesHistorial({
           </p>
         </div>
         <div>
-          <p className="text-xs text-grisMedio uppercase tracking-wide">
+          <p className="text-xs text-muted uppercase tracking-wide">
             Sesiones registradas
           </p>
-          <p className="text-3xl font-bold text-grisOscuro tabular-nums">
+          <p className="text-3xl font-bold tabular-nums text-foreground">
             {totales.total_sesiones}
           </p>
         </div>

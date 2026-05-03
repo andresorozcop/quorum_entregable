@@ -12,6 +12,12 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        surface: "var(--surface)",
+        surfaceMuted: "var(--surface-muted)",
+        borderSubtle: "var(--border-subtle)",
+        muted: "var(--muted-foreground)",
+        input: "var(--input-background)",
+        ring: "var(--ring)",
         // Paleta institucional SENA
         verde: "#3DAE2B",
         verdeOscuro: "#2E7D22",

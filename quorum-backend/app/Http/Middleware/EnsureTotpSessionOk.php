@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\TotpLocalBypass;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,6 +12,10 @@ class EnsureTotpSessionOk
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (TotpLocalBypass::activo()) {
+            return $next($request);
+        }
+
         $usuario = $request->user();
 
         if (! $usuario || $usuario->rol === 'aprendiz') {

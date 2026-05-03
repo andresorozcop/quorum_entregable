@@ -3,7 +3,6 @@
 
 import api from "./api";
 import type {
-  LoginAprendizPayload,
   LoginStaffPayload,
   RespuestaLogin,
   RespuestaMe,
@@ -20,16 +19,6 @@ async function obtenerCsrf(): Promise<void> {
 export async function loginStaff(datos: LoginStaffPayload): Promise<RespuestaLogin> {
   await obtenerCsrf();
   const respuesta = await api.post<RespuestaLogin>("/api/auth/login", datos);
-  return respuesta.data;
-}
-
-// Login para aprendices: correo + documento (cédula) + reCAPTCHA
-// Sin 2FA
-export async function loginAprendiz(
-  datos: LoginAprendizPayload
-): Promise<RespuestaLogin> {
-  await obtenerCsrf();
-  const respuesta = await api.post<RespuestaLogin>("/api/auth/login-aprendiz", datos);
   return respuesta.data;
 }
 

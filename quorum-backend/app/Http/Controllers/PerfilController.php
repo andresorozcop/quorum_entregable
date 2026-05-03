@@ -18,7 +18,7 @@ class PerfilController extends Controller
 
         if ($usuario->password === null || $usuario->password === '') {
             return response()->json([
-                'message' => 'Tu cuenta no usa contraseña. Los aprendices inician sesión con correo y documento.',
+                'message' => 'Tu cuenta no tiene contraseña configurada. Contacta al administrador.',
             ], 422);
         }
 
@@ -37,7 +37,7 @@ class PerfilController extends Controller
         }
 
         $usuario->update([
-            'password'       => bcrypt($nueva),
+            'password' => bcrypt($nueva),
             'actualizado_en' => now(),
         ]);
 

@@ -393,8 +393,8 @@ export default function CoordinadorPage() {
             <BarChart3 size={22} className="text-verde" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-grisOscuro">Vista coordinador</h1>
-            <p className="text-sm text-grisMedio">
+            <h1 className="text-xl font-bold text-foreground">Vista coordinador</h1>
+            <p className="text-sm text-muted">
               Consulta de asistencia y estadísticas (solo lectura)
             </p>
           </div>
@@ -402,7 +402,7 @@ export default function CoordinadorPage() {
       </div>
 
       <div
-        className="mb-4 flex flex-wrap gap-2 border-b border-gray-200 pb-2"
+        className="mb-4 flex flex-wrap gap-2 border-b border-borderSubtle pb-2"
         role="tablist"
         aria-label="Secciones del panel"
       >
@@ -413,7 +413,7 @@ export default function CoordinadorPage() {
           className={`rounded-lg px-4 py-2 text-sm font-medium ${
             pestaña === "ficha"
               ? "bg-verde text-white"
-              : "bg-grisClaro text-grisOscuro hover:bg-gray-200"
+              : "border border-borderSubtle bg-surfaceMuted text-foreground transition-colors hover:bg-surface"
           }`}
           onClick={() => setPestaña("ficha")}
         >
@@ -426,7 +426,7 @@ export default function CoordinadorPage() {
           className={`rounded-lg px-4 py-2 text-sm font-medium ${
             pestaña === "aprendiz"
               ? "bg-verde text-white"
-              : "bg-grisClaro text-grisOscuro hover:bg-gray-200"
+              : "border border-borderSubtle bg-surfaceMuted text-foreground transition-colors hover:bg-surface"
           }`}
           onClick={() => setPestaña("aprendiz")}
         >
@@ -439,7 +439,7 @@ export default function CoordinadorPage() {
           className={`rounded-lg px-4 py-2 text-sm font-medium ${
             pestaña === "estadisticas"
               ? "bg-verde text-white"
-              : "bg-grisClaro text-grisOscuro hover:bg-gray-200"
+              : "border border-borderSubtle bg-surfaceMuted text-foreground transition-colors hover:bg-surface"
           }`}
           onClick={() => setPestaña("estadisticas")}
         >
@@ -449,15 +449,15 @@ export default function CoordinadorPage() {
 
       {pestaña === "ficha" ? (
         <>
-          <div className="mb-4 flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex flex-col gap-4 rounded-xl border border-borderSubtle bg-surface p-4 shadow-sm">
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
-                <label htmlFor="coord-centro" className="block text-xs font-medium text-grisOscuro">
+                <label htmlFor="coord-centro" className="block text-xs font-medium text-foreground">
                   Centro de formación
                 </label>
                 <select
                   id="coord-centro"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="quorum-field mt-1 w-full"
                   value={centroId === "" ? "" : String(centroId)}
                   onChange={(e) =>
                     setCentroId(e.target.value === "" ? "" : Number(e.target.value))
@@ -472,12 +472,12 @@ export default function CoordinadorPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="coord-ficha" className="block text-xs font-medium text-grisOscuro">
+                <label htmlFor="coord-ficha" className="block text-xs font-medium text-foreground">
                   Ficha
                 </label>
                 <select
                   id="coord-ficha"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="quorum-field mt-1 w-full"
                   value={fichaId === "" ? "" : String(fichaId)}
                   onChange={(e) => setFichaId(e.target.value === "" ? "" : Number(e.target.value))}
                   disabled={cargandoFichas || fichas.length === 0}
@@ -491,12 +491,12 @@ export default function CoordinadorPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="coord-jornada" className="block text-xs font-medium text-grisOscuro">
+                <label htmlFor="coord-jornada" className="block text-xs font-medium text-foreground">
                   Jornada
                 </label>
                 <select
                   id="coord-jornada"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="quorum-field mt-1 w-full"
                   value={jornadaFichaId === "" ? "" : String(jornadaFichaId)}
                   onChange={(e) =>
                     setJornadaFichaId(e.target.value === "" ? "" : Number(e.target.value))
@@ -519,18 +519,18 @@ export default function CoordinadorPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-lg border border-gray-300 p-2 text-grisOscuro hover:bg-grisClaro"
+                  className="rounded-lg border border-borderSubtle bg-surface p-2 text-foreground transition-colors hover:bg-surfaceMuted"
                   aria-label="Mes anterior"
                   onClick={() => setMesYm((prev) => ymAnterior(prev))}
                 >
                   <ChevronLeft size={20} aria-hidden="true" />
                 </button>
-                <span className="min-w-[140px] text-center text-sm font-medium capitalize text-grisOscuro">
+                <span className="min-w-[140px] text-center text-sm font-medium capitalize text-foreground">
                   {tituloMes}
                 </span>
                 <button
                   type="button"
-                  className="rounded-lg border border-gray-300 p-2 text-grisOscuro hover:bg-grisClaro"
+                  className="rounded-lg border border-borderSubtle bg-surface p-2 text-foreground transition-colors hover:bg-surfaceMuted"
                   aria-label="Mes siguiente"
                   onClick={() => setMesYm((prev) => ymSiguiente(prev))}
                 >
@@ -538,13 +538,13 @@ export default function CoordinadorPage() {
                 </button>
               </div>
               <div>
-                <label htmlFor="coord-desde" className="block text-xs font-medium text-grisOscuro">
+                <label htmlFor="coord-desde" className="block text-xs font-medium text-foreground">
                   Desde
                 </label>
                 <input
                   id="coord-desde"
                   type="date"
-                  className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="quorum-field mt-1 w-full"
                   value={desde}
                   onChange={(e) => {
                     setDesde(e.target.value);
@@ -553,13 +553,13 @@ export default function CoordinadorPage() {
                 />
               </div>
               <div>
-                <label htmlFor="coord-hasta" className="block text-xs font-medium text-grisOscuro">
+                <label htmlFor="coord-hasta" className="block text-xs font-medium text-foreground">
                   Hasta
                 </label>
                 <input
                   id="coord-hasta"
                   type="date"
-                  className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="quorum-field mt-1 w-full"
                   value={hasta}
                   onChange={(e) => {
                     setHasta(e.target.value);
@@ -569,8 +569,8 @@ export default function CoordinadorPage() {
               </div>
             </div>
 
-            <div className="border-t border-gray-100 pt-3">
-              <p className="mb-2 text-xs font-medium text-grisOscuro">Filtrar por tipo (opcional)</p>
+            <div className="border-t border-borderSubtle/70 pt-3">
+              <p className="mb-2 text-xs font-medium text-foreground">Filtrar por tipo (opcional)</p>
               <div className="flex flex-wrap gap-2">
                 {TIPOS_FILTRO.map(({ valor, etiqueta }) => (
                   <label key={valor} className="inline-flex cursor-pointer items-center gap-2 text-sm">
@@ -585,7 +585,7 @@ export default function CoordinadorPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+            <div className="flex flex-wrap gap-2 border-t border-borderSubtle/70 pt-3">
               <button
                 type="button"
                 className="inline-flex items-center gap-2 rounded-lg bg-verde px-4 py-2 text-sm font-semibold text-white hover:bg-verdeOscuro disabled:opacity-50"
@@ -602,7 +602,7 @@ export default function CoordinadorPage() {
                 numeroFicha={numeroFichaCoordinador}
                 desdeInicial={desde}
                 hastaInicial={hasta}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-grisOscuro hover:bg-grisClaro disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-borderSubtle bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surfaceMuted disabled:opacity-50"
               />
             </div>
           </div>
@@ -615,7 +615,7 @@ export default function CoordinadorPage() {
               soloLectura
             />
           ) : (
-            <div className="rounded-xl border border-dashed border-gray-200 bg-white p-8 text-center text-sm text-grisMedio">
+            <div className="rounded-xl border border-dashed border-borderSubtle bg-surface p-8 text-center text-sm text-muted">
               Elige ficha, período y opciones; luego pulsa &quot;Ver asistencia&quot;.
             </div>
           )}
@@ -624,13 +624,13 @@ export default function CoordinadorPage() {
 
       {pestaña === "aprendiz" ? (
         <div className="max-w-4xl space-y-6">
-          <div className="relative z-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <label htmlFor="buscar-ap" className="block text-xs font-medium text-grisOscuro">
+          <div className="relative z-0 rounded-xl border border-borderSubtle bg-surface p-4 shadow-sm">
+            <label htmlFor="buscar-ap" className="block text-xs font-medium text-foreground">
               Buscar aprendiz (nombre o cédula)
             </label>
             <div className="relative mt-1">
               <Search
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-grisMedio"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
                 size={18}
                 aria-hidden
               />
@@ -638,7 +638,7 @@ export default function CoordinadorPage() {
                 id="buscar-ap"
                 type="search"
                 autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm"
+                className="quorum-field w-full pl-10 pr-3"
                 placeholder="Escribe al menos 2 caracteres…"
                 value={qAprendiz}
                 onChange={(e) => {
@@ -649,27 +649,27 @@ export default function CoordinadorPage() {
               />
               {buscandoAp ? (
                 <Loader2
-                  className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-grisMedio"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted"
                   size={18}
                 />
               ) : null}
             </div>
             {sugerencias.length > 0 ? (
               <ul
-                className="absolute z-10 mt-1 max-h-56 w-full max-w-xl overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                className="absolute z-10 mt-1 max-h-56 w-full max-w-xl overflow-auto rounded-lg border border-borderSubtle bg-surface shadow-lg"
                 role="listbox"
               >
                 {sugerencias.map((s) => (
                   <li key={s.id}>
                     <button
                       type="button"
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-grisClaro"
+                      className="w-full px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-surfaceMuted"
                       onClick={() => void seleccionarAprendiz(s)}
                     >
-                      <span className="font-medium text-grisOscuro">
+                      <span className="font-medium text-foreground">
                         {s.nombre} {s.apellido}
                       </span>
-                      <span className="ml-2 text-grisMedio">CC {s.documento}</span>
+                      <span className="ml-2 text-muted">CC {s.documento}</span>
                     </button>
                   </li>
                 ))}
@@ -690,9 +690,9 @@ export default function CoordinadorPage() {
               />
             ) : (
               <>
-                <p className="text-sm text-grisMedio">
+                <p className="text-sm text-muted">
                   Aprendiz:{" "}
-                  <span className="font-semibold text-grisOscuro">
+                  <span className="font-semibold text-foreground">
                     {aprendizSel.nombre} {aprendizSel.apellido} · CC {aprendizSel.documento}
                   </span>
                 </p>
@@ -704,21 +704,21 @@ export default function CoordinadorPage() {
               </>
             )
           ) : (
-            <p className="text-sm text-grisMedio">Selecciona un aprendiz de la lista para ver su historial.</p>
+            <p className="text-sm text-muted">Selecciona un aprendiz de la lista para ver su historial.</p>
           )}
         </div>
       ) : null}
 
       {pestaña === "estadisticas" ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-borderSubtle bg-surface p-4 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="min-w-[200px]">
-              <label htmlFor="est-centro" className="block text-xs font-medium text-grisOscuro">
+              <label htmlFor="est-centro" className="block text-xs font-medium text-foreground">
                 Centro (filtro)
               </label>
               <select
                 id="est-centro"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="quorum-field mt-1 w-full"
                 value={centroEstId === "" ? "" : String(centroEstId)}
                 onChange={(e) =>
                   setCentroEstId(e.target.value === "" ? "" : Number(e.target.value))
@@ -734,7 +734,7 @@ export default function CoordinadorPage() {
             </div>
             <button
               type="button"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-grisOscuro hover:bg-grisClaro"
+              className="rounded-lg border border-borderSubtle bg-surface px-3 py-2 text-sm text-foreground transition-colors hover:bg-surfaceMuted"
               onClick={() => setOrdenAsc((v) => !v)}
             >
               Orden % asistencia: {ordenAsc ? "mejor primero" : "peor primero"}
@@ -749,12 +749,12 @@ export default function CoordinadorPage() {
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-grisClaro text-left">
-                    <th className="px-3 py-2 font-semibold text-grisOscuro">Ficha</th>
-                    <th className="px-3 py-2 font-semibold text-grisOscuro">Centro</th>
-                    <th className="px-3 py-2 font-semibold text-grisOscuro">Total aprendices</th>
-                    <th className="px-3 py-2 font-semibold text-grisOscuro">% asistencia</th>
-                    <th className="px-3 py-2 font-semibold text-grisOscuro">Sesiones tomadas</th>
+                  <tr className="border-b border-borderSubtle bg-surfaceMuted text-left">
+                    <th className="px-3 py-2 font-semibold text-foreground">Ficha</th>
+                    <th className="px-3 py-2 font-semibold text-foreground">Centro</th>
+                    <th className="px-3 py-2 font-semibold text-foreground">Total aprendices</th>
+                    <th className="px-3 py-2 font-semibold text-foreground">% asistencia</th>
+                    <th className="px-3 py-2 font-semibold text-foreground">Sesiones tomadas</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -763,8 +763,8 @@ export default function CoordinadorPage() {
                     return (
                       <tr
                         key={row.ficha_id}
-                        className={`border-b border-gray-100 ${
-                          bajo ? "bg-red-50 text-error" : "text-grisOscuro"
+                        className={`border-b border-borderSubtle/70 ${
+                          bajo ? "bg-red-50 text-error" : "text-foreground"
                         }`}
                       >
                         <td className="px-3 py-2 font-medium">{row.numero_ficha}</td>
@@ -782,7 +782,7 @@ export default function CoordinadorPage() {
                 </tbody>
               </table>
               {filasEstOrdenadas.length === 0 ? (
-                <p className="py-6 text-center text-sm text-grisMedio">No hay fichas para mostrar.</p>
+                <p className="py-6 text-center text-sm text-muted">No hay fichas para mostrar.</p>
               ) : null}
             </div>
           )}

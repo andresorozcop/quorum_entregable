@@ -261,7 +261,7 @@ export default function MatrizAsistencia({
     if (!reg) {
       return (
         <span
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-grisClaro text-xs font-semibold text-grisMedio"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-surfaceMuted text-xs font-semibold text-muted"
           aria-hidden
         >
           ?
@@ -278,7 +278,7 @@ export default function MatrizAsistencia({
 
   if (datos.aprendices.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-grisMedio dark:border-slate-700 dark:bg-slate-900 dark:text-gray-400">
+      <div className="rounded-xl border border-borderSubtle bg-surface p-8 text-center text-sm text-muted">
         No hay aprendices activos en esta ficha.
       </div>
     );
@@ -286,7 +286,7 @@ export default function MatrizAsistencia({
 
   if (datos.sesiones.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-grisMedio dark:border-slate-700 dark:bg-slate-900 dark:text-gray-400">
+      <div className="rounded-xl border border-borderSubtle bg-surface p-8 text-center text-sm text-muted">
         No hay sesiones en el rango y filtros seleccionados.
       </div>
     );
@@ -294,14 +294,14 @@ export default function MatrizAsistencia({
 
   return (
     <>
-      <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <div className="min-w-0 overflow-hidden rounded-xl border border-borderSubtle bg-surface shadow-sm">
         <div className="w-full min-w-0 overflow-x-auto">
           <table className="w-max min-w-full border-collapse text-sm">
             <thead>
               <tr>
                 <th
                   scope="col"
-                  className="sticky left-0 z-20 min-w-[12rem] border border-gray-200 bg-white px-2 py-2 text-left font-semibold text-grisOscuro shadow-[2px_0_4px_rgba(0,0,0,0.06)] dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100 dark:shadow-[2px_0_4px_rgba(0,0,0,0.3)]"
+                  className="sticky left-0 z-20 min-w-[12rem] border border-borderSubtle bg-surface px-2 py-2 text-left font-semibold text-foreground shadow-[2px_0_4px_rgba(0,0,0,0.06)] dark:shadow-[2px_0_4px_rgba(0,0,0,0.3)]"
                 >
                   Aprendiz
                 </th>
@@ -312,17 +312,17 @@ export default function MatrizAsistencia({
                       key={s.id}
                       scope="col"
                       title={`${formatearFechaCol(s.fecha)} · ${s.instructor_nombre_completo}`}
-                      className="min-w-[3rem] max-w-[4.5rem] border border-gray-200 bg-grisClaro px-1 py-2 text-center text-xs font-medium text-grisOscuro dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200"
+                      className="min-w-[3rem] max-w-[4.5rem] border border-borderSubtle bg-surfaceMuted px-1 py-2 text-center text-xs font-medium text-foreground"
                     >
                       <div className="text-sm font-semibold leading-none">{dia}</div>
-                      <div className="mt-0.5 text-[10px] capitalize leading-tight text-grisMedio dark:text-gray-400">
+                      <div className="mt-0.5 text-[10px] capitalize leading-tight text-muted">
                         {mesCorto}
                       </div>
-                      <div className="mt-0.5 text-[10px] capitalize leading-tight text-grisMedio dark:text-gray-400">
+                      <div className="mt-0.5 text-[10px] capitalize leading-tight text-muted">
                         {diaSemana}
                       </div>
                       <div
-                        className="mt-1 truncate text-[10px] text-grisOscuro/80 dark:text-gray-300"
+                        className="mt-1 truncate text-[10px] text-foreground/85"
                         title={s.instructor_nombre_completo}
                       >
                         {s.instructor_nombre_corto}
@@ -337,18 +337,18 @@ export default function MatrizAsistencia({
                 const nc = nombreCompletoAprendiz(a.nombre, a.apellido);
                 const nCompact = nombreCompacto(a.nombre, a.apellido);
                 return (
-                  <tr key={a.id} className="group hover:bg-grisClaro/40 dark:hover:bg-slate-800/50">
+                  <tr key={a.id} className="group hover:bg-surfaceMuted/50">
                     <th
                       scope="row"
-                      className="sticky left-0 z-10 border border-gray-200 bg-white px-2 py-1.5 text-left font-normal shadow-[2px_0_4px_rgba(0,0,0,0.06)] group-hover:bg-grisClaro/40 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100 dark:shadow-[2px_0_4px_rgba(0,0,0,0.3)] dark:group-hover:bg-slate-800/50"
+                      className="sticky left-0 z-10 border border-borderSubtle bg-surface px-2 py-1.5 text-left font-normal shadow-[2px_0_4px_rgba(0,0,0,0.06)] group-hover:bg-surfaceMuted/50 dark:shadow-[2px_0_4px_rgba(0,0,0,0.3)]"
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         <Avatar nombre={nc} id={a.id} size="sm" />
                         <div className="min-w-0">
-                          <span className="block truncate text-sm font-medium text-grisOscuro dark:text-gray-100">
+                          <span className="block truncate text-sm font-medium text-foreground">
                             {nCompact}
                           </span>
-                          <span className="block truncate text-xs text-grisMedio dark:text-gray-400">
+                          <span className="block truncate text-xs text-muted">
                             CC {a.documento}
                           </span>
                         </div>
@@ -365,9 +365,9 @@ export default function MatrizAsistencia({
                       const titulo = tituloCelda(nc, s.fecha, reg);
 
                       const celdaBase =
-                        "border border-gray-200 p-1 text-center align-middle w-12 min-w-[3rem] max-w-[4.5rem] group-hover:bg-grisClaro/40 dark:border-slate-700 dark:group-hover:bg-slate-800/40";
+                        "border border-borderSubtle p-1 text-center align-middle w-12 min-w-[3rem] max-w-[4.5rem] group-hover:bg-surfaceMuted/40";
                       const celdaFondo =
-                        tipo === null ? "bg-grisClaro/50 dark:bg-slate-800/60" : "bg-white dark:bg-slate-900";
+                        tipo === null ? "bg-surfaceMuted/55" : "bg-surface";
 
                       const contenido = (
                         <span className="flex min-h-10 items-center justify-center">
@@ -417,8 +417,8 @@ export default function MatrizAsistencia({
           </table>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gray-100 px-3 py-2.5 text-xs text-grisMedio dark:border-slate-700 dark:text-gray-400">
-          <span className="font-medium text-grisOscuro dark:text-gray-200">Leyenda:</span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-borderSubtle/70 px-3 py-2.5 text-xs text-muted">
+          <span className="font-medium text-foreground">Leyenda:</span>
           <span className="inline-flex items-center gap-1.5">
             <span className={ESTADO_CELDA.presente.badgeClass}>P</span>
             Presente
@@ -436,7 +436,7 @@ export default function MatrizAsistencia({
             Excusa
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-grisClaro text-xs font-semibold text-grisMedio dark:bg-slate-800 dark:text-gray-400">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-surfaceMuted text-xs font-semibold text-muted">
               ?
             </span>
             Sin registro
@@ -451,22 +451,22 @@ export default function MatrizAsistencia({
           aria-modal="true"
           aria-labelledby="titulo-editar-registro"
         >
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5 shadow-xl dark:border dark:border-slate-600 dark:bg-slate-900">
-            <h2 id="titulo-editar-registro" className="text-lg font-bold text-grisOscuro dark:text-gray-100">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-borderSubtle bg-surface p-5 shadow-xl">
+            <h2 id="titulo-editar-registro" className="text-lg font-bold text-foreground">
               Editar registro
             </h2>
-            <p className="mt-1 text-xs text-grisMedio dark:text-gray-400">
+            <p className="mt-1 text-xs text-muted">
               Sesión {formatearFechaCol(sesionEdit.fecha)} · {sesionEdit.horas_programadas} h
               programadas
             </p>
 
             <div className="mt-4 space-y-3">
-              <label className="block text-sm font-medium text-grisOscuro dark:text-gray-200" htmlFor="tipo-asistencia">
+              <label className="block text-sm font-medium text-foreground" htmlFor="tipo-asistencia">
                 Tipo
               </label>
               <select
                 id="tipo-asistencia"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100"
+                className="w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
                 value={tipoSel}
                 onChange={(e) => setTipoSel(e.target.value as TipoAsistencia)}
                 disabled={guardando}
@@ -480,7 +480,7 @@ export default function MatrizAsistencia({
 
               {tipoSel === "parcial" && (
                 <div>
-                  <label className="block text-sm font-medium text-grisOscuro dark:text-gray-200" htmlFor="horas-parcial">
+                  <label className="block text-sm font-medium text-foreground" htmlFor="horas-parcial">
                     Horas de inasistencia
                   </label>
                   <input
@@ -488,7 +488,7 @@ export default function MatrizAsistencia({
                     type="number"
                     min={1}
                     max={Math.max(1, sesionEdit.horas_programadas - 1)}
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100"
+                    className="mt-1 w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
                     value={horasParcial}
                     onChange={(e) => setHorasParcial(Number(e.target.value) || 1)}
                     disabled={guardando || sesionEdit.horas_programadas <= 1}
@@ -497,14 +497,14 @@ export default function MatrizAsistencia({
               )}
 
               <div>
-                <label className="block text-sm font-medium text-grisOscuro dark:text-gray-200" htmlFor="razon-registro">
+                <label className="block text-sm font-medium text-foreground" htmlFor="razon-registro">
                   Motivo del cambio (opcional)
                 </label>
                 <textarea
                   id="razon-registro"
                   rows={2}
                   maxLength={255}
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100"
+                  className="mt-1 w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted"
                   value={razon}
                   onChange={(e) => setRazon(e.target.value)}
                   disabled={guardando}
@@ -516,7 +516,7 @@ export default function MatrizAsistencia({
             <div className="mt-6 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-grisOscuro hover:bg-grisClaro dark:border-slate-600 dark:text-gray-200 dark:hover:bg-slate-800"
+                className="rounded-lg border border-borderSubtle px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surfaceMuted"
                 onClick={cerrarModal}
                 disabled={guardando}
               >

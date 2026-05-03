@@ -252,8 +252,8 @@ export default function UsuariosPage() {
             <Users size={22} className="text-verde" aria-hidden />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-grisOscuro">Usuarios</h1>
-            <p className="text-sm text-grisMedio">
+            <h1 className="text-xl font-bold text-foreground">Usuarios</h1>
+            <p className="text-sm text-muted">
               Gestión de instructores, coordinadores y aprendices
             </p>
           </div>
@@ -272,13 +272,13 @@ export default function UsuariosPage() {
         <input
           type="search"
           placeholder="Buscar por nombre, apellido, documento o correo…"
-          className="flex-1 min-w-[200px] rounded-lg border border-gray-200 px-3 py-2 text-sm"
+          className="flex-1 min-w-[200px] rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           aria-label="Buscar usuarios"
         />
         <select
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white min-w-[180px]"
+          className="rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground min-w-[180px]"
           value={rolFiltro}
           onChange={(e) => setRolFiltro(e.target.value as RolUsuarioFiltro)}
           aria-label="Filtrar por rol"
@@ -342,7 +342,7 @@ export default function UsuariosPage() {
                     <button
                       type="button"
                       onClick={() => abrirEditar(fila)}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs hover:bg-grisClaro"
+                      className="inline-flex items-center gap-1 rounded-md border border-borderSubtle bg-surface px-2 py-1 text-xs text-foreground transition-colors hover:bg-surfaceMuted"
                     >
                       <Pencil size={14} aria-hidden />
                       Editar

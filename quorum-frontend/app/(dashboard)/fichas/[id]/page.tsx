@@ -5,7 +5,7 @@
 import { ArrowLeft, Pencil, Search, Trash2, Upload, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import FichaFormulario from "../../../../components/fichas/FichaFormulario";
 import DataTable from "../../../../components/ui/DataTable";
@@ -56,6 +56,7 @@ export default function FichaDetallePage() {
   const [archivoImport, setArchivoImport] = useState<File | null>(null);
   const [progresoImport, setProgresoImport] = useState(0);
   const [importando, setImportando] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [modalAprendiz, setModalAprendiz] = useState(false);
   const [apNom, setApNom] = useState("");
   const [apApe, setApApe] = useState("");
@@ -281,6 +282,13 @@ export default function FichaDetallePage() {
     }
   }
 
+  function limpiarSeleccionImport() {
+    setArchivoImport(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
   async function ejecutarImport() {
     if (!ficha || !archivoImport) {
       return;
@@ -295,7 +303,7 @@ export default function FichaDetallePage() {
       );
       await recargar();
       setModalImport(false);
-      setArchivoImport(null);
+      limpiarSeleccionImport();
       await Swal.fire({
         icon: res.fallidos > 0 ? "warning" : "success",
         title: "Importación finalizada",
@@ -476,7 +484,7 @@ export default function FichaDetallePage() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-xs font-medium text-grisOscuro hover:bg-grisClaro"
+                  className="inline-flex items-center gap-1 rounded-lg border border-borderSubtle px-2 py-1 text-xs font-medium text-foreground transition-colors hover:bg-surfaceMuted"
                   onClick={() => {
                     setEditingAprendizId(a.id);
                     setApNom(a.nombre);
@@ -518,10 +526,10 @@ export default function FichaDetallePage() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-grisOscuro">
+          <h1 className="text-xl font-bold text-foreground">
             Ficha {ficha.numero_ficha}
           </h1>
-          <p className="text-sm text-grisMedio mt-1">
+          <p className="text-sm text-muted mt-1">
             {ficha.centro?.nombre} · {ficha.programa?.nombre}
           </p>
         </div>
@@ -545,7 +553,7 @@ export default function FichaDetallePage() {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-gray-200">
+      <div className="flex flex-wrap gap-2 border-b border-borderSubtle">
         {(
           [
             ["informacion", "Información"],
@@ -559,7 +567,7 @@ export default function FichaDetallePage() {
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               pestaña === clave
                 ? "border-verde text-verdeOscuro"
-                : "border-transparent text-grisMedio hover:text-grisOscuro"
+                : "border-transparent text-muted hover:text-foreground"
             }`}
             onClick={() => setPestaña(clave)}
           >
@@ -582,17 +590,17 @@ export default function FichaDetallePage() {
               enviando={enviandoForm}
             />
           ) : (
-            <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-4 text-sm">
+            <div className="rounded-xl border border-borderSubtle bg-surface p-6 space-y-4 text-sm">
               <p>
-                <span className="text-grisMedio">Estado:</span>{" "}
+                <span className="text-muted">Estado:</span>{" "}
                 <span className="capitalize font-medium">{ficha.estado}</span>
               </p>
               <p>
-                <span className="text-grisMedio">Activa:</span>{" "}
+                <span className="text-muted">Activa:</span>{" "}
                 {ficha.activo ? "Sí" : "No"}
               </p>
               <p>
-                <span className="text-grisMedio">Fechas:</span>{" "}
+                <span className="text-muted">Fechas:</span>{" "}
                 {String(ficha.fecha_inicio).slice(0, 10)} —{" "}
                 {String(ficha.fecha_fin).slice(0, 10)}
               </p>
@@ -602,7 +610,7 @@ export default function FichaDetallePage() {
                   <p className="font-medium capitalize mb-2">
                     Jornada {j.tipo.replace("_", " ")}
                   </p>
-                  <ul className="list-disc pl-5 space-y-1 text-grisOscuro">
+                  <ul className="list-disc pl-5 space-y-1 text-foreground">
                     {j.horarios.map((h) => (
                       <li key={h.id ?? `${j.tipo}-${h.dia_semana}`}>
                         {h.dia_semana}: {h.hora_inicio}–{h.hora_fin} (
@@ -619,11 +627,11 @@ export default function FichaDetallePage() {
 
       {pestaña === "instructores" && (
         <div className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <h3 className="font-semibold text-grisOscuro mb-3">
+          <div className="rounded-xl border border-borderSubtle bg-surface p-6">
+            <h3 className="font-semibold text-foreground mb-3">
               Instructores asignados
             </h3>
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-borderSubtle/70">
               {ficha.instructores.map((p) => (
                 <li
                   key={p.usuario_id}
@@ -638,7 +646,7 @@ export default function FichaDetallePage() {
                         Gestor de Grupo
                       </span>
                     )}
-                    <div className="text-grisMedio text-xs">
+                    <div className="text-muted text-xs">
                       {p.usuario?.correo}
                     </div>
                   </div>
@@ -647,7 +655,7 @@ export default function FichaDetallePage() {
                       {!p.es_gestor && (
                         <button
                           type="button"
-                          className="text-xs rounded border border-gray-200 px-2 py-1 hover:bg-grisClaro"
+                          className="text-xs rounded border border-borderSubtle px-2 py-1 text-foreground transition-colors hover:bg-surfaceMuted"
                           onClick={() =>
                             void accionInstructor(p.usuario_id, "toggle_gestor")
                           }
@@ -658,7 +666,7 @@ export default function FichaDetallePage() {
                       {p.es_gestor && (
                         <button
                           type="button"
-                          className="text-xs rounded border border-gray-200 px-2 py-1 hover:bg-grisClaro"
+                          className="text-xs rounded border border-borderSubtle px-2 py-1 text-foreground transition-colors hover:bg-surfaceMuted"
                           onClick={() =>
                             void accionInstructor(p.usuario_id, "toggle_gestor")
                           }
@@ -683,15 +691,15 @@ export default function FichaDetallePage() {
           </div>
 
           {esAdmin && noAsignados.length > 0 && (
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
-              <h3 className="font-semibold text-grisOscuro mb-3">
+            <div className="rounded-xl border border-borderSubtle bg-surface p-6">
+              <h3 className="font-semibold text-foreground mb-3">
                 Agregar instructor
               </h3>
               <ul className="space-y-2">
                 {noAsignados.map((ins) => (
                   <li
                     key={ins.id}
-                    className="flex items-center justify-between gap-2 text-sm border-b border-gray-50 pb-2"
+                    className="flex items-center justify-between gap-2 text-sm border-b border-borderSubtle/50 pb-2"
                   >
                     <span>
                       {ins.nombre} {ins.apellido}
@@ -718,7 +726,7 @@ export default function FichaDetallePage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <label className="relative flex min-w-0 flex-1 sm:max-w-md">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-grisMedio pointer-events-none"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
                 size={18}
                 aria-hidden
               />
@@ -727,7 +735,7 @@ export default function FichaDetallePage() {
                 value={busquedaAprendices}
                 onChange={(e) => setBusquedaAprendices(e.target.value)}
                 placeholder="Buscar por nombre, cédula o correo…"
-                className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-grisOscuro placeholder:text-grisMedio focus:border-verde focus:outline-none focus:ring-1 focus:ring-verde"
+                className="w-full rounded-xl border border-borderSubtle bg-input py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted focus:border-verde focus:outline-none focus:ring-1 focus:ring-verde"
                 aria-label="Buscar aprendices"
               />
             </label>
@@ -735,7 +743,7 @@ export default function FichaDetallePage() {
               <div className="flex flex-wrap justify-end gap-2 shrink-0">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-grisOscuro hover:bg-grisClaro"
+                  className="inline-flex items-center gap-2 rounded-xl border border-borderSubtle bg-surface px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-surfaceMuted"
                   onClick={() => {
                     resetFormAprendiz();
                     setModalAprendiz(true);
@@ -771,7 +779,7 @@ export default function FichaDetallePage() {
       {modalAprendiz && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
           <div
-            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4"
+            className="bg-surface rounded-xl shadow-xl max-w-md w-full p-6 space-y-4"
             role="dialog"
             aria-modal
             aria-labelledby="titulo-aprendiz"
@@ -781,40 +789,40 @@ export default function FichaDetallePage() {
             </h2>
             <div className="space-y-3 text-sm">
               <label className="block space-y-1">
-                <span className="text-grisMedio">Cédula</span>
+                <span className="text-muted">Cédula</span>
                 <input
                   type="text"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  className="quorum-field w-full"
                   value={apDoc}
                   onChange={(e) => setApDoc(e.target.value)}
                   autoComplete="off"
                 />
               </label>
               <label className="block space-y-1">
-                <span className="text-grisMedio">Nombre</span>
+                <span className="text-muted">Nombre</span>
                 <input
                   type="text"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  className="quorum-field w-full"
                   value={apNom}
                   onChange={(e) => setApNom(e.target.value)}
                   autoComplete="off"
                 />
               </label>
               <label className="block space-y-1">
-                <span className="text-grisMedio">Apellido</span>
+                <span className="text-muted">Apellido</span>
                 <input
                   type="text"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  className="quorum-field w-full"
                   value={apApe}
                   onChange={(e) => setApApe(e.target.value)}
                   autoComplete="off"
                 />
               </label>
               <label className="block space-y-1">
-                <span className="text-grisMedio">Correo</span>
+                <span className="text-muted">Correo</span>
                 <input
                   type="email"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  className="quorum-field w-full"
                   value={apCorreo}
                   onChange={(e) => setApCorreo(e.target.value)}
                   autoComplete="off"
@@ -824,7 +832,7 @@ export default function FichaDetallePage() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
+                className="rounded-lg border border-borderSubtle bg-surface px-4 py-2 text-sm text-foreground transition-colors hover:bg-surfaceMuted"
                 onClick={() => {
                   setModalAprendiz(false);
                   resetFormAprendiz();
@@ -854,7 +862,7 @@ export default function FichaDetallePage() {
       {modalImport && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
           <div
-            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4"
+            className="bg-surface rounded-xl shadow-xl max-w-md w-full p-6 space-y-4"
             role="dialog"
             aria-modal
             aria-labelledby="titulo-import"
@@ -862,27 +870,47 @@ export default function FichaDetallePage() {
             <h2 id="titulo-import" className="text-lg font-semibold">
               Importar Aprendices
             </h2>
-            <p className="text-sm text-grisMedio">
+            <p className="text-sm text-muted">
               Archivo .xlsx con columnas: cedula, nombre_completo, correo (primera
               fila).
             </p>
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              className="block w-full text-sm"
-              onChange={(e) =>
-                setArchivoImport(e.target.files?.[0] ?? null)
-              }
-            />
+            <label className="block space-y-2">
+              <span className="text-sm text-muted">Archivo Excel</span>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="sr-only"
+                  onChange={(e) =>
+                    setArchivoImport(e.target.files?.[0] ?? null)
+                  }
+                />
+                <button
+                  type="button"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-borderSubtle bg-surface px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-surfaceMuted"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload size={18} aria-hidden />
+                  Elegir archivo
+                </button>
+                <span
+                  className="min-w-0 truncate text-sm text-muted"
+                  title={archivoImport?.name}
+                >
+                  {archivoImport?.name ?? "Ningún archivo seleccionado"}
+                </span>
+              </div>
+            </label>
             {importando && (
               <div className="space-y-1">
-                <div className="h-2 rounded-full bg-grisClaro overflow-hidden">
+                <div className="h-2 overflow-hidden rounded-full bg-surfaceMuted">
                   <div
                     className="h-full bg-verde transition-all"
                     style={{ width: `${progresoImport}%` }}
                   />
                 </div>
-                <p className="text-xs text-grisMedio">
+                <p className="text-xs text-muted">
                   Subiendo… {progresoImport}%
                 </p>
               </div>
@@ -890,10 +918,10 @@ export default function FichaDetallePage() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
+                className="rounded-lg border border-borderSubtle bg-surface px-4 py-2 text-sm text-foreground transition-colors hover:bg-surfaceMuted"
                 onClick={() => {
                   setModalImport(false);
-                  setArchivoImport(null);
+                  limpiarSeleccionImport();
                 }}
                 disabled={importando}
               >

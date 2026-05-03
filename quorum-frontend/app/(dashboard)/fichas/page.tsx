@@ -153,10 +153,10 @@ export default function FichasPage() {
             <FolderOpen size={22} className="text-verde" aria-hidden />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-grisOscuro">
+            <h1 className="text-xl font-bold text-foreground">
               Fichas de Caracterización
             </h1>
-            <p className="text-sm text-grisMedio">
+            <p className="text-sm text-muted">
               Gestión de grupos de Formación, jornadas y Ambientes de Formación
               académica
             </p>
@@ -173,11 +173,11 @@ export default function FichasPage() {
         )}
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-3 items-end rounded-xl border border-gray-200 bg-white p-4">
+      <div className="mb-6 flex flex-wrap gap-3 items-end rounded-xl border border-borderSubtle bg-surface p-4">
         <label className="text-sm flex-1 min-w-[140px]">
-          <span className="text-grisMedio block mb-1">Buscar</span>
+          <span className="text-muted block mb-1">Buscar</span>
           <input
-            className="w-full rounded-lg border border-gray-200 px-3 py-2"
+            className="quorum-field w-full"
             placeholder="Número de ficha…"
             value={busqueda}
             onChange={(e) => {
@@ -189,9 +189,9 @@ export default function FichasPage() {
         {esAdmin && (
           <>
             <label className="text-sm min-w-[160px]">
-              <span className="text-grisMedio block mb-1">Centro</span>
+              <span className="text-muted block mb-1">Centro</span>
               <select
-                className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                className="quorum-field w-full"
                 value={centroId}
                 onChange={(e) => {
                   setCentroId(e.target.value);
@@ -207,9 +207,9 @@ export default function FichasPage() {
               </select>
             </label>
             <label className="text-sm min-w-[160px]">
-              <span className="text-grisMedio block mb-1">Programa</span>
+              <span className="text-muted block mb-1">Programa</span>
               <select
-                className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                className="quorum-field w-full"
                 value={programaId}
                 onChange={(e) => {
                   setProgramaId(e.target.value);
@@ -227,9 +227,9 @@ export default function FichasPage() {
           </>
         )}
         <label className="text-sm min-w-[120px]">
-          <span className="text-grisMedio block mb-1">Activo</span>
+          <span className="text-muted block mb-1">Activo</span>
           <select
-            className="w-full rounded-lg border border-gray-200 px-3 py-2"
+            className="quorum-field w-full"
             value={activo}
             onChange={(e) => {
               setActivo(e.target.value);
@@ -243,7 +243,7 @@ export default function FichasPage() {
         </label>
         <button
           type="button"
-          className="rounded-lg border border-gray-200 px-4 py-2 text-sm hover:bg-grisClaro"
+          className="rounded-lg border border-borderSubtle bg-surface px-4 py-2 text-sm text-foreground transition-colors hover:bg-surfaceMuted"
           onClick={() => void cargar()}
         >
           Aplicar filtros

@@ -227,21 +227,21 @@ export default function HistorialAsistenciaPage() {
             <History size={22} className="text-verde" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-grisOscuro">Historial de asistencia</h1>
-            <p className="text-sm text-grisMedio">Matriz por ficha y período</p>
+            <h1 className="text-xl font-bold text-foreground">Historial de asistencia</h1>
+            <p className="text-sm text-muted">Matriz por ficha y período</p>
           </div>
         </div>
       </div>
 
-      <div className="mb-4 flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex flex-col gap-4 rounded-xl border border-borderSubtle bg-surface p-4 shadow-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
           <div className="min-w-[200px] flex-1">
-            <label htmlFor="ficha-historial" className="block text-xs font-medium text-grisOscuro">
+            <label htmlFor="ficha-historial" className="block text-xs font-medium text-foreground">
               Ficha
             </label>
             <select
               id="ficha-historial"
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               value={fichaId === "" ? "" : String(fichaId)}
               onChange={(e) => setFichaId(e.target.value === "" ? "" : Number(e.target.value))}
               disabled={cargandoFichas || fichas.length === 0}
@@ -258,18 +258,18 @@ export default function HistorialAsistenciaPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded-lg border border-gray-300 p-2 text-grisOscuro hover:bg-grisClaro"
+              className="rounded-lg border border-borderSubtle bg-surface p-2 text-foreground transition-colors hover:bg-surfaceMuted"
               aria-label="Mes anterior"
               onClick={() => setMesYm((prev) => ymAnterior(prev))}
             >
               <ChevronLeft size={20} aria-hidden="true" />
             </button>
-            <span className="min-w-[140px] text-center text-sm font-medium capitalize text-grisOscuro">
+            <span className="min-w-[140px] text-center text-sm font-medium capitalize text-foreground">
               {tituloMes}
             </span>
             <button
               type="button"
-              className="rounded-lg border border-gray-300 p-2 text-grisOscuro hover:bg-grisClaro"
+              className="rounded-lg border border-borderSubtle bg-surface p-2 text-foreground transition-colors hover:bg-surfaceMuted"
               aria-label="Mes siguiente"
               onClick={() => setMesYm((prev) => ymSiguiente(prev))}
             >
@@ -278,27 +278,27 @@ export default function HistorialAsistenciaPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-gray-100 pt-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="flex flex-col gap-3 border-t border-borderSubtle/70 pt-3 sm:flex-row sm:flex-wrap sm:items-end">
           <div>
-            <label htmlFor="desde-historial" className="block text-xs font-medium text-grisOscuro">
+            <label htmlFor="desde-historial" className="block text-xs font-medium text-foreground">
               Desde
             </label>
             <input
               id="desde-historial"
               type="date"
-              className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="mt-1 rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               value={desde}
               onChange={(e) => setDesde(e.target.value)}
             />
           </div>
           <div>
-            <label htmlFor="hasta-historial" className="block text-xs font-medium text-grisOscuro">
+            <label htmlFor="hasta-historial" className="block text-xs font-medium text-foreground">
               Hasta
             </label>
             <input
               id="hasta-historial"
               type="date"
-              className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="mt-1 rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               value={hasta}
               onChange={(e) => setHasta(e.target.value)}
             />
@@ -306,7 +306,7 @@ export default function HistorialAsistenciaPage() {
           <div className="flex flex-wrap items-end gap-2">
             <button
               type="button"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-grisOscuro hover:bg-grisClaro"
+              className="rounded-lg border border-borderSubtle bg-surface px-3 py-2 text-sm text-foreground transition-colors hover:bg-surfaceMuted"
               onClick={restablecerMes}
             >
               Restablecer al mes visible
@@ -320,9 +320,9 @@ export default function HistorialAsistenciaPage() {
           </div>
         </div>
 
-        <fieldset className="border-t border-gray-100 pt-3">
-          <legend className="text-xs font-medium text-grisOscuro">Filtrar por tipo (opcional)</legend>
-          <p className="mb-2 text-xs text-grisMedio">
+        <fieldset className="border-t border-borderSubtle/70 pt-3">
+          <legend className="text-xs font-medium text-foreground">Filtrar por tipo (opcional)</legend>
+          <p className="mb-2 text-xs text-muted">
             Si no marcas ninguno, se muestran todas las sesiones del rango. Si marcas tipos, solo
             aparecen columnas de sesiones que tengan al menos un registro de esos tipos.
           </p>
@@ -333,7 +333,7 @@ export default function HistorialAsistenciaPage() {
                   type="checkbox"
                   checked={tiposFiltro.includes(valor)}
                   onChange={() => toggleTipo(valor)}
-                  className="rounded border-gray-300 text-verde focus:ring-verde"
+                  className="rounded border-borderSubtle text-verde focus:ring-verde"
                 />
                 {etiqueta}
               </label>

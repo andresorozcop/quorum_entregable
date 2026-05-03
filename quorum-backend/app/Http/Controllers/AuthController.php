@@ -14,8 +14,9 @@ use App\Models\IntentoLogin;
 use App\Models\TokenReset;
 use App\Models\Usuario;
 use App\Services\RecaptchaService;
-use App\Support\LogActivity;
 use App\Services\TotpService;
+use App\Support\LogActivity;
+use App\Support\TotpLocalBypass;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,9 +39,9 @@ class AuthController extends Controller
     public function login(LoginRequest $request, RecaptchaService $recaptcha): JsonResponse
     {
         $correo = $request->input('correo');
-        $ip     = $request->ip();
+        $ip = $request->ip();
 
-        $maxIntentos   = $this->maxIntentosLoginDesdeConfig();
+        $maxIntentos = $this->maxIntentosLoginDesdeConfig();
         $minutosBloqueo = $this->minutosBloqueoDesdeConfig();
 
         // Verificamos si el correo está bloqueado por exceso de intentos fallidos
@@ -52,8 +53,9 @@ class AuthController extends Controller
             ], 429);
         }
 
-        // Verificamos que el token de reCAPTCHA sea válido
-        if (!$recaptcha->verificar($request->input('recaptcha_token'), $ip)) {
+        // Verificamos que el token de reCAPTCHA v3 sea válido (score + action)
+        $accion = (string) config('services.recaptcha.actions.login_staff', 'login_staff');
+        if (! $recaptcha->verificarV3($request->input('recaptcha_token'), $ip, $accion)) {
             return response()->json([
                 'message' => 'La verificación reCAPTCHA no es válida. Por favor, inténtalo de nuevo.',
             ], 422);
@@ -64,7 +66,7 @@ class AuthController extends Controller
 
         // Si el usuario no existe o está inactivo, registramos intento fallido
         // Mensaje genérico para no revelar si el correo existe o no
-        if (!$usuario || $usuario->activo == 0) {
+        if (! $usuario || $usuario->activo == 0) {
             $this->registrarIntento($correo, $ip, false);
 
             // Mensaje especial para cuentas desactivadas (sin revelar la existencia del correo)
@@ -79,7 +81,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Aprendices u otros sin contraseña no pueden usar este flujo (evita Hash::check con null)
+        // Si el usuario no tiene contraseña, no puede iniciar sesión por este flujo
         if (empty($usuario->password)) {
             $this->registrarIntento($correo, $ip, false);
 
@@ -89,7 +91,7 @@ class AuthController extends Controller
         }
 
         // Verificamos que la contraseña sea correcta
-        if (!Hash::check($request->input('password'), $usuario->password)) {
+        if (! Hash::check($request->input('password'), $usuario->password)) {
             $this->registrarIntento($correo, $ip, false);
 
             return response()->json([
@@ -101,15 +103,39 @@ class AuthController extends Controller
         $this->registrarIntento($correo, $ip, true);
         Auth::guard('web')->login($usuario, false);
         $request->session()->regenerate();
+
+        // Aprendiz: no usa 2FA; staff: exige 2FA en sesión
+        if ($usuario->rol === 'aprendiz') {
+            $request->session()->put('totp_sesion_ok', true);
+            LogActivity::registrar('login_exitoso', 'Aprendiz: '.$usuario->correo);
+
+            return response()->json([
+                'usuario' => $this->usuarioParaSesion($usuario, false),
+                'totp_sesion_completa' => true,
+                'nombre_sistema' => $this->nombreSistemaParaJson(),
+            ]);
+        }
+
+        // Desarrollo local: opcionalmente omitir TOTP (TOTP_BYPASS_LOCAL + APP_ENV=local)
+        if (TotpLocalBypass::activo()) {
+            $request->session()->put('totp_sesion_ok', true);
+            LogActivity::registrar('login_exitoso', 'Staff: '.$usuario->correo.' (TOTP bypass local)');
+
+            return response()->json([
+                'usuario' => $this->usuarioParaSesion($usuario, true),
+                'totp_sesion_completa' => true,
+                'nombre_sistema' => $this->nombreSistemaParaJson(),
+            ]);
+        }
+
         // Hasta pasar 2FA no se considera sesión completa para API protegidas
         $request->session()->put('totp_sesion_ok', false);
-
         LogActivity::registrar('login_exitoso', 'Staff: '.$usuario->correo);
 
         return response()->json([
-            'usuario'              => $this->usuarioParaSesion($usuario, true),
+            'usuario' => $this->usuarioParaSesion($usuario, true),
             'totp_sesion_completa' => false,
-            'nombre_sistema'       => $this->nombreSistemaParaJson(),
+            'nombre_sistema' => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -119,53 +145,22 @@ class AuthController extends Controller
     // -------------------------------------------------------------------------
     public function loginAprendiz(LoginAprendizRequest $request, RecaptchaService $recaptcha): JsonResponse
     {
-        $correo    = $request->input('correo');
+        $correo = $request->input('correo');
         $documento = $request->input('documento');
-        $ip        = $request->ip();
+        $ip = $request->ip();
 
-        if (!$recaptcha->verificar($request->input('recaptcha_token'), $ip)) {
+        $accion = (string) config('services.recaptcha.actions.login_aprendiz', 'login_aprendiz');
+        if (! $recaptcha->verificarV3($request->input('recaptcha_token'), $ip, $accion)) {
             return response()->json([
                 'message' => 'La verificación reCAPTCHA no es válida. Por favor, inténtalo de nuevo.',
             ], 422);
         }
 
-        // Buscamos al usuario que sea aprendiz con ese correo y documento
-        $usuario = Usuario::where('correo', $correo)
-            ->where('rol', 'aprendiz')
-            ->first();
-
-        // Mensaje genérico para no revelar qué campo falló
-        if (!$usuario) {
-            return response()->json([
-                'message' => 'Las credenciales no son correctas.',
-            ], 401);
-        }
-
-        if ($usuario->activo == 0) {
-            return response()->json([
-                'message' => 'Tu cuenta está desactivada. Comunícate con el administrador.',
-            ], 401);
-        }
-
-        // Verificamos que el documento coincida (es la "contraseña" del aprendiz)
-        if ($usuario->documento !== $documento) {
-            return response()->json([
-                'message' => 'Las credenciales no son correctas.',
-            ], 401);
-        }
-
-        // Login exitoso — autenticamos en el guard web y regeneramos la sesión
-        Auth::guard('web')->login($usuario, false);
-        $request->session()->regenerate();
-        $request->session()->put('totp_sesion_ok', true);
-
-        LogActivity::registrar('login_exitoso', 'Aprendiz: '.$usuario->correo);
-
+        // Endpoint deprecado: los aprendices ahora usan el login unificado (correo + contraseña).
+        // Mantenemos este endpoint para no romper clientes antiguos, pero forzamos la migración.
         return response()->json([
-            'usuario'              => $this->usuarioParaSesion($usuario, false),
-            'totp_sesion_completa' => true,
-            'nombre_sistema'       => $this->nombreSistemaParaJson(),
-        ]);
+            'message' => 'Este método de inicio de sesión fue actualizado. Usa correo y contraseña en el login principal.',
+        ], 410);
     }
 
     // -------------------------------------------------------------------------
@@ -190,16 +185,16 @@ class AuthController extends Controller
     {
         $usuario = $request->user();
 
-        if (!$usuario) {
+        if (! $usuario) {
             return response()->json([
                 'message' => 'No autenticado.',
             ], 401);
         }
 
         return response()->json([
-            'usuario'              => $this->usuarioParaSesion($usuario, true),
+            'usuario' => $this->usuarioParaSesion($usuario, true),
             'totp_sesion_completa' => $this->totpSesionCompleta($usuario, $request),
-            'nombre_sistema'       => $this->nombreSistemaParaJson(),
+            'nombre_sistema' => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -232,7 +227,7 @@ class AuthController extends Controller
             }
 
             return response()->json([
-                'otpauth_url'    => $totp->urlOtpAuth($usuario->correo, $usuario->totp_secret),
+                'otpauth_url' => $totp->urlOtpAuth($usuario->correo, $usuario->totp_secret),
                 'secreto_manual' => $usuario->totp_secret,
             ]);
         }
@@ -254,8 +249,8 @@ class AuthController extends Controller
         $request->session()->put('totp_sesion_ok', true);
 
         return response()->json([
-            'message'          => 'Autenticación en dos pasos activada correctamente.',
-            'nombre_sistema'   => $this->nombreSistemaParaJson(),
+            'message' => 'Autenticación en dos pasos activada correctamente.',
+            'nombre_sistema' => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -290,8 +285,8 @@ class AuthController extends Controller
         $request->session()->put('totp_sesion_ok', true);
 
         return response()->json([
-            'message'         => 'Verificación correcta.',
-            'nombre_sistema'  => $this->nombreSistemaParaJson(),
+            'message' => 'Verificación correcta.',
+            'nombre_sistema' => $this->nombreSistemaParaJson(),
         ]);
     }
 
@@ -302,14 +297,14 @@ class AuthController extends Controller
     // -------------------------------------------------------------------------
     public function solicitarReset(SolicitarResetRequest $request): JsonResponse
     {
-        $correo  = $request->input('correo');
+        $correo = $request->input('correo');
         $mensaje = ['message' => 'Si el correo existe, recibirás las instrucciones en tu bandeja de entrada.'];
 
         // Buscamos el usuario — sin revelar si existe o no en caso de falla
         $usuario = Usuario::where('correo', $correo)->first();
 
-        // No enviamos correo si: no existe, está inactivo o es aprendiz (sin contraseña)
-        if (!$usuario || $usuario->activo == 0 || empty($usuario->password)) {
+        // No enviamos correo si: no existe o está inactivo
+        if (! $usuario || $usuario->activo == 0) {
             return response()->json($mensaje);
         }
 
@@ -323,9 +318,9 @@ class AuthController extends Controller
             // Guardamos el nuevo token con expiración de 1 hora
             TokenReset::create([
                 'usuario_id' => $usuario->id,
-                'token'      => $token,
-                'expira_en'  => now()->addHour(),
-                'usado'      => 0,
+                'token' => $token,
+                'expira_en' => now()->addHour(),
+                'usado' => 0,
             ]);
 
             $frontendBase = $this->frontendBaseUrlParaCorreoReset($request);
@@ -337,7 +332,7 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
             // Si falla el envío del correo, registramos el error pero no lo mostramos al usuario
             // El token sigue válido; el usuario puede reintentar
-            \Log::error('Error al enviar correo de reset: ' . $e->getMessage());
+            \Log::error('Error al enviar correo de reset: '.$e->getMessage());
         }
 
         // Siempre retornamos el mismo mensaje (no revelamos si el correo existe)
@@ -350,14 +345,14 @@ class AuthController extends Controller
     // -------------------------------------------------------------------------
     public function procesarReset(ProcesarResetRequest $request): JsonResponse
     {
-        $token       = $request->input('token');
-        $nuevaPass   = $request->input('password');
+        $token = $request->input('token');
+        $nuevaPass = $request->input('password');
 
         // Buscamos el token en la base de datos
         $tokenReset = TokenReset::where('token', $token)->first();
 
         // Verificamos que el token exista
-        if (!$tokenReset) {
+        if (! $tokenReset) {
             return response()->json([
                 'message' => 'El enlace de recuperación es inválido.',
             ], 422);
@@ -401,16 +396,16 @@ class AuthController extends Controller
     private function usuarioParaSesion(Usuario $usuario, bool $incluirEstadoTotp): array
     {
         $data = [
-            'id'           => $usuario->id,
-            'nombre'       => $usuario->nombre,
-            'apellido'     => $usuario->apellido,
-            'correo'       => $usuario->correo,
-            'documento'    => $usuario->documento,
-            'rol'          => $usuario->rol,
-            'ficha_id'     => $usuario->ficha_id,
+            'id' => $usuario->id,
+            'nombre' => $usuario->nombre,
+            'apellido' => $usuario->apellido,
+            'correo' => $usuario->correo,
+            'documento' => $usuario->documento,
+            'rol' => $usuario->rol,
+            'ficha_id' => $usuario->ficha_id,
             'avatar_color' => $usuario->avatar_color,
-            'activo'       => (int) $usuario->activo,
-            'creado_en'    => $usuario->creado_en,
+            'activo' => (int) $usuario->activo,
+            'creado_en' => $usuario->creado_en,
         ];
         if ($incluirEstadoTotp) {
             // El frontend usa este flag para decidir si ir a /2fa/configurar o /2fa/verificar
@@ -426,8 +421,8 @@ class AuthController extends Controller
     private function registrarIntento(string $correo, string $ip, bool $exitoso): void
     {
         IntentoLogin::create([
-            'correo'  => $correo,
-            'ip'      => $ip,
+            'correo' => $correo,
+            'ip' => $ip,
             'exitoso' => $exitoso ? 1 : 0,
         ]);
     }
@@ -449,6 +444,10 @@ class AuthController extends Controller
 
         if (empty($usuario->password)) {
             return false;
+        }
+
+        if (TotpLocalBypass::activo()) {
+            return true;
         }
 
         return (bool) $request->session()->get('totp_sesion_ok');

@@ -109,7 +109,7 @@ export default function DashboardPage() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-verdeClaro flex items-center justify-center">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-verdeClaro dark:bg-verdeOscuro/35">
           <LayoutDashboard
             size={22}
             className="text-verde"
@@ -117,8 +117,8 @@ export default function DashboardPage() {
           />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-grisOscuro">Dashboard</h1>
-          <p className="text-sm text-grisMedio">Resumen según tu rol</p>
+          <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted">Resumen según tu rol</p>
         </div>
       </div>
 
@@ -180,7 +180,7 @@ function VistaAdmin({
         />
       </div>
 
-      <h2 className="text-lg font-semibold text-grisOscuro mb-3">
+      <h2 className="text-lg font-semibold text-foreground mb-3">
         Actividad reciente
       </h2>
       {actividad_reciente.length === 0 ? (
@@ -194,21 +194,21 @@ function VistaAdmin({
           {actividad_reciente.map((item, i) => (
             <li
               key={`${item.creado_en}-${i}`}
-              className="bg-white rounded-lg border border-gray-200 px-4 py-3 text-sm"
+              className="bg-surface rounded-lg border border-borderSubtle px-4 py-3 text-sm"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
-                <span className="font-medium text-grisOscuro">
+                <span className="font-medium text-foreground">
                   {item.accion}
                 </span>
                 <time
-                  className="text-xs text-grisMedio tabular-nums"
+                  className="text-xs text-muted tabular-nums"
                   dateTime={item.creado_en}
                 >
                   {formatearFechaActividad(item.creado_en)}
                 </time>
               </div>
-              <p className="text-grisMedio">{item.descripcion}</p>
-              <p className="text-xs text-grisMedio mt-1">
+              <p className="text-muted">{item.descripcion}</p>
+              <p className="text-xs text-muted mt-1">
                 Por: {item.usuario_nombre}
               </p>
             </li>
@@ -257,7 +257,7 @@ function VistaCoordinador({
         />
       </div>
 
-      <h2 className="text-lg font-semibold text-grisOscuro mb-3">
+      <h2 className="text-lg font-semibold text-foreground mb-3">
         Fichas activas por centro
       </h2>
       {fichas_por_centro.length === 0 ? (
@@ -267,9 +267,9 @@ function VistaCoordinador({
           descripcion="Cuando existan fichas activas, verás el conteo agrupado aquí."
         />
       ) : (
-        <div className="overflow-x-auto mb-8 rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto mb-8 rounded-xl border border-borderSubtle bg-surface">
           <table className="min-w-full text-sm">
-            <thead className="bg-grisClaro text-left text-grisOscuro">
+            <thead className="bg-surfaceMuted text-left text-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">Centro</th>
                 <th className="px-4 py-3 font-semibold text-right">
@@ -281,7 +281,7 @@ function VistaCoordinador({
               {fichas_por_centro.map((f) => (
                 <tr
                   key={f.centro_id}
-                  className="border-t border-gray-100 hover:bg-grisClaro/50"
+                  className="border-t border-borderSubtle/70 hover:bg-surfaceMuted/60"
                 >
                   <td className="px-4 py-2.5">{f.centro_nombre}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">
@@ -294,7 +294,7 @@ function VistaCoordinador({
         </div>
       )}
 
-      <h2 className="text-lg font-semibold text-grisOscuro mb-3">
+      <h2 className="text-lg font-semibold text-foreground mb-3">
         Asistencia por ficha (mes actual)
       </h2>
       {sinTablaAsistencia ? (
@@ -304,9 +304,9 @@ function VistaCoordinador({
           descripcion="Aún no hay registros de asistencia en el mes actual para calcular porcentajes."
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-borderSubtle bg-surface">
           <table className="min-w-full text-sm">
-            <thead className="bg-grisClaro text-left text-grisOscuro">
+            <thead className="bg-surfaceMuted text-left text-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">Ficha</th>
                 <th className="px-4 py-3 font-semibold">Centro</th>
@@ -317,10 +317,10 @@ function VistaCoordinador({
               {fichas_asistencia.map((f) => (
                 <tr
                   key={f.ficha_id}
-                  className="border-t border-gray-100 hover:bg-grisClaro/50"
+                  className="border-t border-borderSubtle/70 hover:bg-surfaceMuted/60"
                 >
                   <td className="px-4 py-2.5 font-medium">{f.numero_ficha}</td>
-                  <td className="px-4 py-2.5 text-grisMedio">
+                  <td className="px-4 py-2.5 text-muted">
                     {f.centro_nombre}
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums">
@@ -363,7 +363,7 @@ function VistaInstructor({
         />
       </div>
 
-      <h2 className="text-lg font-semibold text-grisOscuro mb-3">
+      <h2 className="text-lg font-semibold text-foreground mb-3">
         Fichas asignadas
       </h2>
       {fichas.length === 0 ? (
@@ -377,7 +377,7 @@ function VistaInstructor({
           {fichas.map((f) => (
             <li
               key={f.id}
-              className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-sm text-grisOscuro"
+              className="px-3 py-1.5 rounded-lg bg-surface border border-borderSubtle text-sm text-foreground"
             >
               {f.numero_ficha}
             </li>
@@ -385,7 +385,7 @@ function VistaInstructor({
         </ul>
       )}
 
-      <h2 className="text-lg font-semibold text-grisOscuro mb-3">
+      <h2 className="text-lg font-semibold text-foreground mb-3">
         Aprendices con inasistencia ≥ 20% (mes actual)
       </h2>
       {aprendices_alerta.length === 0 ? (
@@ -395,9 +395,9 @@ function VistaInstructor({
           descripcion="Se consideran horas de falla y horas parciales no asistidas respecto al total programado."
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-borderSubtle bg-surface">
           <table className="min-w-full text-sm">
-            <thead className="bg-grisClaro text-left text-grisOscuro">
+            <thead className="bg-surfaceMuted text-left text-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">Aprendiz</th>
                 <th className="px-4 py-3 font-semibold">Ficha</th>
@@ -410,12 +410,12 @@ function VistaInstructor({
               {aprendices_alerta.map((a) => (
                 <tr
                   key={a.id}
-                  className="border-t border-gray-100 hover:bg-grisClaro/50"
+                  className="border-t border-borderSubtle/70 hover:bg-surfaceMuted/60"
                 >
                   <td className="px-4 py-2.5">
                     {a.nombre} {a.apellido}
                   </td>
-                  <td className="px-4 py-2.5 text-grisMedio">{a.numero_ficha}</td>
+                  <td className="px-4 py-2.5 text-muted">{a.numero_ficha}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-error font-medium">
                     {a.porcentaje_inasistencia}%
                   </td>

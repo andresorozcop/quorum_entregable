@@ -44,25 +44,25 @@ export default function RecuperarPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F5F5] flex items-center justify-center p-4">
+    <main className="flex min-h-screen items-center justify-center bg-grisClaro p-4 dark:bg-background">
       <div className="w-full max-w-md">
         {/* Encabezado con logo SENA */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#3DAE2B] mb-3">
+        <div className="mb-6 text-center">
+          <div className="mb-3 inline-flex h-16 w-16 items-center justify-center rounded-full bg-verde">
             <KeyRound className="text-white" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-[#333333]">QUORUM</h1>
-          <p className="text-sm text-[#9E9E9E] mt-1">
+          <h1 className="text-2xl font-bold text-foreground">QUORUM</h1>
+          <p className="mt-1 text-sm text-muted">
             Sistema de Control de Asistencia — SENA CPIC
           </p>
         </div>
 
         {/* Tarjeta del formulario */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-semibold text-[#333333] mb-1">
+        <div className="rounded-xl border border-borderSubtle bg-surface p-6 shadow-md">
+          <h2 className="mb-1 text-lg font-semibold text-foreground">
             Recuperar contraseña
           </h2>
-          <p className="text-sm text-[#9E9E9E] mb-5">
+          <p className="mb-5 text-sm text-muted">
             Ingresa el correo asociado a tu cuenta. Si existe, recibirás un
             enlace para crear una nueva contraseña.
           </p>
@@ -73,14 +73,14 @@ export default function RecuperarPage() {
               <div>
                 <label
                   htmlFor="correo"
-                  className="block text-sm font-medium text-[#333333] mb-1"
+                  className="mb-1 block text-sm font-medium text-foreground"
                 >
                   Correo electrónico
                 </label>
                 <div className="relative">
                   <Mail
                     size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9E9E9E]"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
                   />
                   <input
                     id="correo"
@@ -90,7 +90,7 @@ export default function RecuperarPage() {
                     placeholder="usuario@sena.edu.co"
                     required
                     disabled={enviando}
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3DAE2B] focus:border-transparent disabled:opacity-60"
+                    className="quorum-input pl-9 disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -129,7 +129,7 @@ export default function RecuperarPage() {
         </div>
 
         {/* Pie de página */}
-        <p className="text-center text-xs text-[#9E9E9E] mt-4">
+        <p className="mt-4 text-center text-xs text-muted">
           SENA CPIC — QUORUM v1.0
         </p>
       </div>

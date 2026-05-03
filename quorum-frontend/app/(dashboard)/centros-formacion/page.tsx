@@ -214,8 +214,8 @@ export default function CentrosFormacionPage() {
             <Building2 size={22} className="text-verde" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-grisOscuro">Centros de formación</h1>
-            <p className="text-sm text-grisMedio">Alta, edición y baja de centros SENA</p>
+            <h1 className="text-xl font-bold text-foreground">Centros de formación</h1>
+            <p className="text-sm text-muted">Alta, edición y baja de centros SENA</p>
           </div>
         </div>
         <button
@@ -229,11 +229,11 @@ export default function CentrosFormacionPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-grisMedio">Estado:</span>
+        <span className="text-sm text-muted">Estado:</span>
         <select
           value={filtroActivo}
           onChange={(e) => setFiltroActivo(e.target.value as "" | "1" | "0")}
-          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm bg-white text-grisOscuro"
+          className="rounded-lg border border-borderSubtle bg-input px-3 py-1.5 text-sm text-foreground"
         >
           <option value="">Todos</option>
           <option value="1">Activos</option>
@@ -254,7 +254,7 @@ export default function CentrosFormacionPage() {
               clave: "activo",
               etiqueta: "Estado",
               render: (f) => (
-                <span className={f.activo === 1 ? "text-verde font-medium" : "text-grisMedio"}>
+                <span className={f.activo === 1 ? "text-verde font-medium" : "text-muted"}>
                   {f.activo === 1 ? "Activo" : "Inactivo"}
                 </span>
               ),
@@ -313,32 +313,32 @@ export default function CentrosFormacionPage() {
           aria-modal="true"
           aria-labelledby="titulo-modal-centro"
         >
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-gray-200">
-            <h2 id="titulo-modal-centro" className="text-lg font-semibold text-grisOscuro mb-4">
+          <div className="bg-surface rounded-xl shadow-xl max-w-md w-full p-6 border border-borderSubtle">
+            <h2 id="titulo-modal-centro" className="text-lg font-semibold text-foreground mb-4">
               {editandoId === null ? "Nuevo centro" : "Editar centro"}
             </h2>
             <form onSubmit={(e) => void guardarModal(e)} className="space-y-4">
               <div>
-                <label htmlFor="centro_nombre" className="block text-sm font-medium text-grisOscuro mb-1">
+                <label htmlFor="centro_nombre" className="block text-sm font-medium text-foreground mb-1">
                   Nombre
                 </label>
                 <input
                   id="centro_nombre"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="quorum-input"
                   maxLength={150}
                 />
               </div>
               <div>
-                <label htmlFor="centro_codigo" className="block text-sm font-medium text-grisOscuro mb-1">
+                <label htmlFor="centro_codigo" className="block text-sm font-medium text-foreground mb-1">
                   Código (opcional)
                 </label>
                 <input
                   id="centro_codigo"
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="quorum-input"
                   maxLength={20}
                 />
               </div>
@@ -346,7 +346,7 @@ export default function CentrosFormacionPage() {
                 <button
                   type="button"
                   onClick={() => setModalAbierto(false)}
-                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-grisOscuro hover:bg-grisClaro"
+                  className="px-4 py-2 text-sm rounded-lg border border-borderSubtle text-foreground transition-colors hover:bg-surfaceMuted"
                 >
                   Cancelar
                 </button>

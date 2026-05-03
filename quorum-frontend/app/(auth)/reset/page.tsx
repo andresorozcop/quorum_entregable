@@ -41,14 +41,14 @@ function ResetForm() {
   // Si no hay token en la URL, mostramos un error amigable
   if (!token) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-8 text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-100 mb-4">
-          <XCircle className="text-[#D32F2F]" size={28} />
+      <div className="rounded-xl border border-borderSubtle bg-surface p-8 text-center shadow-md">
+        <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50">
+          <XCircle className="text-error" size={28} />
         </div>
-        <h2 className="text-lg font-semibold text-[#333333] mb-2">
+        <h2 className="mb-2 text-lg font-semibold text-foreground">
           Enlace inválido
         </h2>
-        <p className="text-sm text-[#9E9E9E] mb-5">
+        <p className="mb-5 text-sm text-muted">
           Este enlace de recuperación no es válido o está incompleto.
           Solicita uno nuevo desde la página de recuperación.
         </p>
@@ -120,11 +120,11 @@ function ResetForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
-      <h2 className="text-lg font-semibold text-[#333333] mb-1">
+    <div className="rounded-xl border border-borderSubtle bg-surface p-6 shadow-md">
+      <h2 className="mb-1 text-lg font-semibold text-foreground">
         Nueva contraseña
       </h2>
-      <p className="text-sm text-[#9E9E9E] mb-5">
+      <p className="mb-5 text-sm text-muted">
         Elige una contraseña segura para tu cuenta. Debe cumplir todos los
         requisitos que se muestran abajo.
       </p>
@@ -135,14 +135,14 @@ function ResetForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-[#333333] mb-1"
+              className="mb-1 block text-sm font-medium text-foreground"
             >
               Nueva contraseña
             </label>
             <div className="relative">
               <Lock
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9E9E9E]"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
               />
               <input
                 id="password"
@@ -152,13 +152,13 @@ function ResetForm() {
                 placeholder="Mínimo 8 caracteres"
                 required
                 disabled={enviando}
-                className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3DAE2B] focus:border-transparent disabled:opacity-60"
+                className="quorum-input pl-9 pr-10 disabled:opacity-60"
               />
               {/* Botón para mostrar/ocultar contraseña */}
               <button
                 type="button"
                 onClick={() => setMostrarPass(!mostrarPass)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9E9E9E] hover:text-[#333333]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                 aria-label={mostrarPass ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {mostrarPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -168,8 +168,8 @@ function ResetForm() {
 
           {/* Indicadores de política en tiempo real */}
           {password.length > 0 && (
-            <div className="bg-[#F5F5F5] rounded-lg p-3 space-y-1.5">
-              <p className="text-xs font-medium text-[#333333] mb-2">
+            <div className="space-y-1.5 rounded-lg bg-surfaceMuted p-3">
+              <p className="mb-2 text-xs font-medium text-foreground">
                 Requisitos de contraseña:
               </p>
               {requisitosEstado.map((r) => (
@@ -181,7 +181,7 @@ function ResetForm() {
                   )}
                   <span
                     className={`text-xs ${
-                      r.cumplido ? "text-[#3DAE2B]" : "text-[#9E9E9E]"
+                      r.cumplido ? "text-verde" : "text-muted"
                     }`}
                   >
                     {r.texto}
@@ -195,14 +195,14 @@ function ResetForm() {
           <div>
             <label
               htmlFor="confirmacion"
-              className="block text-sm font-medium text-[#333333] mb-1"
+              className="mb-1 block text-sm font-medium text-foreground"
             >
               Confirmar contraseña
             </label>
             <div className="relative">
               <Lock
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9E9E9E]"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
               />
               <input
                 id="confirmacion"
@@ -212,12 +212,12 @@ function ResetForm() {
                 placeholder="Repite la contraseña"
                 required
                 disabled={enviando}
-                className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3DAE2B] focus:border-transparent disabled:opacity-60"
+                className="quorum-input pl-9 pr-10 disabled:opacity-60"
               />
               <button
                 type="button"
                 onClick={() => setMostrarConfirm(!mostrarConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9E9E9E] hover:text-[#333333]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                 aria-label={mostrarConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {mostrarConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -226,8 +226,8 @@ function ResetForm() {
             {/* Indicador de coincidencia de contraseñas */}
             {confirmacion.length > 0 && (
               <p
-                className={`text-xs mt-1 flex items-center gap-1 ${
-                  passwordsCoinciden ? "text-[#3DAE2B]" : "text-[#D32F2F]"
+                className={`mt-1 flex items-center gap-1 text-xs ${
+                  passwordsCoinciden ? "text-verde" : "text-error"
                 }`}
               >
                 {passwordsCoinciden ? (
@@ -269,9 +269,9 @@ function ResetForm() {
 // Componente de carga mientras se resuelve useSearchParams
 function CargandoReset() {
   return (
-    <div className="bg-white rounded-xl shadow-md p-8 text-center">
-      <span className="inline-block w-8 h-8 border-4 border-[#3DAE2B] border-t-transparent rounded-full animate-spin" />
-      <p className="text-sm text-[#9E9E9E] mt-3">Verificando enlace...</p>
+    <div className="rounded-xl border border-borderSubtle bg-surface p-8 text-center shadow-md">
+      <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-verde border-t-transparent" />
+      <p className="mt-3 text-sm text-muted">Verificando enlace...</p>
     </div>
   );
 }
@@ -279,15 +279,15 @@ function CargandoReset() {
 // Página principal — envuelve el formulario en Suspense (requerido por useSearchParams en App Router)
 export default function ResetPage() {
   return (
-    <main className="min-h-screen bg-[#F5F5F5] flex items-center justify-center p-4">
+    <main className="flex min-h-screen items-center justify-center bg-grisClaro p-4 dark:bg-background">
       <div className="w-full max-w-md">
         {/* Encabezado con logo SENA */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#3DAE2B] mb-3">
+        <div className="mb-6 text-center">
+          <div className="mb-3 inline-flex h-16 w-16 items-center justify-center rounded-full bg-verde">
             <KeyRound className="text-white" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-[#333333]">QUORUM</h1>
-          <p className="text-sm text-[#9E9E9E] mt-1">
+          <h1 className="text-2xl font-bold text-foreground">QUORUM</h1>
+          <p className="mt-1 text-sm text-muted">
             Sistema de Control de Asistencia — SENA CPIC
           </p>
         </div>
@@ -308,7 +308,7 @@ export default function ResetPage() {
         </div>
 
         {/* Pie de página */}
-        <p className="text-center text-xs text-[#9E9E9E] mt-4">
+        <p className="mt-4 text-center text-xs text-muted">
           SENA CPIC — QUORUM v1.0
         </p>
       </div>

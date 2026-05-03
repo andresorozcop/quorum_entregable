@@ -3,21 +3,30 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #333333;
   --surface: #ffffff;
   --surface-muted: #f5f5f5;
   --border-subtle: #e5e7eb;
+  --muted-foreground: #5f6368;
+  --input-background: #ffffff;
+  --ring: #3dae2b;
   /* Escala de fuente para el panel de accesibilidad (1 = tamaño normal) */
   --font-scale: 1;
 }
 
 html.dark {
-  --background: #0f1117;
+  color-scheme: dark;
+  /* Superficies tipo Material: fondo base + tarjetas un escalón más claras */
+  --background: #121212;
   --foreground: #e8eaed;
-  --surface: #1a1d27;
-  --surface-muted: #252936;
-  --border-subtle: #3d4455;
+  --surface: #1e1f25;
+  --surface-muted: #2d2f38;
+  --border-subtle: #3c4043;
+  --muted-foreground: #9aa0a6;
+  --input-background: #303136;
+  --ring: #81c784;
 }
 
 /* El tamaño base del texto se multiplica por --font-scale */
@@ -34,6 +43,21 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  /* Input reutilizable en login y formularios auth */
+  .quorum-input {
+    @apply w-full rounded-lg border px-3 py-2 text-sm transition-colors;
+    @apply border-borderSubtle bg-input text-foreground placeholder:text-muted;
+    @apply focus:border-transparent focus:outline-none focus:ring-2 focus:ring-verde;
+  }
+
+  /* select / input en filtros (combinar con w-full mt-1, o pl-10 pr-3 para búsqueda) */
+  .quorum-field {
+    @apply rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground transition-colors;
+    @apply focus:border-transparent focus:outline-none focus:ring-2 focus:ring-verde;
+  }
 }
 
 @layer utilities {

@@ -35,9 +35,9 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   return (
     <div className="min-w-0 space-y-3">
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <table className="min-w-full text-left text-sm text-grisOscuro dark:text-gray-100">
-          <thead className="border-b border-gray-200 bg-grisClaro dark:border-slate-700 dark:bg-slate-800">
+      <div className="overflow-x-auto rounded-xl border border-borderSubtle bg-surface shadow-sm">
+        <table className="min-w-full text-left text-sm text-foreground">
+          <thead className="border-b border-borderSubtle bg-surfaceMuted">
             <tr>
               {columnas.map((col) => (
                 <th
@@ -60,7 +60,7 @@ export default function DataTable<T>({
               <tr>
                 <td
                   colSpan={columnas.length}
-                  className="px-4 py-8 text-center text-grisMedio dark:text-gray-400"
+                  className="px-4 py-8 text-center text-muted"
                 >
                   {vacioTexto}
                 </td>
@@ -69,7 +69,7 @@ export default function DataTable<T>({
               datos.map((fila) => (
                 <tr
                   key={String(getClaveFila(fila))}
-                  className="border-b border-gray-100 last:border-0 hover:bg-grisClaro/60 dark:border-slate-800 dark:hover:bg-slate-800/80"
+                  className="border-b border-borderSubtle/60 last:border-0 hover:bg-surfaceMuted/70 dark:border-borderSubtle/40"
                 >
                   {columnas.map((col) => (
                     <td
@@ -96,7 +96,7 @@ export default function DataTable<T>({
       </div>
 
       {paginacion && paginacion.totalPaginas > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-grisMedio dark:text-gray-400">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
           <p>
             Mostrando página {paginacion.paginaActual} de{" "}
             {paginacion.totalPaginas} ({paginacion.total} registros)
@@ -104,7 +104,7 @@ export default function DataTable<T>({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 hover:bg-grisClaro disabled:opacity-40 dark:border-slate-600 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-1 rounded-lg border border-borderSubtle px-3 py-1.5 text-foreground transition-colors hover:bg-surfaceMuted disabled:opacity-40"
               disabled={paginacion.paginaActual <= 1}
               onClick={() =>
                 paginacion.alCambiarPagina(paginacion.paginaActual - 1)
@@ -115,7 +115,7 @@ export default function DataTable<T>({
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 hover:bg-grisClaro disabled:opacity-40 dark:border-slate-600 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-1 rounded-lg border border-borderSubtle px-3 py-1.5 text-foreground transition-colors hover:bg-surfaceMuted disabled:opacity-40"
               disabled={
                 paginacion.paginaActual >= paginacion.totalPaginas
               }

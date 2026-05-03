@@ -191,7 +191,7 @@ export default function TomarAsistenciaPage() {
     return () => {
       cancelado = true;
     };
-  }, [cargandoAuth, usuario?.id, usuario?.rol]);
+  }, [cargandoAuth, usuario, usuario?.id, usuario?.rol]);
 
   const cargarSesion = useCallback(async (fid: number, fecha: string, hid?: number) => {
     const seq = ++sesionPeticionSeqRef.current;
@@ -507,23 +507,23 @@ export default function TomarAsistenciaPage() {
   }
 
   const claseSelect =
-    "w-full text-sm text-grisOscuro bg-white rounded-lg border border-gray-200 shadow-sm py-2 pl-3 pr-3 " +
-    "focus:outline-none focus:ring-2 focus:ring-[#3DAE2B]/25 focus:border-verde";
+    "w-full rounded-lg border border-borderSubtle bg-input py-2 pl-3 pr-3 text-sm text-foreground shadow-sm " +
+    "focus:border-verde focus:outline-none focus:ring-2 focus:ring-verde/25";
 
   return (
     <div className="max-w-5xl mx-auto">
       {/* Barra compacta: título + selector ficha (sin caja blanca extra) */}
-      <div className="flex flex-wrap items-end gap-x-4 gap-y-3 border-b border-gray-100 pb-4 mb-4">
+      <div className="mb-4 flex flex-wrap items-end gap-x-4 gap-y-3 border-b border-borderSubtle/70 pb-4">
         <div className="flex items-center gap-2.5 min-w-0 flex-1 md:flex-initial md:max-w-md">
           <div
-            className="w-9 h-9 rounded-lg bg-verdeClaro flex items-center justify-center shrink-0"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-verdeClaro dark:bg-verdeOscuro/35"
             aria-hidden
           >
             <ClipboardCheck size={20} className="text-verde" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-grisOscuro tracking-tight">Tomar asistencia</h1>
-            <p className="text-xs text-grisMedio mt-0.5">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Tomar asistencia</h1>
+            <p className="mt-0.5 text-xs text-muted">
               Fecha {sesion?.fecha ?? fechaSesion} · Marca a todos antes de guardar.
             </p>
           </div>
@@ -531,7 +531,7 @@ export default function TomarAsistenciaPage() {
 
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end md:ml-auto md:w-auto md:shrink-0">
           <div className="w-full sm:w-44">
-            <label htmlFor="fecha-registro-asistencia" className="mb-1 block text-xs font-medium text-grisMedio">
+            <label htmlFor="fecha-registro-asistencia" className="mb-1 block text-xs font-medium text-muted">
               Fecha del registro
             </label>
             <input
@@ -548,16 +548,16 @@ export default function TomarAsistenciaPage() {
             />
           </div>
           <div className="w-full min-w-0 sm:w-72">
-            <label htmlFor="ficha-select" className="mb-1 block text-xs font-medium text-grisMedio">
+            <label htmlFor="ficha-select" className="mb-1 block text-xs font-medium text-muted">
               Ficha
             </label>
             {cargandoFichas ? (
-              <div className="flex items-center gap-2 py-2 text-xs text-grisMedio">
+              <div className="flex items-center gap-2 py-2 text-xs text-muted">
                 <Loader2 className="shrink-0 animate-spin" size={16} aria-hidden />
                 Cargando fichas…
               </div>
             ) : fichas.length === 0 ? (
-              <p className="py-2 text-xs text-grisMedio">No tienes fichas asignadas.</p>
+              <p className="py-2 text-xs text-muted">No tienes fichas asignadas.</p>
             ) : (
               <select
                 id="ficha-select"
@@ -578,7 +578,7 @@ export default function TomarAsistenciaPage() {
       </div>
 
       {fichaSeleccionada && !hayRangoTomar && (
-        <p className="mb-4 text-xs text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2 leading-snug">
+        <p className="mb-4 rounded-lg border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
           La vigencia de esta ficha comienza el {formatoFechaColombia(fichaSeleccionada.fecha_inicio)}. Mientras
           la fecha de hoy sea anterior a ese día, no hay fechas disponibles para tomar asistencia (no se
           registran días futuros). Vuelve cuando el calendario alcance el inicio de la ficha o recarga la
@@ -587,7 +587,7 @@ export default function TomarAsistenciaPage() {
       )}
 
       {fichaSeleccionada && hayRangoTomar && (
-        <p className="mb-4 text-xs text-grisMedio">
+        <p className="mb-4 text-xs text-muted">
           Al cambiar de ficha, la fecha se ajusta al rango permitido de esa ficha (vigencia y no futuro
           respecto a hoy). Puedes elegir un día pasado dentro de la vigencia; la sesión solo se abre si ese
           día tienes horario asignado en esta ficha. Si la asistencia de ese día ya fue guardada,{" "}
@@ -599,8 +599,8 @@ export default function TomarAsistenciaPage() {
       )}
 
       {candidatosHorarios && candidatosHorarios.length > 0 && (
-        <div className="mb-4 p-3 rounded-lg bg-slate-50 border border-slate-200/80">
-          <p className="text-xs text-grisOscuro mb-2 leading-snug">
+        <div className="mb-4 rounded-lg border border-borderSubtle/80 bg-surfaceMuted p-3">
+          <p className="mb-2 text-xs leading-snug text-foreground">
             Varios horarios para esta fecha. Elige cuál registrar.
           </p>
           <div className="flex flex-wrap items-stretch sm:items-center gap-2">
@@ -631,14 +631,14 @@ export default function TomarAsistenciaPage() {
       )}
 
       {cargandoSesion && fichaId !== "" && (
-        <div className="flex items-center justify-center gap-2 py-8 text-grisMedio text-sm">
+        <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted">
           <Loader2 className="animate-spin text-verde" size={24} aria-hidden />
           Preparando sesión…
         </div>
       )}
 
       {!cargandoSesion && sesion && aprendices.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+        <div className="rounded-xl border border-borderSubtle bg-surface p-4 shadow-sm">
           <div className="mb-4">
             <ProgressBar marcados={marcadosCount} total={aprendices.length} />
           </div>
@@ -683,7 +683,7 @@ export default function TomarAsistenciaPage() {
         hayRangoTomar &&
         sesion === null &&
         !candidatosHorarios && (
-          <p className="text-xs text-grisMedio text-left py-6 border-t border-gray-100">
+          <p className="border-t border-borderSubtle/70 py-6 text-left text-xs text-muted">
             No hay sesión activa. Revisa la ficha o los mensajes anteriores.
           </p>
         )}

@@ -142,10 +142,10 @@ export default function NuevaFichaPage() {
         Volver al listado
       </Link>
       <div>
-        <h1 className="text-xl font-bold text-grisOscuro">
+        <h1 className="text-xl font-bold text-foreground">
           Nueva Ficha de Caracterización
         </h1>
-        <p className="text-sm text-grisMedio mt-1">
+        <p className="text-sm text-muted mt-1">
           Completa los datos del grupo, instructores y horario semanal de
           Formación.
         </p>

@@ -172,11 +172,11 @@ export default function UsuarioModal({
       aria-modal="true"
       aria-labelledby="titulo-modal-usuario"
     >
-      <div className="bg-white rounded-xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200">
-        <div className="p-5 border-b border-gray-100">
+      <div className="bg-surface rounded-xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto border border-borderSubtle">
+        <div className="p-5 border-b border-borderSubtle/70">
           <h2
             id="titulo-modal-usuario"
-            className="text-lg font-semibold text-grisOscuro"
+            className="text-lg font-semibold text-foreground"
           >
             {modo === "crear" ? "Nuevo usuario" : "Editar usuario"}
           </h2>
@@ -188,12 +188,12 @@ export default function UsuarioModal({
           )}
 
           <div>
-            <label htmlFor="u-nombre" className="block text-sm font-medium text-grisOscuro mb-1">
+            <label htmlFor="u-nombre" className="block text-sm font-medium text-foreground mb-1">
               Nombre
             </label>
             <input
               id="u-nombre"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              className="quorum-input"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               required
@@ -205,12 +205,12 @@ export default function UsuarioModal({
           </div>
 
           <div>
-            <label htmlFor="u-apellido" className="block text-sm font-medium text-grisOscuro mb-1">
+            <label htmlFor="u-apellido" className="block text-sm font-medium text-foreground mb-1">
               Apellido
             </label>
             <input
               id="u-apellido"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              className="quorum-input"
               value={apellido}
               onChange={(e) => setApellido(e.target.value)}
               required
@@ -222,12 +222,12 @@ export default function UsuarioModal({
           </div>
 
           <div>
-            <label htmlFor="u-doc" className="block text-sm font-medium text-grisOscuro mb-1">
+            <label htmlFor="u-doc" className="block text-sm font-medium text-foreground mb-1">
               Documento
             </label>
             <input
               id="u-doc"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              className="quorum-input"
               value={documento}
               onChange={(e) => setDocumento(e.target.value)}
               required
@@ -238,13 +238,13 @@ export default function UsuarioModal({
           </div>
 
           <div>
-            <label htmlFor="u-correo" className="block text-sm font-medium text-grisOscuro mb-1">
+            <label htmlFor="u-correo" className="block text-sm font-medium text-foreground mb-1">
               Correo
             </label>
             <input
               id="u-correo"
               type="email"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              className="quorum-input"
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               required
@@ -256,12 +256,12 @@ export default function UsuarioModal({
           </div>
 
           <div>
-            <label htmlFor="u-rol" className="block text-sm font-medium text-grisOscuro mb-1">
+            <label htmlFor="u-rol" className="block text-sm font-medium text-foreground mb-1">
               Rol
             </label>
             <select
               id="u-rol"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white"
+              className="quorum-input bg-input"
               value={rol}
               onChange={(e) => setRol(e.target.value as RolUsuario)}
             >
@@ -278,12 +278,12 @@ export default function UsuarioModal({
 
           {esAprendiz && (
             <div>
-              <label htmlFor="u-ficha" className="block text-sm font-medium text-grisOscuro mb-1">
+              <label htmlFor="u-ficha" className="block text-sm font-medium text-foreground mb-1">
                 Ficha de caracterización
               </label>
               <select
                 id="u-ficha"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white"
+                className="quorum-input bg-input"
                 value={fichaId}
                 onChange={(e) => setFichaId(e.target.value)}
                 required={esAprendiz}
@@ -303,13 +303,13 @@ export default function UsuarioModal({
 
           {modo === "crear" && !esAprendiz && (
             <div>
-              <label htmlFor="u-pass" className="block text-sm font-medium text-grisOscuro mb-1">
+              <label htmlFor="u-pass" className="block text-sm font-medium text-foreground mb-1">
                 Contraseña
               </label>
               <input
                 id="u-pass"
                 type="password"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className="quorum-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -323,13 +323,13 @@ export default function UsuarioModal({
 
           {modo === "editar" && !esAprendiz && (
             <div>
-              <label htmlFor="u-pass2" className="block text-sm font-medium text-grisOscuro mb-1">
+              <label htmlFor="u-pass2" className="block text-sm font-medium text-foreground mb-1">
                 Nueva contraseña (opcional)
               </label>
               <input
                 id="u-pass2"
                 type="password"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className="quorum-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
@@ -341,15 +341,15 @@ export default function UsuarioModal({
           )}
 
           {mostrarPolitica && (
-            <ul className="text-xs space-y-1 text-grisMedio border border-gray-100 rounded-lg p-3 bg-grisClaro/50">
+            <ul className="text-xs space-y-1 text-muted border border-borderSubtle/70 rounded-lg bg-surfaceMuted p-3">
               {requisitosEstado.map((r) => (
                 <li key={r.id} className="flex items-center gap-2">
                   {r.cumplido ? (
                     <CheckCircle className="text-verde shrink-0" size={16} aria-hidden />
                   ) : (
-                    <XCircle className="text-grisMedio shrink-0" size={16} aria-hidden />
+                    <XCircle className="text-muted shrink-0" size={16} aria-hidden />
                   )}
-                  <span className={r.cumplido ? "text-grisOscuro" : ""}>{r.texto}</span>
+                  <span className={r.cumplido ? "text-foreground" : ""}>{r.texto}</span>
                 </li>
               ))}
             </ul>
@@ -359,7 +359,7 @@ export default function UsuarioModal({
             <button
               type="button"
               onClick={onCerrar}
-              className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-grisOscuro hover:bg-grisClaro"
+              className="px-4 py-2 rounded-lg border border-borderSubtle text-sm text-foreground transition-colors hover:bg-surfaceMuted"
               disabled={enviando}
             >
               Cancelar

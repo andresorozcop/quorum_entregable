@@ -130,10 +130,10 @@ export default function Headbar({ onToggleSidebar }: HeadbarProps) {
   }
 
   return (
-    <header className="h-14 shrink-0 z-10 flex items-center gap-3 border-b border-gray-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-900">
+    <header className="z-10 flex h-14 shrink-0 items-center gap-3 border-b border-borderSubtle bg-surface px-4">
       <button
         onClick={onToggleSidebar}
-        className="rounded-lg p-2 text-grisOscuro transition-colors hover:bg-grisClaro lg:hidden dark:text-gray-200 dark:hover:bg-slate-800"
+        className="rounded-lg p-2 text-foreground transition-colors hover:bg-surfaceMuted lg:hidden"
         aria-label="Abrir menú"
       >
         <Menu size={20} />
@@ -142,7 +142,7 @@ export default function Headbar({ onToggleSidebar }: HeadbarProps) {
       <div className="flex min-w-0 items-center gap-2">
         <QuorumLogo variant="compact" />
         <span
-          className={`truncate text-[1.21rem] leading-tight text-grisOscuro dark:text-gray-100 ${quorumNombreTextoClases}`}
+          className={`truncate text-[1.21rem] leading-tight text-foreground ${quorumNombreTextoClases}`}
         >
           {nombreSistema || "QUORUM"}
         </span>
@@ -154,7 +154,7 @@ export default function Headbar({ onToggleSidebar }: HeadbarProps) {
         <button
           type="button"
           onClick={alternarTema}
-          className="rounded-lg p-2 text-grisOscuro transition-colors hover:bg-grisClaro dark:text-amber-200 dark:hover:bg-slate-800"
+          className="rounded-lg p-2 text-foreground transition-colors hover:bg-surfaceMuted dark:text-amber-200"
           aria-label={temaOscuro ? "Activar modo claro" : "Activar modo oscuro"}
           title={temaOscuro ? "Modo claro" : "Modo oscuro"}
         >
@@ -181,7 +181,7 @@ export default function Headbar({ onToggleSidebar }: HeadbarProps) {
             className={`rounded-lg p-2 transition-colors ${
               panelAbierto
                 ? "bg-verde text-white"
-                : "text-grisOscuro hover:bg-grisClaro dark:text-gray-200 dark:hover:bg-slate-800"
+                : "text-foreground hover:bg-surfaceMuted"
             }`}
             aria-label="Opciones de accesibilidad"
             aria-expanded={panelAbierto}
@@ -190,48 +190,48 @@ export default function Headbar({ onToggleSidebar }: HeadbarProps) {
           </button>
 
           {panelAbierto && (
-            <div className="absolute right-0 top-11 z-50 w-64 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-slate-600 dark:bg-slate-800">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-grisOscuro dark:text-gray-200">
+            <div className="absolute right-0 top-11 z-50 w-64 rounded-xl border border-borderSubtle bg-surface p-4 shadow-lg">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-foreground">
                 Accesibilidad
               </p>
 
               <div className="mb-4">
-                <p className="mb-2 flex items-center gap-1.5 text-sm text-grisOscuro dark:text-gray-200">
+                <p className="mb-2 flex items-center gap-1.5 text-sm text-foreground">
                   <ZoomIn size={14} aria-hidden="true" />
                   Tamaño del texto
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={reducirTexto}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 transition-colors hover:bg-grisClaro disabled:opacity-40 dark:border-slate-600 dark:hover:bg-slate-700"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-borderSubtle transition-colors hover:bg-surfaceMuted disabled:opacity-40"
                     aria-label="Reducir texto"
                     disabled={escalaTexto <= FONT_SCALE_MIN}
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="flex-1 text-center text-sm font-medium text-grisOscuro dark:text-gray-200">
+                  <span className="flex-1 text-center text-sm font-medium text-foreground">
                     {Math.round(escalaTexto * 100)}%
                   </span>
                   <button
                     onClick={aumentarTexto}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 transition-colors hover:bg-grisClaro disabled:opacity-40 dark:border-slate-600 dark:hover:bg-slate-700"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-borderSubtle transition-colors hover:bg-surfaceMuted disabled:opacity-40"
                     aria-label="Aumentar texto"
                     disabled={escalaTexto >= FONT_SCALE_MAX}
                   >
                     <Plus size={14} />
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-grisMedio dark:text-gray-400">
+                <p className="mt-1 text-xs text-muted">
                   Máximo 200% — usa scroll horizontal en tablas anchas.
                 </p>
               </div>
 
               <div className="flex items-center justify-between">
-                <p className="text-sm text-grisOscuro dark:text-gray-200">Alto contraste</p>
+                <p className="text-sm text-foreground">Alto contraste</p>
                 <button
                   onClick={toggleAltoContraste}
                   className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
-                    altoContraste ? "bg-verde" : "bg-gray-300 dark:bg-slate-600"
+                    altoContraste ? "bg-verde" : "bg-gray-300 dark:bg-surfaceMuted"
                   }`}
                   role="switch"
                   aria-checked={altoContraste}
@@ -250,7 +250,7 @@ export default function Headbar({ onToggleSidebar }: HeadbarProps) {
 
         <button
           onClick={() => void handleLogout()}
-          className="rounded-lg p-2 text-grisOscuro transition-colors hover:bg-red-50 hover:text-error dark:text-gray-200 dark:hover:bg-red-950/40"
+          className="rounded-lg p-2 text-foreground transition-colors hover:bg-red-50 hover:text-error dark:hover:bg-red-950/40"
           aria-label="Cerrar sesión"
           title="Cerrar sesión"
         >

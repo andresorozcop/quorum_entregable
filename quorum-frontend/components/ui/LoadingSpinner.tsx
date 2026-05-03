@@ -32,7 +32,7 @@ export default function LoadingSpinner({
         aria-hidden="true"
       />
       {texto ? (
-        <p className="text-sm text-grisMedio">{texto}</p>
+        <p className="text-sm text-muted">{texto}</p>
       ) : null}
     </div>
   );

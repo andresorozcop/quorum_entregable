@@ -85,24 +85,24 @@ export default function Verificar2FAPage() {
 
   if (cargando || !usuario || usuario.rol === "aprendiz") {
     return (
-      <main className="min-h-screen bg-grisClaro flex items-center justify-center p-4">
-        <p className="text-sm text-grisMedio">Cargando...</p>
+      <main className="flex min-h-screen items-center justify-center bg-grisClaro p-4 dark:bg-background">
+        <p className="text-sm text-muted">Cargando...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-grisClaro flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-verdeClaro mb-4">
-          <KeyRound className="text-verde" size={32} aria-hidden="true" />
+    <main className="flex min-h-screen items-center justify-center bg-grisClaro p-4 dark:bg-background">
+      <div className="w-full max-w-md rounded-xl border border-borderSubtle bg-surface p-8 text-center shadow-md">
+        <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-verdeClaro dark:bg-verdeOscuro/35">
+          <KeyRound className="text-verde dark:text-verdeClaro" size={32} aria-hidden="true" />
         </div>
 
-        <h1 className="text-xl font-bold text-grisOscuro mb-2">
+        <h1 className="mb-2 text-xl font-bold text-foreground">
           Verificación en dos pasos
         </h1>
 
-        <p className="text-sm text-grisMedio mb-6">
+        <p className="mb-6 text-sm text-muted">
           Ingresa el código de 6 dígitos que muestra tu aplicación de
           autenticación.
         </p>
@@ -122,7 +122,7 @@ export default function Verificar2FAPage() {
             onChange={(e) =>
               setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-center text-lg tracking-widest text-grisOscuro focus:ring-2 focus:ring-verde focus:border-verde outline-none"
+            className="quorum-input py-3 text-center text-lg tracking-widest focus:border-verde focus:ring-verde"
           />
           <button
             type="submit"

@@ -285,7 +285,7 @@ export default function ConfiguracionPage() {
   }
 
   const seccionBase = useMemo(
-    () => "rounded-xl border border-gray-200 bg-white p-6 shadow-sm",
+    () => "rounded-xl border border-borderSubtle bg-surface p-6 shadow-sm",
     []
   );
 
@@ -320,20 +320,20 @@ export default function ConfiguracionPage() {
           <Settings size={22} className="text-verde" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-grisOscuro">Configuración</h1>
-          <p className="text-sm text-grisMedio">Parámetros generales, seguridad, festivos e historial</p>
+          <h1 className="text-xl font-bold text-foreground">Configuración</h1>
+          <p className="text-sm text-muted">Parámetros generales, seguridad, festivos e historial</p>
         </div>
       </div>
 
       {/* Sección 1 — Datos del sistema */}
       <section className={seccionBase} aria-labelledby="titulo-datos-sistema">
-        <h2 id="titulo-datos-sistema" className="text-lg font-semibold text-grisOscuro mb-4 flex items-center gap-2">
+        <h2 id="titulo-datos-sistema" className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
           <Settings size={20} className="text-verde" aria-hidden="true" />
           Datos del sistema
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="nombre_sistema" className="block text-sm font-medium text-grisOscuro mb-1">
+            <label htmlFor="nombre_sistema" className="block text-sm font-medium text-foreground mb-1">
               Nombre del sistema
             </label>
             <input
@@ -341,12 +341,12 @@ export default function ConfiguracionPage() {
               type="text"
               value={nombreSistema}
               onChange={(e) => setNombreSistemaLocal(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               autoComplete="off"
             />
           </div>
           <div>
-            <label htmlFor="nombre_institucion" className="block text-sm font-medium text-grisOscuro mb-1">
+            <label htmlFor="nombre_institucion" className="block text-sm font-medium text-foreground mb-1">
               Nombre de la institución
             </label>
             <input
@@ -354,7 +354,7 @@ export default function ConfiguracionPage() {
               type="text"
               value={nombreInstitucion}
               onChange={(e) => setNombreInstitucion(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               autoComplete="organization"
             />
           </div>
@@ -372,14 +372,14 @@ export default function ConfiguracionPage() {
 
       {/* Sección 2 — Parámetros de seguridad */}
       <section className={seccionBase} aria-labelledby="titulo-seguridad">
-        <h2 id="titulo-seguridad" className="text-lg font-semibold text-grisOscuro mb-4 flex items-center gap-2">
+        <h2 id="titulo-seguridad" className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
           <Shield size={20} className="text-verde" aria-hidden="true" />
           Parámetros de seguridad
         </h2>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
             <div className="flex-1">
-              <label htmlFor="timeout_sesion" className="block text-sm font-medium text-grisOscuro mb-1 flex items-center gap-1">
+              <label htmlFor="timeout_sesion" className="block text-sm font-medium text-foreground mb-1 flex items-center gap-1">
                 <Clock size={14} aria-hidden="true" />
                 Tiempo máximo de sesión (minutos)
               </label>
@@ -389,7 +389,7 @@ export default function ConfiguracionPage() {
                 min={1}
                 value={timeoutSesion}
                 onChange={(e) => setTimeoutSesion(e.target.value)}
-                className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full max-w-xs rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               />
             </div>
             <button
@@ -404,7 +404,7 @@ export default function ConfiguracionPage() {
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
             <div className="flex-1">
-              <label htmlFor="max_intentos" className="block text-sm font-medium text-grisOscuro mb-1 flex items-center gap-1">
+              <label htmlFor="max_intentos" className="block text-sm font-medium text-foreground mb-1 flex items-center gap-1">
                 <Lock size={14} aria-hidden="true" />
                 Máximo de intentos de login fallidos
               </label>
@@ -414,7 +414,7 @@ export default function ConfiguracionPage() {
                 min={1}
                 value={maxIntentos}
                 onChange={(e) => setMaxIntentos(e.target.value)}
-                className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full max-w-xs rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               />
             </div>
             <button
@@ -432,17 +432,17 @@ export default function ConfiguracionPage() {
 
       {/* Sección 3 — Días festivos */}
       <section className={seccionBase} aria-labelledby="titulo-festivos">
-        <h2 id="titulo-festivos" className="text-lg font-semibold text-grisOscuro mb-4 flex items-center gap-2">
+        <h2 id="titulo-festivos" className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
           <CalendarOff size={20} className="text-verde" aria-hidden="true" />
           Días festivos ({anioFestivos})
         </h2>
-        <p className="text-sm text-grisMedio mb-4">
+        <p className="text-sm text-muted mb-4">
           No se toma asistencia en estas fechas. Lista solo festivos activos del año en curso.
         </p>
         <div className="overflow-x-auto mb-6">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 text-left text-grisMedio">
+              <tr className="border-b border-borderSubtle text-left text-muted">
                 <th className="py-2 pr-4 font-medium">Fecha</th>
                 <th className="py-2 pr-4 font-medium">Descripción</th>
                 <th className="py-2 font-medium w-28">Acción</th>
@@ -451,13 +451,13 @@ export default function ConfiguracionPage() {
             <tbody>
               {festivos.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="py-4 text-grisMedio">
+                  <td colSpan={3} className="py-4 text-muted">
                     No hay festivos activos para este año.
                   </td>
                 </tr>
               ) : (
                 festivos.map((f) => (
-                  <tr key={f.id} className="border-b border-gray-100">
+                  <tr key={f.id} className="border-b border-borderSubtle/70">
                     <td className="py-2 pr-4 whitespace-nowrap">{formatearFechaSolo(f.fecha)}</td>
                     <td className="py-2 pr-4">{f.descripcion}</td>
                     <td className="py-2">
@@ -476,11 +476,11 @@ export default function ConfiguracionPage() {
             </tbody>
           </table>
         </div>
-        <form onSubmit={agregarFestivo} className="rounded-lg bg-grisClaro/50 p-4 space-y-3">
-          <p className="text-sm font-medium text-grisOscuro">Agregar festivo</p>
+        <form onSubmit={agregarFestivo} className="rounded-lg border border-borderSubtle bg-surfaceMuted p-4 space-y-3">
+          <p className="text-sm font-medium text-foreground">Agregar festivo</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="nueva_fecha_festivo" className="block text-xs text-grisMedio mb-1">
+              <label htmlFor="nueva_fecha_festivo" className="block text-xs text-muted mb-1">
                 Fecha
               </label>
               <input
@@ -488,11 +488,11 @@ export default function ConfiguracionPage() {
                 type="date"
                 value={nuevaFecha}
                 onChange={(e) => setNuevaFecha(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
               />
             </div>
             <div>
-              <label htmlFor="nueva_desc_festivo" className="block text-xs text-grisMedio mb-1">
+              <label htmlFor="nueva_desc_festivo" className="block text-xs text-muted mb-1">
                 Descripción
               </label>
               <input
@@ -501,7 +501,7 @@ export default function ConfiguracionPage() {
                 maxLength={150}
                 value={nuevaDescFestivo}
                 onChange={(e) => setNuevaDescFestivo(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-borderSubtle bg-input px-3 py-2 text-sm text-foreground"
                 placeholder="Ej. Día de la Independencia"
               />
             </div>
@@ -519,14 +519,14 @@ export default function ConfiguracionPage() {
 
       {/* Sección 4 — Historial de actividad */}
       <section className={seccionBase} aria-labelledby="titulo-historial">
-        <h2 id="titulo-historial" className="text-lg font-semibold text-grisOscuro mb-4 flex items-center gap-2">
+        <h2 id="titulo-historial" className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
           <History size={20} className="text-verde" aria-hidden="true" />
           Historial de actividad (últimas 20 acciones)
         </h2>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 text-left text-grisMedio">
+              <tr className="border-b border-borderSubtle text-left text-muted">
                 <th className="py-2 pr-3 font-medium">Usuario</th>
                 <th className="py-2 pr-3 font-medium">Acción</th>
                 <th className="py-2 pr-3 font-medium">Descripción</th>
@@ -536,17 +536,17 @@ export default function ConfiguracionPage() {
             <tbody>
               {historial.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-4 text-grisMedio">
+                  <td colSpan={4} className="py-4 text-muted">
                     Aún no hay registros de actividad.
                   </td>
                 </tr>
               ) : (
                 historial.map((h) => (
-                  <tr key={h.id} className="border-b border-gray-100 align-top">
+                  <tr key={h.id} className="border-b border-borderSubtle/70 align-top">
                     <td className="py-2 pr-3">{h.usuario_nombre}</td>
                     <td className="py-2 pr-3 font-mono text-xs">{h.accion}</td>
                     <td className="py-2 pr-3 max-w-md break-words">{h.descripcion}</td>
-                    <td className="py-2 whitespace-nowrap text-grisMedio">
+                    <td className="py-2 whitespace-nowrap text-muted">
                       {formatearFechaHora(h.creado_en)}
                     </td>
                   </tr>

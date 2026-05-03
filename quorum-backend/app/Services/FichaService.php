@@ -71,7 +71,7 @@ class FichaService
             ]);
         }
         $minutos = $a->diffInMinutes($b);
-        $horas     = (int) max(1, round($minutos / 60));
+        $horas = (int) max(1, round($minutos / 60));
 
         return min(24, $horas);
     }
@@ -103,13 +103,13 @@ class FichaService
 
         return DB::transaction(function () use ($datosCabecera, $instructores, $jornadas) {
             $ficha = FichaCaracterizacion::query()->create([
-                'numero_ficha'           => $datosCabecera['numero_ficha'],
-                'estado'                 => $datosCabecera['estado'],
-                'centro_formacion_id'    => $datosCabecera['centro_formacion_id'],
-                'programa_formacion_id'  => $datosCabecera['programa_formacion_id'],
-                'fecha_inicio'           => $datosCabecera['fecha_inicio'],
-                'fecha_fin'              => $datosCabecera['fecha_fin'],
-                'activo'                 => 1,
+                'numero_ficha' => $datosCabecera['numero_ficha'],
+                'estado' => $datosCabecera['estado'],
+                'centro_formacion_id' => $datosCabecera['centro_formacion_id'],
+                'programa_formacion_id' => $datosCabecera['programa_formacion_id'],
+                'fecha_inicio' => $datosCabecera['fecha_inicio'],
+                'fecha_fin' => $datosCabecera['fecha_fin'],
+                'activo' => 1,
             ]);
 
             $this->sincronizarInstructoresDesdePayload($ficha, $instructores);
@@ -129,12 +129,12 @@ class FichaService
 
         return DB::transaction(function () use ($ficha, $datosCabecera, $instructores, $jornadas) {
             $ficha->update([
-                'numero_ficha'           => $datosCabecera['numero_ficha'],
-                'estado'                 => $datosCabecera['estado'],
-                'centro_formacion_id'    => $datosCabecera['centro_formacion_id'],
-                'programa_formacion_id'  => $datosCabecera['programa_formacion_id'],
-                'fecha_inicio'           => $datosCabecera['fecha_inicio'],
-                'fecha_fin'              => $datosCabecera['fecha_fin'],
+                'numero_ficha' => $datosCabecera['numero_ficha'],
+                'estado' => $datosCabecera['estado'],
+                'centro_formacion_id' => $datosCabecera['centro_formacion_id'],
+                'programa_formacion_id' => $datosCabecera['programa_formacion_id'],
+                'fecha_inicio' => $datosCabecera['fecha_inicio'],
+                'fecha_fin' => $datosCabecera['fecha_fin'],
             ]);
 
             $this->sincronizarInstructoresDesdePayload($ficha, $instructores);
@@ -160,12 +160,12 @@ class FichaService
             try {
                 FichaInstructor::query()->updateOrCreate(
                     [
-                        'ficha_id'   => $ficha->id,
+                        'ficha_id' => $ficha->id,
                         'usuario_id' => (int) $fila['usuario_id'],
                     ],
                     [
                         'es_gestor' => ! empty($fila['es_gestor']) ? 1 : 0,
-                        'activo'    => 1,
+                        'activo' => 1,
                     ]
                 );
             } catch (QueryException $e) {
@@ -190,21 +190,21 @@ class FichaService
         foreach ($jornadas as $j) {
             $jornada = JornadaFicha::query()->create([
                 'ficha_id' => $ficha->id,
-                'tipo'     => $j['tipo'],
-                'activo'   => 1,
+                'tipo' => $j['tipo'],
+                'activo' => 1,
             ]);
 
             foreach ($j['horarios'] as $h) {
                 $horas = $this->calcularHorasProgramadas($h['hora_inicio'], $h['hora_fin']);
                 Horario::query()->create([
-                    'ficha_id'          => $ficha->id,
-                    'jornada_ficha_id'  => $jornada->id,
-                    'dia_semana'        => $h['dia_semana'],
-                    'hora_inicio'       => $h['hora_inicio'],
-                    'hora_fin'          => $h['hora_fin'],
+                    'ficha_id' => $ficha->id,
+                    'jornada_ficha_id' => $jornada->id,
+                    'dia_semana' => $h['dia_semana'],
+                    'hora_inicio' => $h['hora_inicio'],
+                    'hora_fin' => $h['hora_fin'],
                     'horas_programadas' => $horas,
-                    'instructor_id'     => (int) $h['instructor_id'],
-                    'activo'            => 1,
+                    'instructor_id' => (int) $h['instructor_id'],
+                    'activo' => 1,
                 ]);
             }
         }
@@ -230,7 +230,7 @@ class FichaService
         $this->assertFichaActivaParaGestionAprendices($ficha);
 
         $correo = strtolower(trim($datos['correo']));
-        $doc    = trim($datos['documento']);
+        $doc = trim($datos['documento']);
 
         if ($correo === '' || ! filter_var($correo, FILTER_VALIDATE_EMAIL)) {
             throw ValidationException::withMessages([
@@ -251,14 +251,14 @@ class FichaService
         }
 
         return Usuario::query()->create([
-            'nombre'    => trim($datos['nombre']),
-            'apellido'  => trim($datos['apellido']) !== '' ? trim($datos['apellido']) : '-',
+            'nombre' => trim($datos['nombre']),
+            'apellido' => trim($datos['apellido']) !== '' ? trim($datos['apellido']) : '-',
             'documento' => $doc,
-            'correo'    => $correo,
-            'password'  => null,
-            'rol'       => 'aprendiz',
-            'activo'    => 1,
-            'ficha_id'  => $ficha->id,
+            'correo' => $correo,
+            'password' => bcrypt($doc),
+            'rol' => 'aprendiz',
+            'activo' => 1,
+            'ficha_id' => $ficha->id,
         ]);
     }
 
@@ -271,7 +271,7 @@ class FichaService
         $this->assertAprendizDeFicha($ficha, $aprendiz);
 
         $correo = strtolower(trim($datos['correo']));
-        $doc    = trim($datos['documento']);
+        $doc = trim($datos['documento']);
 
         if ($correo === '' || ! filter_var($correo, FILTER_VALIDATE_EMAIL)) {
             throw ValidationException::withMessages([
@@ -282,10 +282,10 @@ class FichaService
         $apellido = trim($datos['apellido']) !== '' ? trim($datos['apellido']) : '-';
 
         $aprendiz->update([
-            'nombre'    => trim($datos['nombre']),
-            'apellido'  => $apellido,
+            'nombre' => trim($datos['nombre']),
+            'apellido' => $apellido,
             'documento' => $doc,
-            'correo'    => $correo,
+            'correo' => $correo,
         ]);
 
         return $aprendiz->fresh();
@@ -297,7 +297,7 @@ class FichaService
         $this->assertAprendizDeFicha($ficha, $aprendiz);
 
         $aprendiz->update([
-            'activo'   => 0,
+            'activo' => 0,
             'ficha_id' => null,
         ]);
     }
@@ -330,9 +330,9 @@ class FichaService
             foreach ($j['horarios'] ?? [] as $h) {
                 $slots[] = [
                     'instructor_id' => (int) $h['instructor_id'],
-                    'dia_semana'    => $h['dia_semana'],
-                    'hora_inicio'   => $h['hora_inicio'],
-                    'hora_fin'      => $h['hora_fin'],
+                    'dia_semana' => $h['dia_semana'],
+                    'hora_inicio' => $h['hora_inicio'],
+                    'hora_fin' => $h['hora_fin'],
                 ];
             }
         }
@@ -424,7 +424,7 @@ class FichaService
             ]);
         }
 
-        $errores  = [];
+        $errores = [];
         $exitosos = 0;
 
         try {
@@ -435,8 +435,8 @@ class FichaService
             ]);
         }
 
-        $hoja    = $spreadsheet->getActiveSheet();
-        $filas   = $hoja->toArray();
+        $hoja = $spreadsheet->getActiveSheet();
+        $filas = $hoja->toArray();
         $cabecera = array_shift($filas);
         if (! is_array($cabecera)) {
             $cabecera = [];
@@ -457,29 +457,33 @@ class FichaService
                 continue;
             }
 
-            $cedula  = trim((string) ($fila[$mapa['cedula']] ?? ''));
+            $cedula = trim((string) ($fila[$mapa['cedula']] ?? ''));
             $nombreC = trim((string) ($fila[$mapa['nombre_completo']] ?? ''));
-            $correo  = strtolower(trim((string) ($fila[$mapa['correo']] ?? '')));
+            $correo = strtolower(trim((string) ($fila[$mapa['correo']] ?? '')));
 
             $errFila = "Fila {$numeroFila}: ";
 
             if ($cedula === '' || $nombreC === '' || $correo === '') {
                 $errores[] = $errFila.'Faltan cédula, nombre completo o correo.';
+
                 continue;
             }
 
             if (! filter_var($correo, FILTER_VALIDATE_EMAIL)) {
                 $errores[] = $errFila.'El correo no es válido.';
+
                 continue;
             }
 
             if (Usuario::query()->where('correo', $correo)->exists()) {
                 $errores[] = $errFila.'El correo ya está registrado en el sistema.';
+
                 continue;
             }
 
             if (Usuario::query()->where('documento', $cedula)->exists()) {
                 $errores[] = $errFila.'La cédula ya está registrada en el sistema.';
+
                 continue;
             }
 
@@ -487,14 +491,14 @@ class FichaService
 
             try {
                 Usuario::query()->create([
-                    'nombre'    => $nombre,
-                    'apellido'  => $apellido,
+                    'nombre' => $nombre,
+                    'apellido' => $apellido,
                     'documento' => $cedula,
-                    'correo'    => $correo,
-                    'password'  => null,
-                    'rol'       => 'aprendiz',
-                    'activo'    => 1,
-                    'ficha_id'  => $ficha->id,
+                    'correo' => $correo,
+                    'password' => bcrypt($cedula),
+                    'rol' => 'aprendiz',
+                    'activo' => 1,
+                    'ficha_id' => $ficha->id,
                 ]);
                 $exitosos++;
             } catch (\Throwable $e) {
@@ -502,23 +506,23 @@ class FichaService
             }
         }
 
-        $fallidos      = count($errores);
-        $totalProceso  = $exitosos + $fallidos;
+        $fallidos = count($errores);
+        $totalProceso = $exitosos + $fallidos;
 
         ImportacionAprendices::query()->create([
-            'importado_por'   => $importadoPorId,
-            'ficha_id'        => $ficha->id,
-            'nombre_archivo'  => $archivo->getClientOriginalName(),
+            'importado_por' => $importadoPorId,
+            'ficha_id' => $ficha->id,
+            'nombre_archivo' => $archivo->getClientOriginalName(),
             'total_registros' => $totalProceso,
-            'exitosos'        => $exitosos,
-            'fallidos'        => $fallidos,
-            'errores'         => $errores,
+            'exitosos' => $exitosos,
+            'fallidos' => $fallidos,
+            'errores' => $errores,
         ]);
 
         return [
             'exitosos' => $exitosos,
             'fallidos' => $fallidos,
-            'errores'  => $errores,
+            'errores' => $errores,
         ];
     }
 
@@ -529,7 +533,7 @@ class FichaService
         if ($partes === []) {
             return ['Sin nombre', ''];
         }
-        $nombre   = array_shift($partes);
+        $nombre = array_shift($partes);
         $apellido = trim(implode(' ', $partes));
 
         return [$nombre, $apellido !== '' ? $apellido : '-'];
@@ -609,7 +613,7 @@ class FichaService
                     ['ficha_id' => $ficha->id, 'usuario_id' => $usuarioId],
                     [
                         'es_gestor' => $esGestorSolicitado ? 1 : 0,
-                        'activo'    => 1,
+                        'activo' => 1,
                     ]
                 );
 

@@ -192,56 +192,56 @@ export default function PerfilPage() {
   return (
     <div className="max-w-4xl mx-auto pb-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-verdeClaro flex items-center justify-center dark:bg-slate-800">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-verdeClaro dark:bg-verdeOscuro/35">
           <UserCircle size={22} className="text-verde" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-grisOscuro dark:text-gray-100">
+          <h1 className="text-xl font-bold text-foreground">
             Mi perfil
           </h1>
-          <p className="text-sm text-grisMedio dark:text-gray-400">
+          <p className="text-sm text-muted">
             Tu información y preferencias
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+      <div className="mb-6 rounded-xl border border-borderSubtle bg-surface p-6">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <Avatar nombre={nombreCompleto} id={usuario.id} size="xl" />
           <div className="flex-1 min-w-0 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold text-grisOscuro dark:text-gray-100 truncate">
+              <h2 className="truncate text-lg font-semibold text-foreground">
                 {nombreCompleto}
               </h2>
               <Badge rol={usuario.rol} />
             </div>
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-grisMedio dark:text-gray-400">Documento</dt>
-                <dd className="font-medium text-grisOscuro dark:text-gray-200">
+                <dt className="text-muted">Documento</dt>
+                <dd className="font-medium text-foreground">
                   {usuario.documento ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-grisMedio dark:text-gray-400 flex items-center gap-1">
+                <dt className="flex items-center gap-1 text-muted">
                   <Mail size={14} aria-hidden="true" />
                   Correo
                 </dt>
-                <dd className="font-medium text-grisOscuro dark:text-gray-200 break-all">
+                <dd className="break-all font-medium text-foreground">
                   {usuario.correo}
                 </dd>
               </div>
               <div>
-                <dt className="text-grisMedio dark:text-gray-400">Estado</dt>
-                <dd className="font-medium text-grisOscuro dark:text-gray-200">
+                <dt className="text-muted">Estado</dt>
+                <dd className="font-medium text-foreground">
                   {activo ? "Activo" : "Inactivo"}
                 </dd>
               </div>
               <div>
-                <dt className="text-grisMedio dark:text-gray-400">
+                <dt className="text-muted">
                   Miembro desde
                 </dt>
-                <dd className="font-medium text-grisOscuro dark:text-gray-200">
+                <dd className="font-medium text-foreground">
                   {formatearMiembroDesde(usuario.creado_en)}
                 </dd>
               </div>
@@ -249,7 +249,7 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg bg-verdeClaro/60 border border-verde/20 px-4 py-3 text-sm text-grisOscuro dark:bg-slate-800 dark:border-slate-600 dark:text-gray-200">
+        <div className="mt-6 rounded-lg border border-verde/20 bg-verdeClaro/60 px-4 py-3 text-sm text-foreground dark:bg-verdeOscuro/25 dark:text-foreground">
           <p>
             Para modificar tu información, comunícate con el administrador:{" "}
             <a
@@ -263,10 +263,10 @@ export default function PerfilPage() {
       </div>
 
       {!esAprendiz && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900 mb-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="mb-6 rounded-xl border border-borderSubtle bg-surface p-6">
+          <div className="mb-4 flex items-center gap-2">
             <Lock size={20} className="text-verde" aria-hidden="true" />
-            <h2 className="text-lg font-semibold text-grisOscuro dark:text-gray-100">
+            <h2 className="text-lg font-semibold text-foreground">
               Cambiar contraseña
             </h2>
           </div>
@@ -274,7 +274,7 @@ export default function PerfilPage() {
             <div>
               <label
                 htmlFor="password_actual"
-                className="block text-sm font-medium text-grisOscuro dark:text-gray-200 mb-1"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
                 Contraseña actual
               </label>
@@ -284,14 +284,14 @@ export default function PerfilPage() {
                 autoComplete="current-password"
                 value={passwordActual}
                 onChange={(e) => setPasswordActual(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100"
+                className="quorum-input"
                 required
               />
             </div>
             <div>
               <label
                 htmlFor="password_nueva"
-                className="block text-sm font-medium text-grisOscuro dark:text-gray-200 mb-1"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
                 Nueva contraseña
               </label>
@@ -301,7 +301,7 @@ export default function PerfilPage() {
                 autoComplete="new-password"
                 value={passwordNueva}
                 onChange={(e) => setPasswordNueva(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100"
+                className="quorum-input"
                 required
               />
               <ul className="mt-2 space-y-1 text-xs">
@@ -311,7 +311,7 @@ export default function PerfilPage() {
                     className={`flex items-center gap-2 ${
                       req.cumple(passwordNueva)
                         ? "text-verdeOscuro dark:text-verde"
-                        : "text-grisMedio dark:text-gray-500"
+                        : "text-muted"
                     }`}
                   >
                     {req.cumple(passwordNueva) ? (
@@ -327,7 +327,7 @@ export default function PerfilPage() {
             <div>
               <label
                 htmlFor="password_confirm"
-                className="block text-sm font-medium text-grisOscuro dark:text-gray-200 mb-1"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
                 Confirmar nueva contraseña
               </label>
@@ -337,7 +337,7 @@ export default function PerfilPage() {
                 autoComplete="new-password"
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100"
+                className="quorum-input"
                 required
               />
               {passwordConfirm.length > 0 && passwordNueva !== passwordConfirm && (
@@ -360,21 +360,21 @@ export default function PerfilPage() {
       )}
 
       {esAprendiz && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-grisMedio dark:border-slate-700 dark:bg-slate-900 dark:text-gray-400 mb-6">
+        <div className="mb-6 rounded-xl border border-borderSubtle bg-surface p-4 text-sm text-muted">
           Tu cuenta de aprendiz no usa contraseña: inicias sesión con correo y
           documento.
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-        <h2 className="text-lg font-semibold text-grisOscuro dark:text-gray-100 mb-4">
+      <div className="rounded-xl border border-borderSubtle bg-surface p-6">
+        <h2 className="mb-4 text-lg font-semibold text-foreground">
           Preferencias de accesibilidad
         </h2>
-        <p className="text-sm text-grisMedio dark:text-gray-400 mb-4">
+        <p className="mb-4 text-sm text-muted">
           Se guardan en este navegador y se aplican al volver a entrar.
         </p>
         <div className="mb-6">
-          <p className="mb-2 flex items-center gap-1.5 text-sm text-grisOscuro dark:text-gray-200">
+          <p className="mb-2 flex items-center gap-1.5 text-sm text-foreground">
             <ZoomIn size={14} aria-hidden="true" />
             Tamaño del texto
           </p>
@@ -382,19 +382,19 @@ export default function PerfilPage() {
             <button
               type="button"
               onClick={reducirTexto}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 transition-colors hover:bg-grisClaro disabled:opacity-40 dark:border-slate-600 dark:hover:bg-slate-700"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-borderSubtle transition-colors hover:bg-surfaceMuted disabled:opacity-40"
               aria-label="Reducir texto"
               disabled={escalaTexto <= FONT_SCALE_MIN}
             >
               <Minus size={14} />
             </button>
-            <span className="flex-1 text-center text-sm font-medium text-grisOscuro dark:text-gray-200">
+            <span className="flex-1 text-center text-sm font-medium text-foreground">
               {Math.round(escalaTexto * 100)}%
             </span>
             <button
               type="button"
               onClick={aumentarTexto}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 transition-colors hover:bg-grisClaro disabled:opacity-40 dark:border-slate-600 dark:hover:bg-slate-700"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-borderSubtle transition-colors hover:bg-surfaceMuted disabled:opacity-40"
               aria-label="Aumentar texto"
               disabled={escalaTexto >= FONT_SCALE_MAX}
             >
@@ -403,14 +403,14 @@ export default function PerfilPage() {
           </div>
         </div>
         <div className="flex items-center justify-between max-w-xs">
-          <p className="text-sm text-grisOscuro dark:text-gray-200">
+          <p className="text-sm text-foreground">
             Alto contraste
           </p>
           <button
             type="button"
             onClick={toggleAltoContraste}
             className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
-              altoContraste ? "bg-verde" : "bg-gray-300 dark:bg-slate-600"
+              altoContraste ? "bg-verde" : "bg-gray-300 dark:bg-surfaceMuted"
             }`}
             role="switch"
             aria-checked={altoContraste}

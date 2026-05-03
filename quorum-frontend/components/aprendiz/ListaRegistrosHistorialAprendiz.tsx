@@ -55,23 +55,23 @@ export default function ListaRegistrosHistorialAprendiz({
 }: ListaRegistrosHistorialAprendizProps) {
   return (
     <section aria-label="Lista de sesiones">
-      <h2 className="text-sm font-semibold text-grisOscuro mb-3">{tituloSeccion}</h2>
+      <h2 className="text-sm font-semibold text-foreground mb-3">{tituloSeccion}</h2>
       <ul className="space-y-3">
         {registros.map((reg) => {
           const badge = BADGE_TIPO[reg.tipo] ?? BADGE_TIPO.presente;
           return (
             <li
               key={reg.id}
-              className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              className="flex flex-col gap-3 rounded-xl border border-borderSubtle bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
-                <p className="font-medium text-grisOscuro">
+                <p className="font-medium text-foreground">
                   {formatearFecha(reg.fecha)}
                 </p>
-                <p className="text-sm text-grisMedio truncate">
+                <p className="text-sm text-muted truncate">
                   {etiquetaFicha(reg)}
                 </p>
-                <p className="text-sm text-grisOscuro">
+                <p className="text-sm text-foreground">
                   Instructor:{" "}
                   <span className="font-medium">
                     {reg.instructor_nombre.trim() || "—"}
@@ -84,7 +84,7 @@ export default function ListaRegistrosHistorialAprendiz({
                 >
                   {badge.etiqueta}
                 </span>
-                <span className="text-sm text-grisMedio">
+                <span className="text-sm text-muted">
                   {reg.tipo === "parcial" && reg.horas_inasistencia != null ? (
                     <>
                       Inasistencia: {reg.horas_inasistencia} h

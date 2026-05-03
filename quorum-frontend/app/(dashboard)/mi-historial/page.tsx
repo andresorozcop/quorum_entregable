@@ -98,8 +98,8 @@ export default function MiHistorialPage() {
           <BookOpen size={22} className="text-verde" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-grisOscuro">Mi historial</h1>
-          <p className="text-sm text-grisMedio">
+          <h1 className="text-xl font-bold text-foreground">Mi historial</h1>
+          <p className="text-sm text-muted">
             Tu registro de asistencia en la ficha (solo lectura)
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function MiHistorialPage() {
           <LoadingSpinner />
         </div>
       ) : huboError ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-grisMedio">
+        <div className="rounded-xl border border-borderSubtle bg-surface p-8 text-center text-sm text-muted">
           No se pudieron obtener los datos. Recarga la página o vuelve a iniciar sesión.
         </div>
       ) : !haySesiones ? (

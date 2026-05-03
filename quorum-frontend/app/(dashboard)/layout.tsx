@@ -63,14 +63,14 @@ export default function DashboardLayout({
   // Mientras se verifica la sesión, mostramos un spinner de pantalla completa
   if (cargando) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-grisClaro dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-grisClaro dark:bg-background">
         <div className="flex flex-col items-center gap-3">
           <Loader2
             size={40}
             className="animate-spin text-verde"
             aria-hidden="true"
           />
-          <p className="text-sm text-grisMedio dark:text-gray-400">Cargando...</p>
+          <p className="text-sm text-muted">Cargando...</p>
         </div>
       </div>
     );
@@ -84,14 +84,14 @@ export default function DashboardLayout({
   // Staff sin TOTP completado en esta sesión: esperamos redirección a /2fa/*
   if (usuario.rol !== "aprendiz" && !totpSesionCompleta) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-grisClaro dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-grisClaro dark:bg-background">
         <div className="flex flex-col items-center gap-3">
           <Loader2
             size={40}
             className="animate-spin text-verde"
             aria-hidden="true"
           />
-          <p className="text-sm text-grisMedio dark:text-gray-400">Verificando acceso...</p>
+          <p className="text-sm text-muted">Verificando acceso...</p>
         </div>
       </div>
     );
@@ -99,7 +99,7 @@ export default function DashboardLayout({
 
   return (
     // Contenedor principal — ocupa toda la pantalla dividido en sidebar + contenido
-    <div className="flex h-screen overflow-hidden bg-grisClaro dark:bg-slate-950">
+    <div className="flex h-screen overflow-hidden bg-grisClaro dark:bg-background">
       <Sidebar
         abierto={sidebarAbierto}
         onCerrar={() => setSidebarAbierto(false)}
