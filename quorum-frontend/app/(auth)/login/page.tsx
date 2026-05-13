@@ -9,7 +9,7 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import Swal from "sweetalert2";
 import { useAuth } from "../../../hooks/useAuth";
 import { toggleHtmlTheme } from "../../../lib/toggleTheme";
-import { QuorumLogo, quorumNombreTextoClases } from "../../../components/branding/QuorumMark";
+import { QuorumWordmark } from "../../../components/branding/QuorumMark";
 
 // Usuarios de prueba del seeder (PRD §22) — solo para desarrollo
 const USUARIOS_PRUEBA = [
@@ -162,12 +162,7 @@ export default function LoginPage() {
         {/* Encabezado con marca Quorum */}
         <div className="mb-6 text-center">
           <h1 className="flex flex-col items-center gap-3">
-            <QuorumLogo variant="hero" priority />
-            <span
-              className={`text-[1.815rem] leading-tight text-foreground ${quorumNombreTextoClases}`}
-            >
-              QUORUM
-            </span>
+            <QuorumWordmark variant="login" priority />
           </h1>
           <p className="mt-3 text-sm text-muted">
             Sistema de Control de Asistencia — SENA

@@ -7,6 +7,7 @@ import { KeyRound, Mail, ArrowLeft, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import Swal from "sweetalert2";
+import { QuorumWordmark } from "../../../components/branding/QuorumMark";
 import { solicitarReset } from "../../../services/auth.service";
 
 export default function RecuperarPage() {
@@ -51,7 +52,9 @@ export default function RecuperarPage() {
           <div className="mb-3 inline-flex h-16 w-16 items-center justify-center rounded-full bg-verde">
             <KeyRound className="text-white" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">QUORUM</h1>
+          <h1 className="m-0 p-0">
+            <QuorumWordmark variant="auth" />
+          </h1>
           <p className="mt-1 text-sm text-muted">
             Sistema de Control de Asistencia — SENA CPIC
           </p>

@@ -96,7 +96,7 @@ html.dark a {
   gap: 0.75rem;
 }
 
-/* Marca: Montserrat wordmark como quorumNombreTextoClases (QuorumMark.tsx) */
+/* Marca: wordmark PNG (alineado con quorum-frontend/public/branding/wordmark_quorum.png) */
 .doc-brand {
   display: flex;
   align-items: center;
@@ -115,21 +115,6 @@ html.dark .doc-brand {
   line-height: 1.2;
 }
 
-.doc-wordmark {
-  font-family: "Montserrat", system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.215rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  -webkit-font-smoothing: antialiased;
-  color: #1a1a1a;
-  line-height: 1.15;
-}
-
-html.dark .doc-wordmark {
-  color: #ffffff;
-}
-
 .doc-brand-suffix {
   font-family: "Montserrat", system-ui, sans-serif;
   font-weight: 600;
@@ -142,19 +127,19 @@ html.dark .doc-brand-suffix {
   color: #e8eaed;
 }
 
-/* Misma línea que QuorumMark "compact": 57×57 px */
-.doc-brand-logo {
-  width: 57px;
-  height: 57px;
+.doc-brand-wordmark {
+  max-height: 40px;
+  width: auto;
+  max-width: min(52vw, 280px);
+  height: auto;
   object-fit: contain;
   flex-shrink: 0;
   display: block;
 }
 
-/* Logo con fondo oscuro: contraste en barra oscura del tema */
-html.dark .doc-header .doc-brand-logo {
-  padding: 4px;
-  border-radius: 10px;
+html.dark .doc-header .doc-brand-wordmark {
+  padding: 4px 6px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
   box-sizing: content-box;
 }

@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUORUM — Presentación Proyecto SENA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#39A900;--green-dark:#1B5E20;--green-mid:#2E7D32;--green-light:#E8F5E9;--green-pale:#F1F8E9;
+  --gray-900:#212121;--gray-700:#424242;--gray-600:#616161;--gray-400:#9E9E9E;--gray-200:#EEEEEE;--gray-100:#F5F5F5;
+  --white:#FFFFFF;--shadow:0 4px 24px rgba(0,0,0,.08);--shadow-lg:0 8px 40px rgba(0,0,0,.12);
+  --radius:12px;--radius-sm:8px;
+  --font-head:'Poppins',sans-serif;--font-body:'Inter',sans-serif;
+  --slide-w:100%;--slide-h:100%;
+}
+html,body{overflow:hidden;width:100%;height:100%;font-family:var(--font-body);background:#000}
+.deck{position:relative;width:100%;height:100%}
+.slide{
+  position:absolute;inset:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;
+  padding:60px 80px;opacity:0;visibility:hidden;transition:opacity .5s ease,transform .5s ease;
+  transform:translateX(40px);background:var(--white);overflow:hidden;
+}
+.slide.active{opacity:1;visibility:visible;transform:translateX(0)}
+.slide.prev{transform:translateX(-40px)}
+.slide.next{transform:translateX(40px)}
+
+/* top accent bar for content slides */
+.slide::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--green-dark),var(--green),#66BB6A);z-index:2;
+}
+.slide.slide--green::before,.slide.slide--dark::before{display:none}
+
+/* green section slides */
+.slide--green{
+  background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 50%,#4CAF50 100%);
+  color:var(--white);
+}
+.slide--dark{
+  background:linear-gradient(135deg,#0D3B0F 0%,var(--green-dark) 50%,var(--green-mid) 100%);
+  color:var(--white);
+}
+
+/* logos bar */
+.slide-logos{
+  position:absolute;top:24px;left:40px;right:40px;display:flex;justify-content:space-between;align-items:center;z-index:3;
+}
+.slide-logos img{height:54px;object-fit:contain}
+.slide-logos img[alt="Quorum"]{height:70px}
+.slide--green .slide-logos img,.slide--dark .slide-logos img{filter:brightness(0) invert(1)}
+
+/* footer */
+.slide-footer{
+  position:absolute;bottom:16px;left:40px;right:40px;display:flex;justify-content:space-between;
+  font-size:.7rem;color:var(--gray-400);z-index:3;
+}
+.slide--green .slide-footer,.slide--dark .slide-footer{color:rgba(255,255,255,.5)}
+
+/* progress bar */
+#progress{position:fixed;bottom:0;left:0;height:3px;background:var(--green);transition:width .4s ease;z-index:100}
+
+/* slide counter */
+#counter{
+  position:fixed;bottom:10px;right:24px;font-family:var(--font-body);font-size:.75rem;
+  color:rgba(255,255,255,.6);z-index:100;background:rgba(0,0,0,.4);padding:2px 10px;border-radius:20px;
+}
+
+/* nav hint */
+#navhint{
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-body);font-size:.7rem;color:rgba(255,255,255,.4);z-index:100;
+  opacity:1;transition:opacity 2s ease;pointer-events:none;
+}
+
+/* typography */
+.t-section{font-family:var(--font-head);font-size:1.1rem;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--green);margin-bottom:8px}
+.slide--green .t-section,.slide--dark .t-section{color:rgba(255,255,255,.7)}
+.t-title{font-family:var(--font-head);font-size:2.8rem;font-weight:700;line-height:1.2;color:var(--gray-900);margin-bottom:16px}
+.t-title--lg{font-size:3.4rem}
+.slide--green .t-title,.slide--dark .t-title{color:var(--white)}
+.t-subtitle{font-size:1.3rem;color:var(--gray-600);line-height:1.5;max-width:950px}
+.slide--green .t-subtitle,.slide--dark .t-subtitle{color:rgba(255,255,255,.85)}
+.t-accent{color:var(--green);font-weight:600}
+.slide--green .t-accent,.slide--dark .t-accent{color:#A5D6A7}
+.t-small{font-size:.95rem;color:var(--gray-600);line-height:1.6}
+
+/* green underline on titles */
+.t-title::after{
+  content:'';display:block;width:60px;height:4px;background:var(--green);border-radius:2px;margin-top:12px;
+}
+.slide--green .t-title::after,.slide--dark .t-title::after{background:rgba(255,255,255,.4)}
+.t-title.no-bar::after{display:none}
+
+/* layout helpers */
+.row{display:flex;gap:32px;align-items:flex-start}
+.col{flex:1}
+.center-content{align-items:center;text-align:center}
+.center-content .t-title::after{margin-left:auto;margin-right:auto}
+.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mt-32{margin-top:32px}.mt-40{margin-top:40px}
+
+/* cards */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-top:24px}
+.card{
+  background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:24px;
+  box-shadow:var(--shadow);transition:transform .2s;
+}
+.card:hover{transform:translateY(-2px)}
+.card h3{font-family:var(--font-head);font-size:1.1rem;font-weight:600;color:var(--gray-900);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card p{font-size:1rem;color:var(--gray-600);line-height:1.5}
+.card-icon{
+  width:36px;height:36px;border-radius:8px;background:var(--green-light);color:var(--green);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.card-icon svg{width:20px;height:20px}
+
+/* list items with green dots */
+.item-list{list-style:none;margin-top:16px}
+.item-list li{
+  position:relative;padding:10px 0 10px 20px;font-size:1.1rem;color:var(--gray-700);line-height:1.5;
+}
+.item-list li::before{
+  content:'';position:absolute;left:0;top:18px;width:8px;height:8px;border-radius:50%;background:var(--green);
+}
+.slide--green .item-list li::before{background:rgba(255,255,255,.6)}
+.slide--green .item-list li{color:rgba(255,255,255,.9)}
+
+/* check/cross list */
+.scope-list{list-style:none;margin-top:12px}
+.scope-list li{display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-size:1.05rem;color:var(--gray-700);line-height:1.45}
+.scope-list .check{color:var(--green);font-weight:700;font-size:1.1rem;flex-shrink:0}
+.scope-list .cross{color:#E53935;font-weight:700;font-size:1.1rem;flex-shrink:0}
+
+/* browser mockup for screenshots */
+.browser-mock{
+  background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);overflow:hidden;max-width:720px;
+  border:1px solid var(--gray-200);
+}
+.browser-mock-bar{
+  display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--gray-100);border-bottom:1px solid var(--gray-200);
+}
+.browser-mock-dot{width:10px;height:10px;border-radius:50%}
+.browser-mock-dot:nth-child(1){background:#FF5F57}
+.browser-mock-dot:nth-child(2){background:#FFBD2E}
+.browser-mock-dot:nth-child(3){background:#28CA41}
+.browser-mock-url{
+  margin-left:12px;flex:1;background:var(--white);border-radius:4px;padding:4px 10px;
+  font-size:.7rem;color:var(--gray-400);border:1px solid var(--gray-200);
+}
+.browser-mock img{width:100%;display:block}
+
+/* arch diagram */
+.arch-box{
+  display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:24px;
+}
+.arch-node{
+  background:var(--white);border:2px solid var(--green);border-radius:var(--radius);padding:20px 28px;
+  text-align:center;box-shadow:var(--shadow);min-width:160px;
+}
+.arch-node h4{font-family:var(--font-head);font-size:.95rem;font-weight:600;color:var(--green-dark)}
+.arch-node p{font-size:.75rem;color:var(--gray-600);margin-top:4px}
+.arch-arrow{font-size:1.5rem;color:var(--green);font-weight:700}
+
+/* tech pills */
+.pill-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.pill{
+  background:var(--green-light);color:var(--green-dark);padding:6px 16px;border-radius:20px;
+  font-size:.8rem;font-weight:500;
+}
+
+/* table */
+.req-table{width:100%;border-collapse:collapse;margin-top:16px;font-size:.9rem}
+.req-table th{
+  background:var(--green);color:var(--white);padding:10px 14px;text-align:left;
+  font-family:var(--font-head);font-weight:600;
+}
+.req-table td{padding:10px 14px;border-bottom:1px solid var(--gray-200);color:var(--gray-700)}
+.req-table tr:nth-child(even){background:var(--green-pale)}
+.req-table .tag{
+  display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600;
+}
+.tag-alta{background:#FFCDD2;color:#C62828}
+.tag-media{background:#FFF9C4;color:#F57F17}
+
+/* portada */
+.portada{padding:0;justify-content:center;align-items:center;text-align:center}
+.portada-logos{display:flex;align-items:center;justify-content:center;gap:40px;margin-bottom:32px}
+.portada-logos img{height:90px;object-fit:contain}
+.portada-logos img[alt="Quorum"]{height:117px}
+.portada-logos .sep{width:2px;height:50px;background:rgba(255,255,255,.3);border-radius:1px}
+.portada h1{
+  font-family:var(--font-head);font-size:2rem;font-weight:700;color:var(--white);
+  max-width:800px;line-height:1.3;margin-bottom:12px;
+}
+.portada h2{
+  font-family:var(--font-head);font-size:3.5rem;font-weight:800;color:var(--white);
+  letter-spacing:2px;margin-bottom:24px;
+}
+.portada-meta{
+  font-size:1.1rem;color:rgba(255,255,255,.8);line-height:1.8;
+}
+.portada-meta strong{color:var(--white)}
+.portada-badge{
+  display:inline-block;margin-top:24px;padding:8px 24px;border:2px solid rgba(255,255,255,.4);
+  border-radius:30px;font-size:.8rem;color:rgba(255,255,255,.7);letter-spacing:1px;
+}
+
+/* TOC */
+.toc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+.toc-item{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--green-pale);
+  border-radius:var(--radius-sm);border-left:3px solid var(--green);font-size:.85rem;color:var(--gray-700);
+  cursor:pointer;transition:background .2s;
+}
+.toc-item:hover{background:var(--green-light)}
+.toc-num{
+  font-family:var(--font-head);font-weight:700;font-size:1rem;color:var(--green);min-width:28px;text-align:center;
+}
+
+/* impact numbers */
+.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:24px}
+.impact-card{
+  text-align:center;padding:32px 20px;background:var(--green-pale);border-radius:var(--radius);
+  border:1px solid var(--green-light);
+}
+.impact-card .num{font-family:var(--font-head);font-size:2.5rem;font-weight:800;color:var(--green)}
+.impact-card .label{font-size:.85rem;color:var(--gray-600);margin-top:8px}
+
+/* cierre */
+.cierre{text-align:center;align-items:center}
+.cierre h2{font-family:var(--font-head);font-size:4rem;font-weight:800;color:var(--white);margin-bottom:16px}
+.cierre p{font-size:1.1rem;color:rgba(255,255,255,.8);line-height:1.8}
+.cierre-logos{display:flex;align-items:center;justify-content:center;gap:32px;margin-top:40px}
+.cierre-logos img{height:72px;object-fit:contain;filter:brightness(0) invert(1)}
+.cierre-logos img[alt="Quorum"]{height:94px}
+
+/* animations for elements entering */
+.slide.active .anim{animation:fadeUp .6s ease forwards}
+.slide.active .anim-d1{animation-delay:.1s}
+.slide.active .anim-d2{animation-delay:.2s}
+.slide.active .anim-d3{animation-delay:.3s}
+.slide.active .anim-d4{animation-delay:.4s}
+.slide.active .anim-d5{animation-delay:.5s}
+.anim{opacity:0;transform:translateY(20px)}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+
+/* fullscreen btn */
+#fsbtn{
+  position:fixed;top:16px;right:16px;z-index:200;background:rgba(0,0,0,.3);border:none;
+  color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;opacity:.4;transition:opacity .3s;
+}
+#fsbtn:hover{opacity:1}
+#fsbtn svg{width:18px;height:18px}
+
+/* responsive */
+@media(max-width:1100px){
+  .slide{padding:40px 48px}
+  .t-title{font-size:2.2rem}
+  .portada h2{font-size:2.8rem}
+  .card-grid{grid-template-columns:repeat(2,1fr)}
+  .toc-grid{grid-template-columns:repeat(2,1fr)}
+  .impact-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="counter"></div>
+<div id="navhint">Usa ← → para navegar</div>
+<button id="fsbtn" title="Pantalla completa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></button>
+
+<div class="deck">
+
+<!-- ============== SLIDE 1 — PORTADA ============== -->
+<section class="slide slide--dark portada active">
+  <div class="portada-logos anim">
+    <img src="logo-sena.png" alt="SENA" style="filter:brightness(0) invert(1)">
+    <div class="sep"></div>
+    <img src="wordmark_quorum.png" alt="Quorum" style="filter:brightness(0) invert(1)">
+  </div>
+  <h1 class="anim anim-d1">Sistema de Información para la Gestión de Asistencia y Automatización de Formatos Académicos</h1>
+  <h2 class="anim anim-d2">QUORUM</h2>
+  <div class="portada-meta anim anim-d3">
+    <strong>Andrés Felipe Orozco Piedrahita</strong><br>
+    Ficha 2929061 &middot; Análisis y Desarrollo de Software (ADSO)
+  </div>
+  <div class="portada-badge anim anim-d4">
+    SENA &middot; Centro de Procesos Industriales y Construcción (CPIC) &middot; Mayo 2026
+  </div>
+</section>
+
+<!-- ============== SLIDE 2 — CONTENIDO ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">Índice</p>
+  <h2 class="t-title anim anim-d1">Contenido de la presentación</h2>
+  <div class="toc-grid anim anim-d2">
+    <div class="toc-item" onclick="goSlide(2)"><span class="toc-num">01</span>Introducción</div>
+    <div class="toc-item" onclick="goSlide(4)"><span class="toc-num">02</span>Justificación</div>
+    <div class="toc-item" onclick="goSlide(5)"><span class="toc-num">03</span>Antecedentes</div>
+    <div class="toc-item" onclick="goSlide(6)"><span class="toc-num">04</span>Objetivos</div>
+    <div class="toc-item" onclick="goSlide(8)"><span class="toc-num">05</span>Alcance</div>
+    <div class="toc-item" onclick="goSlide(9)"><span class="toc-num">06</span>Descripción general</div>
+    <div class="toc-item" onclick="goSlide(12)"><span class="toc-num">07</span>Arquitectura y stack</div>
+    <div class="toc-item" onclick="goSlide(14)"><span class="toc-num">08</span>Demo del sistema</div>
+    <div class="toc-item" onclick="goSlide(22)"><span class="toc-num">09</span>Requisitos</div>
+    <div class="toc-item" onclick="goSlide(25)"><span class="toc-num">10</span>Casos de prueba</div>
+    <div class="toc-item" onclick="goSlide(26)"><span class="toc-num">11</span>Impacto</div>
+    <div class="toc-item" onclick="goSlide(28)"><span class="toc-num">12</span>Cierre</div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 3 — INTRODUCCIÓN ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">01</p>
+  <h2 class="t-title anim anim-d1">Introducción</h2>
+  <p class="t-subtitle anim anim-d2">
+    El control de asistencia en los procesos formativos es un <span class="t-accent">requisito fundamental</span> para garantizar la permanencia y certificación de los aprendices en el SENA.
+  </p>
+  <ul class="item-list anim anim-d3">
+    <li>Actualmente el proceso se realiza de manera <strong>manual o dispersa</strong>, generando errores en el conteo de horas.</li>
+    <li>Se produce <strong>pérdida de información física</strong> y re-procesos tediosos al transcribir datos a formatos institucionales.</li>
+    <li>QUORUM surge de la necesidad de <strong>optimizar este flujo</strong>: la asistencia diaria alimenta automáticamente los informes finales.</li>
+  </ul>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 4 — DESCRIPCIÓN DEL PROBLEMA ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">01</p>
+  <h2 class="t-title anim anim-d1">Descripción del problema</h2>
+  <div class="row mt-16">
+    <div class="col anim anim-d2">
+      <h3 style="font-family:var(--font-head);font-size:1.1rem;font-weight:600;color:var(--green-dark);margin-bottom:12px">Situación actual</h3>
+      <ul class="item-list" style="margin-top:0">
+        <li>Listas de asistencia en papel o archivos Excel individuales por instructor.</li>
+        <li>Sin fuente de verdad centralizada: cada docente maneja sus propios formatos.</li>
+        <li>Transcripción manual al cierre de periodo al formato oficial CPIC.</li>
+        <li>Riesgo de errores, inconsistencias y pérdida de datos.</li>
+      </ul>
+    </div>
+    <div class="col anim anim-d3">
+      <h3 style="font-family:var(--font-head);font-size:1.1rem;font-weight:600;color:var(--green-dark);margin-bottom:12px">Consecuencias</h3>
+      <ul class="item-list" style="margin-top:0">
+        <li>Tiempo excesivo dedicado a tareas administrativas en vez de pedagógicas.</li>
+        <li>Aprendices sin visibilidad de su propio estado de asistencia.</li>
+        <li>Coordinación sin herramienta de monitoreo en tiempo real.</li>
+        <li>Formatos finales con errores que retrasan entregas institucionales.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 5 — JUSTIFICACIÓN ============== -->
+<section class="slide slide--green">
+  <p class="t-section anim">02</p>
+  <h2 class="t-title anim anim-d1">Justificación</h2>
+  <p class="t-subtitle anim anim-d2">
+    La digitalización del control de asistencia no es solo una mejora técnica, es una <span class="t-accent">necesidad operativa</span> para la eficiencia del proceso formativo.
+  </p>
+  <ul class="item-list anim anim-d3">
+    <li><strong>Reducción de carga operativa:</strong> Lo que el instructor registra en el sistema aparece ya organizado en el formato final.</li>
+    <li><strong>Transparencia:</strong> El aprendiz consulta sus propias fallas acumuladas en tiempo real.</li>
+    <li><strong>Trazabilidad:</strong> Registros centralizados en base de datos con auditoría y respaldo.</li>
+    <li><strong>Cumplimiento institucional:</strong> El reporte Excel se genera respetando la plantilla oficial del CPIC.</li>
+    <li><strong>Escalabilidad:</strong> Puede implementarse en múltiples fichas y centros de formación.</li>
+  </ul>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 6 — ANTECEDENTES ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">03</p>
+  <h2 class="t-title anim anim-d1">Antecedentes y referentes</h2>
+  <div class="card-grid anim anim-d2">
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>Additio App</h3>
+      <p>Cuaderno de notas digital multiplataforma. Referente principal en <strong>usabilidad (UX)</strong> para registro rápido de asistencia y exportación a Excel.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>iDoceo</h3>
+      <p>Aplicación líder iOS en gestión de aula. Referencia para <strong>lógica de estados</strong> de asistencia (retrasos, faltas, excusas) y seguimiento por aprendiz.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>Phidias</h3>
+      <p>Software de gestión escolar usado en Colombia. Referencia para <strong>visualización de seguimiento</strong> intuitiva para estudiantes y familias.</p>
+    </div>
+  </div>
+  <p class="t-small mt-24 anim anim-d3">De cada referente se tomaron las mejores prácticas para construir un sistema adaptado al contexto específico del SENA y sus formatos institucionales.</p>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 7 — OBJETIVO GENERAL ============== -->
+<section class="slide slide--green">
+  <p class="t-section anim">04</p>
+  <h2 class="t-title t-title--lg anim anim-d1">Objetivo General</h2>
+  <p class="t-subtitle anim anim-d2" style="font-size:1.3rem;max-width:900px">
+    Desarrollar un sistema de información web llamado <span class="t-accent" style="font-size:1.5rem">QUORUM</span> que permita al personal autorizado registrar la asistencia por sesiones de formación, con trazabilidad por ficha y aprendiz, y genere el reporte en Excel alineado al formato institucional de control de inasistencias y deserción del CPIC.
+  </p>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 8 — OBJETIVOS ESPECÍFICOS ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">04</p>
+  <h2 class="t-title anim anim-d1">Objetivos Específicos</h2>
+  <div class="card-grid anim anim-d2" style="grid-template-columns:repeat(3,1fr)">
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>Digitalizar</h3>
+      <p>Toma de asistencia mediante aplicación web responsiva (escritorio y móvil).</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Diferenciar acceso</h3>
+      <p>Flujos separados para personal (correo + contraseña + 2FA) y aprendiz (correo + documento).</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>Consulta aprendiz</h3>
+      <p>Historial personal de asistencia sin acceso a datos de terceros.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>Monitoreo coordinador</h3>
+      <p>Vistas de seguimiento por ficha y aprendiz con filtros y estadísticas.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>Exportar Excel</h3>
+      <p>Reporte por rango de fechas respetando la plantilla oficial del CPIC.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>Administrar</h3>
+      <p>Fichas, usuarios, centros, configuración y días festivos centralizados.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 9 — ALCANCE ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">05</p>
+  <h2 class="t-title anim anim-d1">Alcance del proyecto</h2>
+  <div class="row mt-16">
+    <div class="col anim anim-d2">
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green);margin-bottom:12px">✓ Incluido</h3>
+      <ul class="scope-list">
+        <li><span class="check">✓</span>Autenticación multi-rol con 2FA (TOTP) y reCAPTCHA</li>
+        <li><span class="check">✓</span>Asistencia por sesión: presente, falla, excusa y parcial</li>
+        <li><span class="check">✓</span>Gestión de fichas, usuarios, centros e importación Excel</li>
+        <li><span class="check">✓</span>Vista coordinador con estadísticas y búsqueda</li>
+        <li><span class="check">✓</span>Historial personal del aprendiz (solo lectura)</li>
+        <li><span class="check">✓</span>Exportación Excel formato CPIC por rango de fechas</li>
+        <li><span class="check">✓</span>Dashboard, auditoría, configuración y días festivos</li>
+      </ul>
+    </div>
+    <div class="col anim anim-d3">
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:#E53935;margin-bottom:12px">✗ Fuera de alcance</h3>
+      <ul class="scope-list">
+        <li><span class="cross">✗</span>Gestión de calificaciones o notas</li>
+        <li><span class="cross">✗</span>Planes de mejoramiento académico</li>
+        <li><span class="cross">✗</span>Alertas predictivas complejas</li>
+        <li><span class="cross">✗</span>Integración en tiempo real con SofiaPlus</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 10 — DESCRIPCIÓN GENERAL ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">06</p>
+  <h2 class="t-title anim anim-d1">Descripción general</h2>
+  <p class="t-subtitle anim anim-d2">
+    QUORUM es una aplicación <span class="t-accent">web responsiva</span> que reemplaza las hojas de cálculo individuales por una base de datos centralizada donde interactúan los roles clave de la formación.
+  </p>
+  <ul class="item-list anim anim-d3">
+    <li>Interfaz minimalista adaptada a computadores de escritorio y dispositivos móviles.</li>
+    <li>Comunicación mediante <strong>API REST</strong> autenticada con Laravel Sanctum (sesión por cookies).</li>
+    <li>Cada rol tiene un panel personalizado con las funciones que le corresponden.</li>
+    <li>Registros inmutables con trazabilidad: lo que se marca en la sesión queda consolidado para el formato final.</li>
+  </ul>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 11 — ROLES ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">06</p>
+  <h2 class="t-title anim anim-d1">Roles de usuario</h2>
+  <div class="card-grid anim anim-d2">
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Administrador</h3>
+      <p>Usuarios, fichas, centros de formación, configuración, festivos, auditoría. Máximos privilegios de gestión.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #1565C0">
+      <h3><div class="card-icon" style="background:#E3F2FD;color:#1565C0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>Coordinador</h3>
+      <p>Seguimiento global, estadísticas por ficha, búsqueda de aprendices, descarga de reportes. Solo lectura.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #F57F17">
+      <h3><div class="card-icon" style="background:#FFF8E1;color:#F57F17"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>Instructor / Gestor</h3>
+      <p>Toma de asistencia por sesión, historial de fichas asignadas, exportación del Excel oficial.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #7B1FA2">
+      <h3><div class="card-icon" style="background:#F3E5F5;color:#7B1FA2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>Aprendiz</h3>
+      <p>Consulta su historial personal de asistencia. Login con correo y documento. Sin permisos de edición.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 12 — FUNCIONALIDADES ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">06</p>
+  <h2 class="t-title anim anim-d1">Funcionalidades principales</h2>
+  <div class="card-grid anim anim-d2" style="grid-template-columns:repeat(3,1fr)">
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>Autenticación</h3>
+      <p>Login multi-rol, 2FA TOTP, reCAPTCHA, recuperación de contraseña.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>Asistencia</h3>
+      <p>Sesiones por ficha. Tipos: Presente, falla, excusa (con evidencia) y parcial.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>Reportes Excel</h3>
+      <p>Generación automática del formato CPIC con rango de fechas configurable.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>Gestión fichas</h3>
+      <p>CRUD de fichas, asignación de instructores, importación de aprendices desde Excel.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>Dashboard</h3>
+      <p>Indicadores por rol: usuarios activos, fichas, aprendices, sesiones del día.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>Auditoría</h3>
+      <p>Historial de actividad, trazabilidad de correcciones, supervisión institucional.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 13 — ARQUITECTURA ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">07</p>
+  <h2 class="t-title anim anim-d1">Arquitectura del sistema</h2>
+  <div class="arch-box anim anim-d2">
+    <div class="arch-node">
+      <h4>🖥️ Frontend</h4>
+      <p>Next.js 14 SPA<br>TypeScript + Tailwind</p>
+    </div>
+    <div class="arch-arrow">⟷</div>
+    <div class="arch-node" style="border-color:var(--green-dark)">
+      <h4>⚙️ Backend API</h4>
+      <p>Laravel 12 REST<br>Sanctum + 2FA TOTP</p>
+    </div>
+    <div class="arch-arrow">⟷</div>
+    <div class="arch-node">
+      <h4>🗄️ Base de datos</h4>
+      <p>MySQL 8<br>Migraciones Eloquent</p>
+    </div>
+  </div>
+  <div class="row mt-32 anim anim-d3">
+    <div class="col">
+      <ul class="item-list" style="margin-top:0">
+        <li>Comunicación via <strong>HTTPS / JSON</strong> con cookies de sesión Sanctum.</li>
+        <li>Políticas de autorización en el servidor (Laravel Policies).</li>
+      </ul>
+    </div>
+    <div class="col">
+      <ul class="item-list" style="margin-top:0">
+        <li>Frontend solo consume <code>/api/*</code>; sin lógica sensible en cliente.</li>
+        <li>Middleware <strong>EnsureTotpSessionOk</strong> protege rutas de personal.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 14 — STACK TECNOLÓGICO ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">07</p>
+  <h2 class="t-title anim anim-d1">Stack tecnológico</h2>
+  <div class="row mt-16">
+    <div class="col anim anim-d2">
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green-dark);margin-bottom:12px">Frontend</h3>
+      <div class="pill-row">
+        <span class="pill">Next.js 14</span><span class="pill">React 18</span><span class="pill">TypeScript</span><span class="pill">Tailwind CSS</span><span class="pill">Axios</span><span class="pill">Lucide React</span><span class="pill">SweetAlert2</span>
+      </div>
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green-dark);margin:20px 0 12px">Backend</h3>
+      <div class="pill-row">
+        <span class="pill">Laravel 12</span><span class="pill">PHP 8.2</span><span class="pill">Laravel Sanctum</span><span class="pill">PhpSpreadsheet</span><span class="pill">Google2FA</span>
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green-dark);margin-bottom:12px">Infraestructura</h3>
+      <div class="pill-row">
+        <span class="pill">MySQL 8</span><span class="pill">XAMPP</span><span class="pill">Node.js 20+</span>
+      </div>
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green-dark);margin:20px 0 12px">Seguridad</h3>
+      <div class="pill-row">
+        <span class="pill">Sanctum SPA</span><span class="pill">TOTP 2FA</span><span class="pill">reCAPTCHA v3</span><span class="pill">CSRF Cookies</span><span class="pill">Bcrypt Hash</span>
+      </div>
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green-dark);margin:20px 0 12px">Reportes</h3>
+      <div class="pill-row">
+        <span class="pill">Excel .xlsx</span><span class="pill">Plantilla CPIC</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 15 — DEMO: LOGIN ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Inicio de sesión</h2>
+  <div class="row mt-16" style="align-items:center">
+    <div class="col anim anim-d2" style="flex:0 0 55%">
+      <div class="browser-mock">
+        <div class="browser-mock-bar"><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-url">localhost:3000/login</div></div>
+        <img src="../Quorum-manual_y_presentacion/assets/screenshots/01-login.png" alt="Login">
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <ul class="item-list" style="margin-top:0">
+        <li>Login unificado con tabs: <strong>Instructor/Admin</strong> y <strong>Aprendiz</strong>.</li>
+        <li>Protección con <strong>reCAPTCHA v3</strong> invisible.</li>
+        <li>Tras login exitoso, verificación <strong>2FA TOTP</strong> para personal.</li>
+        <li>Recuperación de contraseña por correo electrónico.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 16 — DEMO: DASHBOARD ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Dashboard</h2>
+  <div class="row mt-16" style="align-items:center">
+    <div class="col anim anim-d2" style="flex:0 0 58%">
+      <div class="browser-mock">
+        <div class="browser-mock-bar"><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-url">localhost:3000/dashboard</div></div>
+        <img src="../Quorum-manual_y_presentacion/assets/screenshots/06-dashboard.png" alt="Dashboard">
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <ul class="item-list" style="margin-top:0">
+        <li><strong>Indicadores</strong> en tiempo real: Usuarios activos, fichas, aprendices, sesiones.</li>
+        <li><strong>Actividad reciente</strong> con log de eventos del sistema.</li>
+        <li>Contenido adaptado según el rol del usuario autenticado.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 17 — DEMO: FICHAS ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Gestión de fichas</h2>
+  <div class="row mt-16" style="align-items:center">
+    <div class="col anim anim-d2" style="flex:0 0 58%">
+      <div class="browser-mock">
+        <div class="browser-mock-bar"><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-url">localhost:3000/fichas</div></div>
+        <img src="../Quorum-manual_y_presentacion/assets/screenshots/07-fichas.png" alt="Fichas">
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <ul class="item-list" style="margin-top:0">
+        <li>Listado con filtros por <strong>centro, programa y estado</strong>.</li>
+        <li>Creación de nuevas fichas con asignación de instructores.</li>
+        <li>Alta manual de aprendices e <strong>importación desde Excel</strong>.</li>
+        <li>Vinculación ficha → centro → programa de formación.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 18 — DEMO: USUARIOS ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Gestión de usuarios</h2>
+  <div class="row mt-16" style="align-items:center">
+    <div class="col anim anim-d2" style="flex:0 0 58%">
+      <div class="browser-mock">
+        <div class="browser-mock-bar"><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-url">localhost:3000/usuarios</div></div>
+        <img src="../Quorum-manual_y_presentacion/assets/screenshots/10-usuarios.png" alt="Usuarios">
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <ul class="item-list" style="margin-top:0">
+        <li>Panel de administración para crear y gestionar <strong>usuarios del sistema</strong>.</li>
+        <li>Asignación de roles: admin, coordinador, instructor, gestor de grupo.</li>
+        <li>Activación / desactivación de cuentas (soft delete con <code>activo=0</code>).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 19 — DEMO: ASISTENCIA ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Historial de asistencia</h2>
+  <div class="row mt-16" style="align-items:center">
+    <div class="col anim anim-d2" style="flex:0 0 58%">
+      <div class="browser-mock">
+        <div class="browser-mock-bar"><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-url">localhost:3000/asistencia/historial</div></div>
+        <img src="../Quorum-manual_y_presentacion/assets/screenshots/12-asistencia-historial.png" alt="Asistencia">
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <ul class="item-list" style="margin-top:0">
+        <li><strong>Matriz visual</strong> de fechas × aprendices con código de colores.</li>
+        <li>Tipos de registro: <span style="color:var(--green)">● Presente</span>, <span style="color:#E53935">● Falla</span>, <span style="color:#FF9800">● Excusa</span>, <span style="color:#1565C0">● Parcial</span>.</li>
+        <li>Filtros por ficha, rango de fechas y tipo.</li>
+        <li>Botón <strong>Descargar Excel</strong> directamente desde esta vista.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 20 — DEMO: COORDINADOR ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Vista coordinador</h2>
+  <div class="row mt-16" style="align-items:center">
+    <div class="col anim anim-d2" style="flex:0 0 58%">
+      <div class="browser-mock">
+        <div class="browser-mock-bar"><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-url">localhost:3000/coordinador</div></div>
+        <img src="../Quorum-manual_y_presentacion/assets/screenshots/14-coordinador.png" alt="Coordinador">
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <ul class="item-list" style="margin-top:0">
+        <li>Resumen con indicadores: aprendices, <strong>% asistencia mes actual</strong>, centros.</li>
+        <li>Fichas activas por centro con detalle de asistencia.</li>
+        <li>Rol de <strong>solo lectura</strong>: no puede modificar registros del instructor.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 21 — DEMO: APRENDIZ ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Mi historial (aprendiz)</h2>
+  <div class="row mt-16" style="align-items:center">
+    <div class="col anim anim-d2" style="flex:0 0 58%">
+      <div class="browser-mock">
+        <div class="browser-mock-bar"><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-dot"></div><div class="browser-mock-url">localhost:3000/mi-historial</div></div>
+        <img src="../Quorum-manual_y_presentacion/assets/screenshots/15-mi-historial.png" alt="Mi historial">
+      </div>
+    </div>
+    <div class="col anim anim-d3">
+      <ul class="item-list" style="margin-top:0">
+        <li>El aprendiz ve <strong>únicamente sus propios registros</strong>.</li>
+        <li>Historial completo con fechas, tipos y acumulado de fallas.</li>
+        <li><strong>Aislamiento total:</strong> sin acceso a datos de otros compañeros (RNF-01).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 22 — GENERACIÓN REPORTES ============== -->
+<section class="slide slide--green">
+  <p class="t-section anim">08 · Demo</p>
+  <h2 class="t-title anim anim-d1">Generación de reportes Excel</h2>
+  <p class="t-subtitle anim anim-d2" style="max-width:900px">
+    El módulo de reportes genera automáticamente el archivo <span class="t-accent">.xlsx</span> con la plantilla oficial del CPIC, preservando encabezados, logos del SENA y estructura de columnas.
+  </p>
+  <ul class="item-list anim anim-d3">
+    <li>Selección de ficha y <strong>rango de fechas</strong> personalizado (desde / hasta).</li>
+    <li>Los datos registrados en las sesiones se inyectan en la plantilla oficial automáticamente.</li>
+    <li>El archivo está listo para <strong>revisión, firma y entrega</strong> sin re-proceso manual.</li>
+    <li>Generado en el backend con <strong>PhpSpreadsheet</strong> a partir de la plantilla versionada en el repositorio.</li>
+  </ul>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 23 — REQUISITOS FUNCIONALES ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">09</p>
+  <h2 class="t-title anim anim-d1">Requisitos funcionales</h2>
+  <div class="anim anim-d2" style="overflow-x:auto">
+    <table class="req-table">
+      <thead><tr><th>ID</th><th>Requisito</th><th>Descripción</th><th>Prioridad</th></tr></thead>
+      <tbody>
+        <tr><td><strong>RF-01</strong></td><td>Autenticación y seguridad</td><td>Login multi-rol, 2FA TOTP, reCAPTCHA, redirección por rol</td><td><span class="tag tag-alta">ALTA</span></td></tr>
+        <tr><td><strong>RF-02</strong></td><td>Registro de asistencia</td><td>Sesiones por ficha: presente, falla, excusa, parcial; corrección controlada</td><td><span class="tag tag-alta">ALTA</span></td></tr>
+        <tr><td><strong>RF-03</strong></td><td>Consulta aprendiz</td><td>Historial personal sin exposición de datos de terceros</td><td><span class="tag tag-alta">ALTA</span></td></tr>
+        <tr><td><strong>RF-04</strong></td><td>Exportación Excel CPIC</td><td>Archivo .xlsx por ficha y rango de fechas con plantilla oficial</td><td><span class="tag tag-alta">ALTA</span></td></tr>
+        <tr><td><strong>RF-05</strong></td><td>Panel coordinador</td><td>Fichas, búsqueda, estadísticas, matriz de seguimiento</td><td><span class="tag tag-media">MEDIA</span></td></tr>
+        <tr><td><strong>RF-06</strong></td><td>Gestión admin</td><td>CRUD usuarios, fichas, centros, importación Excel aprendices</td><td><span class="tag tag-alta">ALTA</span></td></tr>
+        <tr><td><strong>RF-07</strong></td><td>Recuperación contraseña</td><td>Flujo seguro por correo electrónico</td><td><span class="tag tag-media">MEDIA</span></td></tr>
+        <tr><td><strong>RF-08</strong></td><td>Configuración y festivos</td><td>Parámetros del sistema y calendario de días festivos</td><td><span class="tag tag-media">MEDIA</span></td></tr>
+        <tr><td><strong>RF-09</strong></td><td>Dashboard y auditoría</td><td>Indicadores por rol, historial de actividad</td><td><span class="tag tag-media">MEDIA</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 24 — REQUISITOS NO FUNCIONALES ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">09</p>
+  <h2 class="t-title anim anim-d1">Requisitos no funcionales</h2>
+  <div class="card-grid anim anim-d2">
+    <div class="card" style="border-left:4px solid var(--green)">
+      <h3>RNF-01 · Privacidad</h3>
+      <p>Aislamiento de datos: un aprendiz no puede acceder a registros de otro. Autorización en servidor con Laravel Policies.</p>
+    </div>
+    <div class="card" style="border-left:4px solid #1565C0">
+      <h3>RNF-02 · Usabilidad</h3>
+      <p>Interfaz responsiva. Flujo de toma de asistencia en pocas interacciones para uso diario eficiente.</p>
+    </div>
+    <div class="card" style="border-left:4px solid #F57F17">
+      <h3>RNF-03 · Fidelidad Excel</h3>
+      <p>El archivo generado conserva encabezados, logos y columnas conformes a la plantilla CPIC oficial.</p>
+    </div>
+    <div class="card" style="border-left:4px solid #7B1FA2">
+      <h3>RNF-04 · Seguridad</h3>
+      <p>Sanctum, cookies de sesión, CSRF, contraseñas con hash bcrypt, 2FA TOTP para personal.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 25 — RESTRICCIONES ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">09</p>
+  <h2 class="t-title anim anim-d1">Restricciones por rol</h2>
+  <div class="anim anim-d2" style="overflow-x:auto">
+    <table class="req-table">
+      <thead><tr><th>Rol</th><th>Permitido</th><th>Bloqueado</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Aprendiz</strong></td><td>Su historial, su perfil</td><td>Editar asistencia, ver datos de otros</td></tr>
+        <tr><td><strong>Instructor</strong></td><td>Fichas asignadas, toma de asistencia, descarga Excel</td><td>Fichas de otros instructores, gestión global</td></tr>
+        <tr><td><strong>Coordinador</strong></td><td>Consulta y reportes de todas las fichas</td><td>Pasar lista o alterar registros</td></tr>
+        <tr><td><strong>Admin</strong></td><td>Configuración total, usuarios, fichas, centros</td><td>Registrar asistencia en nombre de instructores</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="t-small mt-24 anim anim-d3">
+    <strong>Restricciones de sistema:</strong> Sin integración con SofiaPlus; formato Excel inmutable por código; ámbito limitado exclusivamente a asistencia (sin notas ni evaluaciones).
+  </p>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 26 — CASOS DE PRUEBA ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">10</p>
+  <h2 class="t-title anim anim-d1">Casos de prueba</h2>
+  <div class="card-grid anim anim-d2" style="grid-template-columns:repeat(3,1fr)">
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h3 style="font-size:.9rem">CP-01 · Consulta aprendiz</h3>
+      <p><strong>Objetivo:</strong> Verificar que el aprendiz ve únicamente su historial.</p>
+      <p class="mt-12"><strong>Pasos:</strong> Login aprendiz → Mi historial → Verificar registro de falla.</p>
+      <p class="mt-12"><strong>Esperado:</strong> Solo aparecen registros del aprendiz autenticado.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #1565C0">
+      <h3 style="font-size:.9rem">CP-02 · Exportación Excel</h3>
+      <p><strong>Objetivo:</strong> Validar que el .xlsx refleja las inasistencias del periodo.</p>
+      <p class="mt-12"><strong>Pasos:</strong> Login instructor → Historial → Descargar Excel → Abrir archivo.</p>
+      <p class="mt-12"><strong>Esperado:</strong> Marca de inasistencia en fila/columna correcta con plantilla CPIC.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #7B1FA2">
+      <h3 style="font-size:.9rem">CP-03 · Verificación 2FA</h3>
+      <p><strong>Objetivo:</strong> Validar que el personal con TOTP no accede sin verificación.</p>
+      <p class="mt-12"><strong>Pasos:</strong> Login exitoso → Sistema exige código TOTP → Ingresar código válido.</p>
+      <p class="mt-12"><strong>Esperado:</strong> Acceso al dashboard solo tras completar 2FA.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 27 — IMPACTO ============== -->
+<section class="slide slide--green">
+  <p class="t-section anim">11</p>
+  <h2 class="t-title anim anim-d1">Impacto del proyecto</h2>
+  <div class="impact-grid anim anim-d2">
+    <div class="impact-card" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2)">
+      <div class="num" style="color:var(--white)">-80%</div>
+      <div class="label" style="color:rgba(255,255,255,.8)">Tiempo de transcripción manual eliminado al cierre de periodo</div>
+    </div>
+    <div class="impact-card" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2)">
+      <div class="num" style="color:var(--white)">100%</div>
+      <div class="label" style="color:rgba(255,255,255,.8)">Trazabilidad de registros con respaldo en base de datos</div>
+    </div>
+    <div class="impact-card" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2)">
+      <div class="num" style="color:var(--white)">4 roles</div>
+      <div class="label" style="color:rgba(255,255,255,.8)">Diferenciados con permisos y vistas personalizadas</div>
+    </div>
+  </div>
+  <ul class="item-list mt-32 anim anim-d3">
+    <li>Los instructores se enfocan en la <strong>formación</strong>, no en tareas administrativas repetitivas.</li>
+    <li>Los aprendices tienen <strong>transparencia</strong> sobre su estado de asistencia en todo momento.</li>
+    <li>La coordinación toma decisiones con <strong>datos reales y actualizados</strong>.</li>
+  </ul>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 28 — RECOMENDACIONES ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">12</p>
+  <h2 class="t-title anim anim-d1">Recomendaciones adicionales</h2>
+  <p class="t-subtitle anim anim-d2">Mejoras futuras que pueden ampliar el alcance del sistema:</p>
+  <div class="card-grid anim anim-d3" style="grid-template-columns:repeat(2,1fr)">
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>Integración SofiaPlus</h3>
+      <p>Conexión con la plataforma nacional para sincronizar datos de fichas y aprendices automáticamente.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>Aplicación móvil nativa</h3>
+      <p>App dedicada para que instructores tomen asistencia más rápido desde su celular en el aula.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>Alertas predictivas</h3>
+      <p>Notificaciones automáticas cuando un aprendiz se acerca al umbral de inasistencias permitidas.</p>
+    </div>
+    <div class="card">
+      <h3><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Despliegue en la nube</h3>
+      <p>Migrar a un entorno cloud para acceso desde cualquier centro de formación del SENA a nivel nacional.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 29 — REFERENCIAS ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">12</p>
+  <h2 class="t-title anim anim-d1">Referencias</h2>
+  <div class="row mt-16">
+    <div class="col anim anim-d2">
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green-dark);margin-bottom:12px">Referentes funcionales</h3>
+      <ul class="item-list" style="margin-top:0">
+        <li><strong>Additio App</strong> — Usabilidad en registro de asistencia y exportación.</li>
+        <li><strong>iDoceo</strong> — Lógica de estados de asistencia y seguimiento.</li>
+        <li><strong>Phidias</strong> — Visualización de seguimiento para estudiantes.</li>
+      </ul>
+    </div>
+    <div class="col anim anim-d3">
+      <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--green-dark);margin-bottom:12px">Tecnologías y documentación</h3>
+      <ul class="item-list" style="margin-top:0">
+        <li><strong>Next.js 14</strong> — nextjs.org</li>
+        <li><strong>Laravel 12</strong> — laravel.com</li>
+        <li><strong>Laravel Sanctum</strong> — Autenticación SPA</li>
+        <li><strong>PhpSpreadsheet</strong> — Generación Excel</li>
+        <li><strong>Tailwind CSS</strong> — tailwindcss.com</li>
+        <li><strong>MySQL 8</strong> — mysql.com</li>
+      </ul>
+    </div>
+  </div>
+  <p class="t-small mt-24 anim anim-d4">
+    <strong>Documentación del proyecto:</strong> README.md, Manual HTML (Quorum-manual_y_presentacion/), Guía de exposición, Documento IEEE 830 actualizado.
+  </p>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 30 — PERSONAL INVOLUCRADO ============== -->
+<section class="slide">
+  <div class="slide-logos"><img src="logo-sena.png" alt="SENA"><img src="wordmark_quorum.png" alt="Quorum"></div>
+  <p class="t-section anim">12</p>
+  <h2 class="t-title anim anim-d1">Personal involucrado</h2>
+  <div class="card-grid anim anim-d2" style="grid-template-columns:repeat(2,1fr);max-width:700px">
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h3 style="font-size:.9rem">Desarrollador</h3>
+      <p><strong>Andrés Felipe Orozco Piedrahita</strong></p>
+      <p class="mt-12">Ficha 2929061<br>Análisis y Desarrollo de Software<br>Etapa Práctica</p>
+    </div>
+    <div class="card" style="border-top:3px solid #1565C0">
+      <h3 style="font-size:.9rem">Cliente / Validador</h3>
+      <p><strong>José Germán Estrada Clavijo</strong></p>
+      <p class="mt-12">Instructor<br>gestradac@sena.edu.co</p>
+    </div>
+  </div>
+  <div class="card-grid anim anim-d3 mt-16" style="grid-template-columns:repeat(3,1fr);max-width:700px">
+    <div class="card" style="text-align:center;padding:16px">
+      <p style="font-size:.8rem;color:var(--gray-600)"><strong>Oscar Aristizabal</strong><br>Instructor y Gestor de ficha</p>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <p style="font-size:.8rem;color:var(--gray-600)"><strong>Carlos Loaiza</strong><br>Instructor</p>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <p style="font-size:.8rem;color:var(--gray-600)"><strong>Santiago Becerra H.</strong><br>Coordinador Académico</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span>Andrés Felipe Orozco P. · Ficha 2929061 · SENA CPIC</span><span></span></div>
+</section>
+
+<!-- ============== SLIDE 31 — CIERRE ============== -->
+<section class="slide slide--dark cierre">
+  <div class="portada-logos anim" style="margin-bottom:40px">
+    <img src="logo-sena.png" alt="SENA" style="filter:brightness(0) invert(1)">
+    <div class="sep"></div>
+    <img src="wordmark_quorum.png" alt="Quorum" style="filter:brightness(0) invert(1)">
+  </div>
+  <h2 class="anim anim-d1">Gracias</h2>
+  <p class="anim anim-d2">
+    <strong>Andrés Felipe Orozco Piedrahita</strong><br>
+    Ficha 2929061 · ADSO · Jornada Nocturna<br>
+    SENA — Centro de Procesos Industriales y Construcción
+  </p>
+  <div class="portada-badge anim anim-d3">
+    Mayo 2026 · Etapa Práctica
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<script>
+(function(){
+  const slides=Array.from(document.querySelectorAll('.slide'));
+  let cur=0;
+  const total=slides.length;
+
+  const progress=document.getElementById('progress');
+  const counter=document.getElementById('counter');
+  const navhint=document.getElementById('navhint');
+
+  function show(n,dir){
+    if(n<0||n>=total)return;
+    var old=cur;
+    slides[old].classList.remove('active');
+    slides[old].classList.remove('prev');
+    slides[old].style.transform='';
+    if(dir==='prev')slides[old].classList.add('next');
+    else slides[old].classList.add('prev');
+
+    slides[old].querySelectorAll('.anim').forEach(el=>{el.style.animation='none';el.offsetHeight;el.style.animation=''});
+
+    cur=n;
+    slides[cur].classList.remove('prev');
+    slides[cur].classList.remove('next');
+    slides[cur].style.transform='';
+    slides[cur].classList.add('active');
+
+    progress.style.width=((cur/(total-1))*100)+'%';
+    counter.textContent=(cur+1)+' / '+total;
+
+    if(cur>0&&navhint.style.opacity!=='0'){navhint.style.opacity='0'}
+  }
+
+  function next(){show(cur+1,'next')}
+  function prev(){show(cur-1,'prev')}
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown')next();
+    else if(e.key==='ArrowLeft'||e.key==='PageUp')prev();
+    else if(e.key==='Home')show(0,'prev');
+    else if(e.key==='End')show(total-1,'next');
+    else if(e.key==='f'||e.key==='F5'){e.preventDefault();toggleFS();}
+  });
+
+  document.addEventListener('click',function(e){
+    if(e.target.closest('.toc-item')||e.target.closest('#fsbtn'))return;
+    const x=e.clientX/window.innerWidth;
+    if(x>0.75)next();
+    else if(x<0.25)prev();
+  });
+
+  let touchX=0;
+  document.addEventListener('touchstart',function(e){touchX=e.changedTouches[0].screenX});
+  document.addEventListener('touchend',function(e){
+    const dx=e.changedTouches[0].screenX-touchX;
+    if(dx<-50)next();else if(dx>50)prev();
+  });
+
+  function toggleFS(){
+    if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+  document.getElementById('fsbtn').addEventListener('click',toggleFS);
+
+  window.goSlide=function(n){show(n,'next')};
+
+  show(0,'next');
+})();
+</script>
+</body>
+</html>

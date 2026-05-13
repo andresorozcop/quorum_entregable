@@ -198,7 +198,7 @@ export default function Sidebar({
             aria-hidden="true"
           />
           <aside
-            className={`fixed left-0 top-14 z-[45] flex h-[calc(100vh-3.5rem)] w-[min(280px,85vw)] max-w-[280px] flex-col shadow-xl lg:hidden ${asideClass}`}
+            className={`fixed left-0 top-16 z-[45] flex h-[calc(100vh-4rem)] w-[min(280px,85vw)] max-w-[280px] flex-col shadow-xl lg:hidden ${asideClass}`}
             aria-label="Menú de navegación"
           >
             {navFull(onColapsarOverlay)}

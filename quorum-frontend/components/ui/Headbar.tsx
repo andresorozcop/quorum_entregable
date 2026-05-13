@@ -30,7 +30,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import Avatar from "./Avatar";
 import Badge from "./Badge";
-import { QuorumLogo, quorumNombreTextoClases } from "../branding/QuorumMark";
+import { QuorumWordmark } from "../branding/QuorumMark";
 
 interface HeadbarProps {
   sidebarExpandido: boolean;
@@ -134,7 +134,7 @@ export default function Headbar({
   }
 
   return (
-    <header className="relative z-50 flex h-14 w-full min-w-0 shrink-0 items-center gap-3 border-b border-borderSubtle bg-surface px-4">
+    <header className="relative z-50 flex h-16 w-full min-w-0 shrink-0 items-center gap-3 border-b border-borderSubtle bg-surface px-4">
       <button
         type="button"
         onClick={onToggleSidebar}
@@ -147,13 +147,12 @@ export default function Headbar({
         <Menu size={20} />
       </button>
 
-      <div className="flex min-w-0 items-center gap-2">
-        <QuorumLogo variant="compact" />
-        <span
-          className={`truncate text-[1.21rem] leading-tight text-foreground ${quorumNombreTextoClases}`}
-        >
-          {nombreSistema || "QUORUM"}
-        </span>
+      <div
+        className="flex min-w-0 items-center gap-2"
+        title={nombreSistema || "QUORUM"}
+      >
+        <QuorumWordmark variant="headbar" />
+        <span className="sr-only">{nombreSistema || "QUORUM"}</span>
       </div>
 
       <div className="flex-1 min-w-0" />

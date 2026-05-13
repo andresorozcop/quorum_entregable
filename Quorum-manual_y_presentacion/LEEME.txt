@@ -37,7 +37,8 @@ CONTENIDO DEL PAQUETE (todo lo necesario para el sitio estático)
   assets/
     quorum-docs.css       Estilos
     docs.js               Menú móvil, tema claro/oscuro, índice del manual
-    logo-quorum.png       Logo de marca
+    logo-quorum.png       Ícono de marca (opcional; cabecera usa wordmark)
+    wordmark-quorum.png   Marca tipográfica horizontal (misma imagen que en la app)
     screenshots/          Capturas de pantalla (PNG) usadas por el manual
 
 --------------------------------------------------------------------------------
@@ -68,10 +69,11 @@ CAPTURAS (nombres esperados en assets/screenshots/)
 --------------------------------------------------------------------------------
 MARCA (cabecera de las tres páginas HTML)
 --------------------------------------------------------------------------------
-  assets/logo-quorum.png — mismo recurso que quorum-frontend/public/branding/
-  logo_quorum.png (copia para este paquete).
-  Tamaño mostrado en cabecera: 68×68 px.
-  Texto "QUORUM": Montserrat (Google Fonts, enlazado en los HTML).
+  assets/wordmark-quorum.png — copia de quorum-frontend/public/branding/
+  wordmark_quorum.png (marca en imagen; sustituye el texto "QUORUM").
+  Altura máxima mostrada en cabecera: ~40 px (ancho automático, responsive).
+  logo-quorum.png se conserva en assets por si lo enlazas manualmente en otro
+  material; la cabecera de ventas/manual/producto usa el wordmark.
 
 --------------------------------------------------------------------------------
 AL COMPRIMIR EN ZIP
